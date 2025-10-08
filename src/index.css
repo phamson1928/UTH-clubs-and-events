@@ -28,6 +28,7 @@
     --input: 220 7% 96%;
     --ring: 180 100% 27%;
     --radius: 0.5rem;
+    --surface-shadow: 0 8px 30px rgba(16, 24, 40, 0.06);
   }
 }
 
@@ -61,5 +62,20 @@
   .muted-panel {
     background-color: hsl(var(--muted));
     border: 1px solid hsl(var(--border));
+  }
+
+  /* subtle page backdrop shadow to give depth */
+  .page-backdrop {
+    background-image: radial-gradient(
+      rgba(2, 6, 23, 0.02) 1px,
+      transparent 1px
+    );
+    background-size: 24px 24px;
+  }
+
+  .surface-muted {
+    box-shadow: var(--surface-shadow);
+    border-radius: var(--radius);
+    background: hsl(var(--card));
   }
 }

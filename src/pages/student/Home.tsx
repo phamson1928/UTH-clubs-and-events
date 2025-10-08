@@ -2,6 +2,8 @@ import { Search, Calendar, Users, TrendingUp } from "lucide-react";
 import Navbar from "../../components/Navbar";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -60,14 +62,30 @@ export default function StudentHome() {
     },
   ];
 
+  const [heroQuery, setHeroQuery] = useState("");
+  const navigate = useNavigate();
+
+  function onHeroSearch(e: React.FormEvent) {
+    e.preventDefault();
+    const q = heroQuery.trim();
+    if (q) navigate(`/student/clubs?q=${encodeURIComponent(q)}`);
+    else navigate(`/student/clubs`);
+  }
+
   return (
-    <div className="min-h-screen bg-[hsl(var(--background))]">
+    <div className="min-h-screen bg-[hsl(var(--background))] page-backdrop">
       <Navbar />
 
       {/* Hero Section */}
       <section className="py-24">
         <div className="container px-4">
-          <div className="relative overflow-hidden rounded-2xl hero-gradient p-12">
+          <div
+            className="relative overflow-hidden rounded-2xl p-12"
+            style={{
+              background:
+                "linear-gradient(135deg, hsl(var(--primary)) 0%, rgba(0,134,137,0.85) 100%)",
+            }}
+          >
             {/* decorative blobs */}
             <svg
               className="absolute -top-10 -left-10 opacity-30"
@@ -78,38 +96,48 @@ export default function StudentHome() {
               aria-hidden
             >
               <g fill="none">
-                <circle cx="50" cy="50" r="60" fill="rgba(0,134,137,0.12)" />
-                <circle cx="150" cy="140" r="50" fill="rgba(255,107,74,0.08)" />
+                <circle cx="50" cy="50" r="60" fill="rgba(0,134,137,0.18)" />
+                <circle cx="150" cy="140" r="50" fill="rgba(0,134,137,0.12)" />
               </g>
             </svg>
 
-            <div className="max-w-3xl mx-auto text-center relative z-10">
-              <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-4 text-[hsl(var(--foreground))]">
+            <div className="max-w-3xl mx-auto text-center relative z-10 text-white">
+              <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-4">
                 Discover Your Community at UTH
               </h1>
-              <p className="text-lg text-[hsl(var(--muted-foreground))] mb-8">
+              <p className="text-lg opacity-90 mb-8">
                 Join clubs, attend events, and connect with students who share
                 your interests
               </p>
 
-              <div className="flex gap-3 max-w-xl mx-auto">
+              <form
+                onSubmit={onHeroSearch}
+                className="flex gap-3 max-w-xl mx-auto"
+              >
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     placeholder="Search for clubs..."
-                    className="pl-10 bg-[hsl(var(--card))] border border-[hsl(var(--border))]"
+                    className="pl-10 bg-white text-gray-900"
+                    value={heroQuery}
+                    onChange={(e) => setHeroQuery(e.target.value)}
                   />
                 </div>
-                <Button className="bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:brightness-95">
+                <Button
+                  type="submit"
+                  className="bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-sm"
+                >
                   Search
                 </Button>
                 <Button
-                  variant="outline"
-                  className="border-[hsl(var(--border))]"
+                  type="button"
+                  variant="ghost"
+                  className="border border-white/30 text-white"
+                  onClick={() => navigate("/student/clubs")}
                 >
                   Explore
                 </Button>
-              </div>
+              </form>
             </div>
           </div>
         </div>
@@ -177,7 +205,7 @@ export default function StudentHome() {
             {featuredClubs.map((club) => (
               <Card
                 key={club.id}
-                className="overflow-hidden hover:shadow-lg transition-shadow"
+                className="overflow-hidden hover:shadow-2xl transition-shadow"
               >
                 <img
                   src={club.image || "/placeholder.svg"}

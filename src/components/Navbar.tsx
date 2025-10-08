@@ -13,14 +13,18 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 export default function Navbar() {
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b bg-white/90 backdrop-blur-sm shadow-md">
       <div className="container flex h-16 items-center justify-between px-4">
-        <div className="flex items-center gap-2">
+        <Link
+          to="/"
+          className="flex items-center gap-2"
+          aria-label="Go to homepage"
+        >
           <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
             <span className="text-primary-foreground font-bold text-lg">U</span>
           </div>
           <span className="font-semibold text-lg">UTH Club System</span>
-        </div>
+        </Link>
 
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" className="relative">
@@ -34,7 +38,12 @@ export default function Navbar() {
             </Link>
           </Button>
           {/* Club Owner Dashboard shortcut */}
-          <Button asChild variant="ghost" size="icon" title="Club Owner Dashboard">
+          <Button
+            asChild
+            variant="ghost"
+            size="icon"
+            title="Club Owner Dashboard"
+          >
             <Link to="/club-owner/dashboard">
               <Building2 className="h-5 w-5" />
             </Link>

@@ -160,7 +160,7 @@ export default function AdminClubs() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {clubs.map((club) => (
+                  {visible.map((club) => (
                     <TableRow key={club.id}>
                       <TableCell className="font-medium">{club.name}</TableCell>
                       <TableCell>{club.category}</TableCell>

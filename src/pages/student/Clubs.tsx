@@ -1,7 +1,6 @@
 import { Search, Filter, Users } from "lucide-react";
 import Navbar from "../../components/Navbar";
 import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
 import {
   Card,
   CardContent,
@@ -9,16 +8,10 @@ import {
   CardHeader,
   CardTitle,
 } from "../../components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../components/ui/select";
 import { Link } from "react-router-dom";
 import SearchAndFilters, { Filters } from "../../components/SearchAndFilters";
 import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 export default function StudentClubs() {
   const clubs = [
@@ -72,8 +65,11 @@ export default function StudentClubs() {
     },
   ];
 
+  const [searchParams] = useSearchParams();
+  const initialQuery = searchParams.get("q") || "";
+
   const [filters, setFilters] = useState<Filters>({
-    query: "",
+    query: initialQuery,
     category: "all",
     sort: "popular",
   });
@@ -118,40 +114,42 @@ export default function StudentClubs() {
           </p>
         </div>
 
-        <SearchAndFilters value={filters} onChange={setFilters} />
+        <div className="surface-muted p-6 rounded-lg">
+          <SearchAndFilters value={filters} onChange={setFilters} />
 
-        {/* Clubs Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {visible.map((club) => (
-            <Card
-              key={club.id}
-              className="overflow-hidden hover:shadow-lg transition-shadow"
-            >
-              <img
-                src={club.image || "/placeholder.svg"}
-                alt={club.name}
-                className="w-full h-48 object-cover"
-              />
-              <CardHeader>
-                <CardTitle>{club.name}</CardTitle>
-                <CardDescription>{club.category}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">
-                  {club.description}
-                </p>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Users className="h-4 w-4" />
-                    <span>{club.members} members</span>
+          {/* Clubs Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {visible.map((club) => (
+              <Card
+                key={club.id}
+                className="overflow-hidden hover:shadow-2xl transition-shadow"
+              >
+                <img
+                  src={club.image || "/placeholder.svg"}
+                  alt={club.name}
+                  className="w-full h-48 object-cover"
+                />
+                <CardHeader>
+                  <CardTitle>{club.name}</CardTitle>
+                  <CardDescription>{club.category}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {club.description}
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Users className="h-4 w-4" />
+                      <span>{club.members} members</span>
+                    </div>
+                    <Button size="sm" asChild>
+                      <Link to={`/student/clubs/${club.id}`}>View Details</Link>
+                    </Button>
                   </div>
-                  <Button size="sm" asChild>
-                    <Link to={`/student/clubs/${club.id}`}>View Details</Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
     </div>
