@@ -61,27 +61,55 @@ export default function StudentHome() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[hsl(var(--background))]">
       <Navbar />
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-b from-primary/10 to-background py-20">
+      <section className="py-24">
         <div className="container px-4">
-          <div className="max-w-3xl mx-auto text-center">
-            <h1 className="text-4xl font-bold tracking-tight mb-4 text-balance">
-              Discover Your Community at UTH
-            </h1>
-            <p className="text-lg text-muted-foreground mb-8 text-pretty">
-              Join clubs, attend events, and connect with students who share
-              your interests
-            </p>
+          <div className="relative overflow-hidden rounded-2xl hero-gradient p-12">
+            {/* decorative blobs */}
+            <svg
+              className="absolute -top-10 -left-10 opacity-30"
+              width="220"
+              height="220"
+              viewBox="0 0 200 200"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden
+            >
+              <g fill="none">
+                <circle cx="50" cy="50" r="60" fill="rgba(0,134,137,0.12)" />
+                <circle cx="150" cy="140" r="50" fill="rgba(255,107,74,0.08)" />
+              </g>
+            </svg>
 
-            <div className="flex gap-2 max-w-xl mx-auto">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search for clubs..." className="pl-10" />
+            <div className="max-w-3xl mx-auto text-center relative z-10">
+              <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-4 text-[hsl(var(--foreground))]">
+                Discover Your Community at UTH
+              </h1>
+              <p className="text-lg text-[hsl(var(--muted-foreground))] mb-8">
+                Join clubs, attend events, and connect with students who share
+                your interests
+              </p>
+
+              <div className="flex gap-3 max-w-xl mx-auto">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
+                  <Input
+                    placeholder="Search for clubs..."
+                    className="pl-10 bg-[hsl(var(--card))] border border-[hsl(var(--border))]"
+                  />
+                </div>
+                <Button className="bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:brightness-95">
+                  Search
+                </Button>
+                <Button
+                  variant="outline"
+                  className="border-[hsl(var(--border))]"
+                >
+                  Explore
+                </Button>
               </div>
-              <Button>Search</Button>
             </div>
           </div>
         </div>
@@ -91,7 +119,7 @@ export default function StudentHome() {
       <section className="py-12 border-b">
         <div className="container px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card>
+            <Card className="card-accent">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">
                   Active Clubs
@@ -106,7 +134,7 @@ export default function StudentHome() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="card-accent">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">
                   Upcoming Events
@@ -119,7 +147,7 @@ export default function StudentHome() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="card-accent">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">
                   Total Members
