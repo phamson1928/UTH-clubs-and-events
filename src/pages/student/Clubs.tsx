@@ -17,6 +17,8 @@ import {
   SelectValue,
 } from "../../components/ui/select";
 import { Link } from "react-router-dom";
+import SearchAndFilters, { Filters } from "../../components/SearchAndFilters";
+import { useMemo, useState } from "react";
 
 export default function StudentClubs() {
   const clubs = [
@@ -70,6 +72,40 @@ export default function StudentClubs() {
     },
   ];
 
+  const [filters, setFilters] = useState<Filters>({
+    query: "",
+    category: "all",
+    sort: "popular",
+  });
+
+  const visible = useMemo(() => {
+    let items = clubs.slice();
+
+    if (filters.query.trim()) {
+      const q = filters.query.toLowerCase();
+      items = items.filter(
+        (c) =>
+          c.name.toLowerCase().includes(q) ||
+          c.description.toLowerCase().includes(q) ||
+          c.category.toLowerCase().includes(q)
+      );
+    }
+
+    if (filters.category && filters.category !== "all") {
+      items = items.filter((c) => c.category === filters.category);
+    }
+
+    if (filters.sort === "name") {
+      items.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (filters.sort === "newest") {
+      items.sort((a, b) => b.id - a.id);
+    } else {
+      items.sort((a, b) => b.members - a.members);
+    }
+
+    return items;
+  }, [clubs, filters]);
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -82,42 +118,11 @@ export default function StudentClubs() {
           </p>
         </div>
 
-        {/* Search and Filters */}
-        <div className="flex flex-col md:flex-row gap-4 mb-8">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search clubs..." className="pl-10" />
-          </div>
-
-          <Select>
-            <SelectTrigger className="w-full md:w-48">
-              <Filter className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              <SelectItem value="technology">Technology</SelectItem>
-              <SelectItem value="arts">Arts</SelectItem>
-              <SelectItem value="sports">Sports</SelectItem>
-              <SelectItem value="music">Music</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select>
-            <SelectTrigger className="w-full md:w-48">
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="popular">Most Popular</SelectItem>
-              <SelectItem value="newest">Newest</SelectItem>
-              <SelectItem value="name">Name (A-Z)</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <SearchAndFilters value={filters} onChange={setFilters} />
 
         {/* Clubs Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {clubs.map((club) => (
+          {visible.map((club) => (
             <Card
               key={club.id}
               className="overflow-hidden hover:shadow-lg transition-shadow"

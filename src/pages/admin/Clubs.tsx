@@ -17,6 +17,8 @@ import {
   CardTitle,
 } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
+import SearchAndFilters, { Filters } from "../../components/SearchAndFilters";
+import { useMemo, useState } from "react";
 import { Badge } from "../../components/ui/badge";
 import {
   Table,
@@ -84,6 +86,40 @@ export default function AdminClubs() {
     },
   ];
 
+  const [filters, setFilters] = useState<Filters>({
+    query: "",
+    category: "all",
+    sort: "popular",
+  });
+
+  const visible = useMemo(() => {
+    let items = clubs.slice();
+
+    if (filters.query.trim()) {
+      const q = filters.query.toLowerCase();
+      items = items.filter(
+        (c) =>
+          c.name.toLowerCase().includes(q) ||
+          c.category.toLowerCase().includes(q) ||
+          (c.owner && c.owner.toLowerCase().includes(q))
+      );
+    }
+
+    if (filters.category && filters.category !== "all") {
+      items = items.filter((c) => c.category === filters.category);
+    }
+
+    if (filters.sort === "name") {
+      items.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (filters.sort === "newest") {
+      items.sort((a, b) => b.id - a.id);
+    } else {
+      items.sort((a, b) => b.members - a.members);
+    }
+
+    return items;
+  }, [clubs, filters]);
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -109,10 +145,7 @@ export default function AdminClubs() {
             </CardHeader>
             <CardContent>
               <div className="mb-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Search clubs..." className="pl-10" />
-                </div>
+                <SearchAndFilters value={filters} onChange={setFilters} />
               </div>
 
               <Table>

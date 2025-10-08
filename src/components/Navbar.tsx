@@ -1,5 +1,6 @@
-import { Bell, User } from "lucide-react"
-import { Button } from "./ui/button"
+import { Bell, User, LayoutDashboard, Building2 } from "lucide-react";
+import { Button } from "./ui/button";
+import { Link } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,8 +8,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "./ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
+} from "./ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 export default function Navbar() {
   return (
@@ -26,12 +27,30 @@ export default function Navbar() {
             <Bell className="h-5 w-5" />
             <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive" />
           </Button>
+          {/* Admin Dashboard shortcut */}
+          <Button asChild variant="ghost" size="icon" title="Admin Dashboard">
+            <Link to="/admin/dashboard">
+              <LayoutDashboard className="h-5 w-5" />
+            </Link>
+          </Button>
+          {/* Club Owner Dashboard shortcut */}
+          <Button asChild variant="ghost" size="icon" title="Club Owner Dashboard">
+            <Link to="/club-owner/dashboard">
+              <Building2 className="h-5 w-5" />
+            </Link>
+          </Button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+              <Button
+                variant="ghost"
+                className="relative h-10 w-10 rounded-full"
+              >
                 <Avatar>
-                  <AvatarImage src="/placeholder.svg?height=40&width=40" alt="User" />
+                  <AvatarImage
+                    src="/placeholder.svg?height=40&width=40"
+                    alt="User"
+                  />
                   <AvatarFallback>JD</AvatarFallback>
                 </Avatar>
               </Button>
@@ -45,11 +64,13 @@ export default function Navbar() {
               </DropdownMenuItem>
               <DropdownMenuItem>Settings</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive">Log out</DropdownMenuItem>
+              <DropdownMenuItem className="text-destructive">
+                Log out
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
     </header>
-  )
+  );
 }
