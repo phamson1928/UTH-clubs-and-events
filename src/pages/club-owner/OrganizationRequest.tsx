@@ -220,8 +220,8 @@ export default function ClubOwnerOrganizationRequest() {
                           request.status === "approved"
                             ? "default"
                             : request.status === "pending"
-                            ? "secondary"
-                            : "destructive"
+                              ? "secondary"
+                              : "destructive"
                         }
                       >
                         {request.status}

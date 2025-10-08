@@ -1,24 +1,24 @@
-import { Link, useLocation } from "react-router-dom"
-import { cn } from "../lib/utils"
-import type { LucideIcon } from "lucide-react"
+import { Link, useLocation } from "react-router-dom";
+import { cn } from "../lib/utils";
+import type { LucideIcon } from "lucide-react";
 
 interface SidebarProps {
   links: {
-    href: string
-    label: string
-    icon: LucideIcon
-  }[]
+    href: string;
+    label: string;
+    icon: LucideIcon;
+  }[];
 }
 
 export default function Sidebar({ links }: SidebarProps) {
-  const location = useLocation()
+  const location = useLocation();
 
   return (
     <aside className="w-64 border-r bg-muted/40 min-h-[calc(100vh-4rem)]">
       <nav className="flex flex-col gap-2 p-4">
         {links.map((link) => {
-          const Icon = link.icon
-          const isActive = location.pathname === link.href
+          const Icon = link.icon;
+          const isActive = location.pathname === link.href;
 
           return (
             <Link
@@ -34,9 +34,9 @@ export default function Sidebar({ links }: SidebarProps) {
               <Icon className="h-4 w-4" />
               {link.label}
             </Link>
-          )
+          );
         })}
       </nav>
     </aside>
-  )
+  );
 }

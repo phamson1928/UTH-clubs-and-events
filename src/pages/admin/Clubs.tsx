@@ -101,7 +101,7 @@ export default function AdminClubs() {
         (c) =>
           c.name.toLowerCase().includes(q) ||
           c.category.toLowerCase().includes(q) ||
-          (c.owner && c.owner.toLowerCase().includes(q))
+          (c.owner && c.owner.toLowerCase().includes(q)),
       );
     }
 
