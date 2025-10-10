@@ -1,26 +1,35 @@
 import { Injectable } from '@nestjs/common';
 import { CreateMembershipDto } from './dto/create-membership.dto';
 import { UpdateMembershipDto } from './dto/update-membership.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Membership } from './entities/membership.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class MembershipsService {
-  create(createMembershipDto: CreateMembershipDto) {
-    return 'This action adds a new membership';
+  constructor(
+    @InjectRepository(Membership)
+    private membershipRepository: Repository<Membership>,
+  ) {}
+
+  async create(createMembershipDto: CreateMembershipDto) {
+    const membership = this.membershipRepository.create(createMembershipDto);
+    return this.membershipRepository.save(membership);
   }
 
-  findAll() {
-    return `This action returns all memberships`;
+  async findAll() {
+    return this.membershipRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} membership`;
+  async findOne(id: number) {
+    return this.membershipRepository.findOne({ where: { id } });
   }
 
-  update(id: number, updateMembershipDto: UpdateMembershipDto) {
-    return `This action updates a #${id} membership`;
+  async update(id: number, updateMembershipDto: UpdateMembershipDto) {
+    return this.membershipRepository.update(id, updateMembershipDto);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} membership`;
+  async remove(id: number) {
+    return this.membershipRepository.delete(id);
   }
 }

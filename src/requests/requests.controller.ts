@@ -22,7 +22,12 @@ export class RequestsController {
 
   @Get()
   findAll() {
-    return this.requestsService.findAll();
+    return this.requestsService.findAllApplications();
+  }
+
+  @Get('events')
+  findAllEvents() {
+    return this.requestsService.findAllEventRequests();
   }
 
   @Get(':id')

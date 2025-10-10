@@ -22,6 +22,13 @@ export class CreateEventDto {
   @IsNotEmpty()
   date: Date;
 
+  @IsNotEmpty()
+  event_image: string;
+
+  @IsNotEmpty()
+  @IsString()
+  activities: string;
+
   @IsEnum(['pending', 'approved', 'rejected', 'canceled'])
   @IsOptional()
   status?: 'pending' | 'approved' | 'rejected' | 'canceled';

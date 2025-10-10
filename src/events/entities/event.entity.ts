@@ -25,11 +25,23 @@ export class Event {
   @Column({ default: 'pending' })
   status: 'pending' | 'approved' | 'rejected' | 'canceled';
 
+  @Column()
+  event_image: string;
+
   @CreateDateColumn()
   createdAt: Date;
 
   @Column()
   date: Date;
+
+  @Column({ default: 0 })
+  attending_users_number: number;
+
+  @Column()
+  activities: string;
+
+  @Column()
+  location: string;
 
   @OneToMany(() => Request, (request) => request.event)
   requests: Request[];

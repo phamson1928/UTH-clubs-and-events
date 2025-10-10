@@ -31,6 +31,9 @@ export class Club {
   @CreateDateColumn()
   created_at: Date;
 
+  @Column()
+  club_image: string;
+
   @OneToMany(() => Membership, (membership) => membership.club)
   memberships: Membership[];
 

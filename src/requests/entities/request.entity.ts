@@ -9,7 +9,7 @@ export class Request {
   id: number;
 
   @Column()
-  type: 'create' | 'cancel' | 'join'; // join = user gửi request join club
+  type: 'create' | 'join'; // join = user gửi request join club
 
   @ManyToOne(() => User, { nullable: true })
   user: User; // chỉ dùng khi request do user gửi
@@ -20,6 +20,15 @@ export class Request {
   @ManyToOne(() => Event, (event) => event.requests, { nullable: true })
   event: Event; // nếu request liên quan event
 
+  @Column()
+  reason: string;
+
+  @Column()
+  experiance: string;
+
+  @Column()
+  apply_date: Date;
+
   @Column({ default: 'pending' })
-  adminStatus: 'pending' | 'approved' | 'rejected';
+  request_status: 'pending' | 'approved' | 'rejected';
 }

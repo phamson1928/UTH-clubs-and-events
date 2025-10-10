@@ -18,16 +18,19 @@ export class UsersService {
   }
 
   async findAll() {
-    return this.usersRepository.find();
+    return this.usersRepository.find({
+      relations: ['memberships', 'ownedClubs'],
+    });
   }
 
   async findOne(id: number) {
-    return this.usersRepository.findOne({ where: { id } });
+    return this.usersRepository.findOne({
+      where: { id },
+    });
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
-    await this.usersRepository.update(id, updateUserDto);
-    return this.usersRepository.findOne({ where: { id } });
+    return await this.usersRepository.update(id, updateUserDto);
   }
 
   remove(id: number) {
