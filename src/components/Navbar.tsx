@@ -1,4 +1,4 @@
-import { Bell, User, LayoutDashboard, Building2 } from "lucide-react";
+import { Bell, User, LayoutDashboard, Building2, LogIn, UserPlus } from "lucide-react";
 import { Button } from "./ui/button";
 import { Link } from "react-router-dom";
 import {
@@ -27,6 +27,24 @@ export default function Navbar() {
         </Link>
 
         <div className="flex items-center gap-4">
+          {/* Login and Register Buttons */}
+          <div className="flex items-center gap-2">
+            <Button asChild variant="outline" size="sm">
+              <Link to="/login" className="flex items-center gap-2">
+                <LogIn className="h-4 w-4" />
+                <span>Đăng nhập</span>
+              </Link>
+            </Button>
+            <Button asChild size="sm">
+              <Link to="/register" className="flex items-center gap-2">
+                <UserPlus className="h-4 w-4" />
+                <span>Đăng ký</span>
+              </Link>
+            </Button>
+          </div>
+          
+          <div className="h-6 w-px bg-gray-200 mx-2"></div>
+          
           <Button variant="ghost" size="icon" className="relative">
             <Bell className="h-5 w-5" />
             <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive" />

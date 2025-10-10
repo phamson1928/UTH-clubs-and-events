@@ -16,7 +16,6 @@ import {
   CardHeader,
   CardTitle,
 } from "../../components/ui/card";
-import { Input } from "../../components/ui/input";
 import SearchAndFilters, { Filters } from "../../components/SearchAndFilters";
 import { useMemo, useState } from "react";
 import { Badge } from "../../components/ui/badge";
@@ -101,7 +100,7 @@ export default function AdminClubs() {
         (c) =>
           c.name.toLowerCase().includes(q) ||
           c.category.toLowerCase().includes(q) ||
-          (c.owner && c.owner.toLowerCase().includes(q)),
+          (c.owner && c.owner.toLowerCase().includes(q))
       );
     }
 

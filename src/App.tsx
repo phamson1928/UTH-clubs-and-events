@@ -1,6 +1,10 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "./components/ui/toaster";
 
+// Auth Pages
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
+
 // Student Pages
 import StudentHome from "./pages/student/Home";
 import StudentClubs from "./pages/student/Clubs";
@@ -19,11 +23,16 @@ import AdminDashboard from "./pages/admin/Dashboard";
 import AdminClubs from "./pages/admin/Clubs";
 import AdminEvents from "./pages/admin/Events";
 import AdminRequests from "./pages/admin/Requests";
+import AdminUsers from "./pages/admin/Users";
 
 function App() {
   return (
     <Router>
       <Routes>
+        {/* Auth Routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        
         {/* Student Routes */}
         <Route path="/" element={<StudentHome />} />
         <Route path="/student/clubs" element={<StudentClubs />} />
@@ -48,6 +57,7 @@ function App() {
         <Route path="/admin/clubs" element={<AdminClubs />} />
         <Route path="/admin/events" element={<AdminEvents />} />
         <Route path="/admin/requests" element={<AdminRequests />} />
+        <Route path="/admin/users" element={<AdminUsers />} />
       </Routes>
       <Toaster />
     </Router>
