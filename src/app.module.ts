@@ -13,6 +13,7 @@ import { MembershipsModule } from './memberships/memberships.module';
 import { EventsModule } from './events/events.module';
 import { RequestsModule } from './requests/requests.module';
 import { Request } from './requests/entities/request.entity';
+import { AuthModule } from './auth/auth.module';
 @Module({
   imports: [
     ConfigModule.forRoot(), // 👈 bắt buộc phải có dòng này
@@ -32,6 +33,7 @@ import { Request } from './requests/entities/request.entity';
     MembershipsModule,
     EventsModule,
     RequestsModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
