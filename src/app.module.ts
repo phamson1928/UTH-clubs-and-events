@@ -11,8 +11,6 @@ import { Event } from './events/entities/event.entity';
 import { ClubsModule } from './clubs/clubs.module';
 import { MembershipsModule } from './memberships/memberships.module';
 import { EventsModule } from './events/events.module';
-import { RequestsModule } from './requests/requests.module';
-import { Request } from './requests/entities/request.entity';
 import { AuthModule } from './auth/auth.module';
 @Module({
   imports: [
@@ -26,13 +24,12 @@ import { AuthModule } from './auth/auth.module';
       database: process.env.DB_NAME, // tên database bạn vừa tạo
       autoLoadEntities: true,
       synchronize: true, // Tự tạo bảng khi chạy (chỉ dùng trong dev)
-      entities: [User, Club, Membership, Event, Request],
+      entities: [User, Club, Membership, Event],
     }),
     UsersModule,
     ClubsModule,
     MembershipsModule,
     EventsModule,
-    RequestsModule,
     AuthModule,
   ],
   controllers: [AppController],

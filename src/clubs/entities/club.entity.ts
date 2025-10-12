@@ -9,7 +9,6 @@ import {
 import { User } from 'src/users/entities/user.entity';
 import { Membership } from 'src/memberships/entities/membership.entity';
 import { Event } from 'src/events/entities/event.entity';
-import { Request } from 'src/requests/entities/request.entity';
 
 @Entity()
 export class Club {
@@ -39,7 +38,4 @@ export class Club {
 
   @OneToMany(() => Event, (event) => event.club)
   events: Event[];
-
-  @OneToMany(() => Request, (request) => request.club)
-  requests: Request[];
 }

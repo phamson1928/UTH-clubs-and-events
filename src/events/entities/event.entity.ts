@@ -1,12 +1,10 @@
 import { Club } from 'src/clubs/entities/club.entity';
-import { Request } from 'src/requests/entities/request.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
   CreateDateColumn,
-  OneToMany,
 } from 'typeorm';
 @Entity()
 export class Event {
@@ -42,7 +40,4 @@ export class Event {
 
   @Column()
   location: string;
-
-  @OneToMany(() => Request, (request) => request.event)
-  requests: Request[];
 }
