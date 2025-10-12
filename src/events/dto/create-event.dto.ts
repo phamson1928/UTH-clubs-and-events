@@ -1,10 +1,4 @@
-import {
-  IsString,
-  IsNotEmpty,
-  IsEnum,
-  IsOptional,
-  IsDate,
-} from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsDate } from 'class-validator';
 
 export class CreateEventDto {
   @IsNotEmpty()
@@ -28,8 +22,4 @@ export class CreateEventDto {
   @IsNotEmpty()
   @IsString()
   activities: string;
-
-  @IsEnum(['pending', 'approved', 'rejected', 'canceled'])
-  @IsOptional()
-  status?: 'pending' | 'approved' | 'rejected' | 'canceled';
 }
