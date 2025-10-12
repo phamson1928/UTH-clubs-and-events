@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsEnum } from 'class-validator';
+import { IsNotEmpty } from 'class-validator';
 
 export class CreateMembershipDto {
   @IsNotEmpty()
@@ -7,6 +7,12 @@ export class CreateMembershipDto {
   @IsNotEmpty()
   userId: number;
 
-  @IsEnum(['pending', 'approved', 'rejected'])
-  status: 'pending' | 'approved' | 'rejected';
+  @IsNotEmpty()
+  join_reason: string;
+
+  @IsNotEmpty()
+  skills: string;
+
+  @IsNotEmpty()
+  promise: string;
 }

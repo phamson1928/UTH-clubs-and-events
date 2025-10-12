@@ -14,11 +14,11 @@ export class ClubsService {
 
   async create(createClubDto: CreateClubDto) {
     const club = this.clubsRepository.create(createClubDto);
-    return this.clubsRepository.save(club);
+    return await this.clubsRepository.save(club);
   }
 
   async findAll() {
-    return this.clubsRepository
+    return await this.clubsRepository
       .createQueryBuilder('clubs')
       .leftJoinAndSelect('clubs.owner', 'owner')
       .loadRelationCountAndMap('clubs.eventsCount', 'clubs.events')
@@ -27,7 +27,7 @@ export class ClubsService {
   }
 
   async findOne(id: number) {
-    return this.clubsRepository
+    return await this.clubsRepository
       .createQueryBuilder('clubs')
       .leftJoinAndSelect('clubs.owner', 'owner')
       .leftJoinAndSelect('clubs.memberships', 'memberships')
@@ -37,11 +37,10 @@ export class ClubsService {
   }
 
   async update(id: number, updateClubDto: UpdateClubDto) {
-    await this.clubsRepository.update(id, updateClubDto);
-    return this.findOne(id);
+    return await this.clubsRepository.update(id, updateClubDto);
   }
 
   async remove(id: number) {
-    return this.clubsRepository.delete(id);
+    return await this.clubsRepository.delete(id);
   }
 }

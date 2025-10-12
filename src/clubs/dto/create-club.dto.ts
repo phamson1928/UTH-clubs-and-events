@@ -17,5 +17,5 @@ export class CreateClubDto {
   club_image: string;
 
   @IsNotEmpty()
-  ownerId: number; // id của user sở hữu club
+  ownerId: number;
 }
