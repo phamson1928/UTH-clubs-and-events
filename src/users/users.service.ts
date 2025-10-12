@@ -12,19 +12,19 @@ export class UsersService {
     private usersRepository: Repository<User>,
   ) {}
 
-  create(createUserDto: CreateUserDto) {
+  async create(createUserDto: CreateUserDto) {
     const user = this.usersRepository.create(createUserDto);
-    return this.usersRepository.save(user);
+    return await this.usersRepository.save(user);
   }
 
   async findAll() {
-    return this.usersRepository.find({
+    return await this.usersRepository.find({
       relations: ['memberships', 'ownedClubs'],
     });
   }
 
   async findOne(id: number) {
-    return this.usersRepository.findOne({
+    return await this.usersRepository.findOne({
       where: { id },
     });
   }
@@ -33,11 +33,11 @@ export class UsersService {
     return await this.usersRepository.update(id, updateUserDto);
   }
 
-  remove(id: number) {
-    return this.usersRepository.delete(id);
+  async remove(id: number) {
+    return await this.usersRepository.delete(id);
   }
 
-  findByEmail(email: string) {
-    return this.usersRepository.findOne({ where: { email } });
+  async findByEmail(email: string) {
+    return await this.usersRepository.findOne({ where: { email } });
   }
 }
