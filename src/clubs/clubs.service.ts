@@ -20,6 +20,7 @@ export class ClubsService {
   async findAll() {
     return await this.clubsRepository
       .createQueryBuilder('clubs')
+      .orderBy('clubs.created_at', 'DESC')
       .leftJoinAndSelect('clubs.owner', 'owner')
       .loadRelationCountAndMap('clubs.eventsCount', 'clubs.events')
       .loadRelationCountAndMap('clubs.membershipCount', 'clubs.memberships')
