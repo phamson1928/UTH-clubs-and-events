@@ -80,7 +80,7 @@ export default function StudentHome() {
       <section className="py-24">
         <div className="container px-4">
           <div
-            className="relative overflow-hidden rounded-2xl p-12"
+            className="relative overflow-hidden p-12"
             style={{
               background:
                 "linear-gradient(135deg, hsl(var(--primary)) 0%, rgba(0,134,137,0.85) 100%)",
@@ -147,7 +147,7 @@ export default function StudentHome() {
       <section className="py-12 border-b">
         <div className="container px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="card-accent">
+            <Card className="card-accent rounded-none">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">
                   Active Clubs
@@ -162,7 +162,7 @@ export default function StudentHome() {
               </CardContent>
             </Card>
 
-            <Card className="card-accent">
+            <Card className="card-accent rounded-none">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">
                   Upcoming Events
@@ -175,7 +175,7 @@ export default function StudentHome() {
               </CardContent>
             </Card>
 
-            <Card className="card-accent">
+            <Card className="card-accent rounded-none">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">
                   Total Members
@@ -205,7 +205,7 @@ export default function StudentHome() {
             {featuredClubs.map((club) => (
               <Card
                 key={club.id}
-                className="overflow-hidden hover:shadow-2xl transition-shadow"
+                className="overflow-hidden hover:shadow-2xl transition-shadow rounded-none"
               >
                 <img
                   src={club.image || "/placeholder.svg"}
@@ -240,7 +240,7 @@ export default function StudentHome() {
 
           <div className="grid gap-4">
             {upcomingEvents.map((event) => (
-              <Card key={event.id}>
+              <Card key={event.id} className="rounded-none">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div>
