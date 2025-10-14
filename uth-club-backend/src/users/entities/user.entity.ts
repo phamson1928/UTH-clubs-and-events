@@ -25,6 +25,9 @@ export class User {
   @Column({ default: 'user' })
   role: 'user' | 'admin' | 'club_owner';
 
+  @Column()
+  mssv: number;
+
   @CreateDateColumn()
   createdAt: Date;
 
