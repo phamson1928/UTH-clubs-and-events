@@ -5,6 +5,7 @@ import {
   FileText,
   Search,
   MoreVertical,
+  Users,
 } from "lucide-react";
 import Navbar from "../../components/Navbar";
 import Sidebar from "../../components/Sidebar";
@@ -39,6 +40,7 @@ const sidebarLinks = [
   { href: "/admin/clubs", label: "Clubs", icon: Building2 },
   { href: "/admin/events", label: "Events", icon: Calendar },
   { href: "/admin/requests", label: "Requests", icon: FileText },
+  { href: "/admin/users", label: "Users", icon: Users },
 ];
 
 export default function AdminClubs() {
