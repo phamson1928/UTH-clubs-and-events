@@ -20,6 +20,15 @@ export class UsersService {
   async findAll() {
     return await this.usersRepository.find({
       relations: ['memberships', 'ownedClubs'],
+      select: [
+        'id',
+        'name',
+        'email',
+        'role',
+        'createdAt',
+        'memberships',
+        'ownedClubs',
+      ],
     });
   }
 
