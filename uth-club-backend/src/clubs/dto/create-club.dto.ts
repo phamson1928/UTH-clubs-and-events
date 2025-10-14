@@ -1,0 +1,21 @@
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+
+export class CreateClubDto {
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+
+  @IsString()
+  @IsOptional()
+  description?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  category: string;
+
+  @IsNotEmpty()
+  club_image: string;
+
+  @IsNotEmpty()
+  ownerId: number;
+}
