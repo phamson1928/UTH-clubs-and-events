@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Get,
 } from '@nestjs/common';
 import { MembershipsService } from './memberships.service';
 import { CreateMembershipDto } from './dto/create-membership.dto';
@@ -17,6 +18,13 @@ import { Roles } from 'common/decorators/roles.decorator';
 @Controller('memberships')
 export class MembershipsController {
   constructor(private readonly membershipsService: MembershipsService) {}
+
+  @Get('request')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('club_owner')
+  findAllRequests() {
+    return this.membershipsService.findAllRequests();
+  }
 
   @Post('request')
   @UseGuards(JwtAuthGuard, RolesGuard)
