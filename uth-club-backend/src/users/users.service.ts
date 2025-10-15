@@ -18,24 +18,24 @@ export class UsersService {
   }
 
   async findAll() {
-    return await this.usersRepository.find({
-      relations: ['memberships', 'ownedClubs'],
-      select: [
-        'id',
-        'name',
-        'email',
-        'role',
-        'createdAt',
-        'memberships',
-        'ownedClubs',
-      ],
-    });
-  }
-
-  async findOne(id: number) {
-    return await this.usersRepository.findOne({
-      where: { id },
-    });
+    return await this.usersRepository
+      .createQueryBuilder('users')
+      .leftJoinAndSelect('users.memberships', 'memberships')
+      .leftJoinAndSelect('users.ownedClubs', 'ownedClubs')
+      .select([
+        'users.id',
+        'users.name',
+        'users.email',
+        'users.role',
+        'users.mssv',
+        'users.createdAt',
+        'memberships.id',
+        'memberships.status',
+        'ownedClubs.id',
+        'ownedClubs.name',
+      ])
+      .where('users.isVerified = :isVerified', { isVerified: true })
+      .getMany();
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
