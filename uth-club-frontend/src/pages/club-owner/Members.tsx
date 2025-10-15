@@ -4,7 +4,6 @@ import {
   FileText,
   Calendar,
   Send,
-  Building2,
   Search,
   MoreVertical,
 } from "lucide-react";
@@ -45,11 +44,6 @@ const sidebarLinks = [
   { href: "/club-owner/applications", label: "Applications", icon: FileText },
   { href: "/club-owner/events", label: "Events", icon: Calendar },
   { href: "/club-owner/requests", label: "Requests", icon: Send },
-  {
-    href: "/club-owner/organization-request",
-    label: "Organization Request",
-    icon: Building2,
-  },
 ];
 
 export default function ClubOwnerMembers() {

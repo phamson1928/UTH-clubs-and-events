@@ -4,7 +4,6 @@ import {
   LayoutDashboard,
   Building2,
   Calendar,
-  FileText,
   Users as UsersIcon,
   Search,
   MoreVertical,
@@ -67,7 +66,6 @@ const sidebarLinks = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/clubs", label: "Clubs", icon: Building2 },
   { href: "/admin/events", label: "Events", icon: Calendar },
-  { href: "/admin/requests", label: "Requests", icon: FileText },
   { href: "/admin/users", label: "Users", icon: UsersIcon, active: true },
 ];
 
