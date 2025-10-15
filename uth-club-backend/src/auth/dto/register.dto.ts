@@ -13,5 +13,5 @@ export class RegisterDto {
   password: string;
 
   @IsNotEmpty()
-  studentId: string;
+  mssv: string;
 }

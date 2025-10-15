@@ -28,6 +28,12 @@ export class User {
   @Column()
   mssv: number;
 
+  @Column({ default: false })
+  isVerified: boolean;
+
+  @Column({ nullable: true })
+  verificationToken: string;
+
   @CreateDateColumn()
   createdAt: Date;
 

@@ -16,4 +16,8 @@ export class CreateUserDto {
   @IsNumber()
   @IsNotEmpty()
   mssv: number;
+
+  @IsString()
+  @IsNotEmpty()
+  verificationToken: string;
 }

@@ -1,4 +1,3 @@
-// src/auth/auth.service.ts
 import {
   Injectable,
   BadRequestException,
@@ -9,12 +8,15 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { randomUUID } from 'crypto';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
+    private mailService: MailService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -22,9 +24,13 @@ export class AuthService {
     if (userExists) throw new BadRequestException('Email already registered');
 
     const hashed = await bcrypt.hash(dto.password, 10);
+    const verificationToken = randomUUID();
     const newUser = await this.usersService.create({
-      ...dto,
+      name: dto.name,
+      email: dto.email,
       password: hashed,
+      mssv: Number(dto.mssv),
+      verificationToken: verificationToken,
     });
 
     const token = this.jwtService.sign({
@@ -32,6 +38,11 @@ export class AuthService {
       email: newUser.email,
       role: newUser.role,
     });
+
+    await this.mailService.sendVerificationEmail(
+      newUser.email,
+      verificationToken,
+    );
     return { user: newUser, token };
   }
 
@@ -48,5 +59,17 @@ export class AuthService {
       role: user.role,
     });
     return { user, token };
+  }
+
+  async verifyEmail(token: string) {
+    const user = await this.usersService.findByVerificationToken(token);
+    if (!user) throw new BadRequestException('Token không hợp lệ');
+
+    await this.usersService.update(user.id, {
+      isVerified: true,
+      verificationToken: '',
+    });
+
+    return { message: 'Xác thực tài khoản thành công ' };
   }
 }

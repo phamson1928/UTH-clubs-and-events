@@ -49,4 +49,10 @@ export class UsersService {
   async findByEmail(email: string) {
     return await this.usersRepository.findOne({ where: { email } });
   }
+
+  async findByVerificationToken(token: string) {
+    return this.usersRepository.findOne({
+      where: { verificationToken: token },
+    });
+  }
 }

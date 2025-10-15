@@ -12,8 +12,32 @@ import { ClubsModule } from './clubs/clubs.module';
 import { MembershipsModule } from './memberships/memberships.module';
 import { EventsModule } from './events/events.module';
 import { AuthModule } from './auth/auth.module';
+import { MailerModule } from '@nestjs-modules/mailer';
+import { join } from 'path';
+import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 @Module({
   imports: [
+    MailerModule.forRoot({
+      transport: {
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false,
+        auth: {
+          user: 'pson4282@gmail.com',
+          pass: 'dvdg qjpp hpdz zdxj', // dùng App Password, không dùng password thật!
+        },
+      },
+      defaults: {
+        from: '"UTH Clubs" <no-reply@pson4282@gmail.com>',
+      },
+      template: {
+        dir: join(__dirname, 'mail', 'templates'),
+        adapter: new HandlebarsAdapter(),
+        options: {
+          strict: true,
+        },
+      },
+    }),
     ConfigModule.forRoot(), // 👈 bắt buộc phải có dòng này
     TypeOrmModule.forRoot({
       type: 'postgres',
