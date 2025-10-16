@@ -19,22 +19,20 @@ export class UsersService {
 
   async findAll() {
     return await this.usersRepository
-      .createQueryBuilder('users')
-      .leftJoinAndSelect('users.memberships', 'memberships')
-      .leftJoinAndSelect('users.ownedClubs', 'ownedClubs')
+      .createQueryBuilder('user')
+      .leftJoin('user.memberships', 'membership')
+      .leftJoin('user.ownedClubs', 'club')
       .select([
-        'users.id',
-        'users.name',
-        'users.email',
-        'users.role',
-        'users.mssv',
-        'users.createdAt',
-        'memberships.id',
-        'memberships.status',
-        'ownedClubs.id',
-        'ownedClubs.name',
+        'user.id',
+        'user.name',
+        'user.email',
+        'user.role',
+        'user.mssv',
+        'user.createdAt',
       ])
-      .where('users.isVerified = :isVerified', { isVerified: true })
+      .addSelect(['membership.id', 'membership.status'])
+      .addSelect(['club.id', 'club.name'])
+      .where('user.isVerified = :isVerified', { isVerified: true })
       .getMany();
   }
 

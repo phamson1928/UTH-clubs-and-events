@@ -40,10 +40,24 @@ export class EventsController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
+  @Roles('club_owner')
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateEventDto: UpdateEventDto) {
     return this.eventsService.update(+id, updateEventDto);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Patch(':id/approved')
+  clickApproved(@Param('id') id: string) {
+    return this.eventsService.update(+id, { status: 'approved' });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Patch(':id/rejected')
+  clickRejected(@Param('id') id: string) {
+    return this.eventsService.update(+id, { status: 'rejected' });
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

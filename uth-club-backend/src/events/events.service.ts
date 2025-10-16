@@ -21,14 +21,38 @@ export class EventsService {
 
   async findAll(status?: 'pending' | 'approved' | 'rejected' | 'canceled') {
     if (status) {
-      return await this.eventsRepository.find({
-        where: { status },
-        relations: ['club'],
-      });
+      return await this.eventsRepository
+        .createQueryBuilder('event')
+        .leftJoinAndSelect('event.club', 'club')
+        .select([
+          'event.id',
+          'event.name',
+          'event.description',
+          'event.date',
+          'event.time',
+          'event.location',
+          'event.status',
+          'club.id',
+          'club.name',
+        ])
+        .where('event.status = :status', { status })
+        .getMany();
     }
-    return await this.eventsRepository.find({
-      relations: ['club'],
-    });
+    return await this.eventsRepository
+      .createQueryBuilder('event')
+      .leftJoinAndSelect('event.club', 'club')
+      .select([
+        'event.id',
+        'event.name',
+        'event.description',
+        'event.date',
+        'event.time',
+        'event.location',
+        'event.status',
+        'club.id',
+        'club.name',
+      ])
+      .getMany();
   }
 
   async findOne(id: number) {

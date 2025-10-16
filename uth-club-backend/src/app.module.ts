@@ -15,6 +15,7 @@ import { AuthModule } from './auth/auth.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { join } from 'path';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
+import { StatisticsModule } from './statistics/statistics.module';
 @Module({
   imports: [
     MailerModule.forRoot({
@@ -55,6 +56,7 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
     MembershipsModule,
     EventsModule,
     AuthModule,
+    StatisticsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
