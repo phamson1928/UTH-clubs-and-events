@@ -91,6 +91,15 @@ export default function AdminClubs() {
     sort: "popular",
   });
 
+  const stats = useMemo(() => {
+    const totalClubs = clubs.length;
+    const totalMembers = clubs.reduce((sum, c) => sum + c.members, 0);
+    const avgMembers =
+      totalClubs > 0 ? Math.round(totalMembers / totalClubs) : 0;
+
+    return { totalClubs, totalMembers, avgMembers };
+  }, [clubs]);
+
   const visible = useMemo(() => {
     let items = clubs.slice();
 
@@ -131,6 +140,51 @@ export default function AdminClubs() {
             <p className="text-muted-foreground">Manage all registered clubs</p>
           </div>
 
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Total Clubs
+                </CardTitle>
+                <Building2 className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalClubs}</div>
+                <p className="text-xs text-muted-foreground">
+                  {stats.totalClubs} clubs
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Total Members
+                </CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalMembers}</div>
+                <p className="text-xs text-muted-foreground">
+                  Across all clubs
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Avg Members
+                </CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.avgMembers}</div>
+                <p className="text-xs text-muted-foreground">Per club</p>
+              </CardContent>
+            </Card>
+          </div>
+
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -154,7 +208,6 @@ export default function AdminClubs() {
                     <TableHead>Category</TableHead>
                     <TableHead>Owner</TableHead>
                     <TableHead>Members</TableHead>
-                    <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -165,15 +218,6 @@ export default function AdminClubs() {
                       <TableCell>{club.category}</TableCell>
                       <TableCell>{club.owner}</TableCell>
                       <TableCell>{club.members}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            club.status === "active" ? "default" : "secondary"
-                          }
-                        >
-                          {club.status}
-                        </Badge>
-                      </TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -184,11 +228,6 @@ export default function AdminClubs() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem>View Details</DropdownMenuItem>
                             <DropdownMenuItem>Edit</DropdownMenuItem>
-                            <DropdownMenuItem>
-                              {club.status === "active"
-                                ? "Deactivate"
-                                : "Activate"}
-                            </DropdownMenuItem>
                             <DropdownMenuItem className="text-destructive">
                               Delete
                             </DropdownMenuItem>

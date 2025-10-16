@@ -47,9 +47,15 @@ import {
   DialogTrigger,
 } from "../../components/ui/dialog";
 import { Label } from "../../components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
 
-type UserRole = 'ADMIN' | 'CLUB_LEADER' | 'STUDENT';
+type UserRole = "ADMIN" | "CLUB_LEADER" | "STUDENT";
 
 interface User {
   id: string;
@@ -85,42 +91,42 @@ export default function AdminUsers() {
         // TODO: Replace with actual API call
         // const response = await fetch('/api/users');
         // const data = await response.json();
-        
+
         // Mock data
         const mockUsers: User[] = [
           {
-            id: '1',
-            email: 'admin@example.com',
-            firstName: 'Admin',
-            lastName: 'User',
-            role: 'ADMIN',
+            id: "1",
+            email: "admin@example.com",
+            firstName: "Admin",
+            lastName: "User",
+            role: "ADMIN",
             isActive: true,
-            createdAt: '2023-01-01T00:00:00Z',
+            createdAt: "2023-01-01T00:00:00Z",
           },
           {
-            id: '2',
-            email: 'leader@example.com',
-            firstName: 'Club',
-            lastName: 'Leader',
-            role: 'CLUB_LEADER',
+            id: "2",
+            email: "leader@example.com",
+            firstName: "Club",
+            lastName: "Leader",
+            role: "CLUB_LEADER",
             isActive: true,
-            createdAt: '2023-02-15T00:00:00Z',
+            createdAt: "2023-02-15T00:00:00Z",
           },
           {
-            id: '3',
-            email: 'student@example.com',
-            firstName: 'John',
-            lastName: 'Doe',
-            studentId: '65000001',
-            role: 'STUDENT',
+            id: "3",
+            email: "student@example.com",
+            firstName: "John",
+            lastName: "Doe",
+            studentId: "65000001",
+            role: "STUDENT",
             isActive: true,
-            createdAt: '2023-03-20T00:00:00Z',
+            createdAt: "2023-03-20T00:00:00Z",
           },
         ];
-        
+
         setUsers(mockUsers);
       } catch (error) {
-        console.error('Error fetching users:', error);
+        console.error("Error fetching users:", error);
       } finally {
         setIsLoading(false);
       }
@@ -129,11 +135,13 @@ export default function AdminUsers() {
     fetchUsers();
   }, []);
 
-  const filteredUsers = users.filter(user => {
+  const filteredUsers = users.filter((user) => {
     const searchLower = searchTerm.toLowerCase();
     return (
       user.email.toLowerCase().includes(searchLower) ||
-      `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchLower) ||
+      `${user.firstName} ${user.lastName}`
+        .toLowerCase()
+        .includes(searchLower) ||
       (user.studentId && user.studentId.includes(searchTerm)) ||
       user.role.toLowerCase().includes(searchLower)
     );
@@ -145,13 +153,13 @@ export default function AdminUsers() {
   };
 
   const handleDelete = async (userId: string) => {
-    if (window.confirm('Are you sure you want to delete this user?')) {
+    if (window.confirm("Are you sure you want to delete this user?")) {
       try {
         // TODO: Replace with actual API call
         // await fetch(`/api/users/${userId}`, { method: 'DELETE' });
-        setUsers(users.filter(user => user.id !== userId));
+        setUsers(users.filter((user) => user.id !== userId));
       } catch (error) {
-        console.error('Error deleting user:', error);
+        console.error("Error deleting user:", error);
       }
     }
   };
@@ -162,11 +170,11 @@ export default function AdminUsers() {
 
     setIsSubmitting(true);
     try {
-      const method = currentUser.id ? 'PUT' : 'POST';
-      const url = currentUser.id 
+      const method = currentUser.id ? "PUT" : "POST";
+      const url = currentUser.id
         ? `/api/users/${currentUser.id}`
-        : '/api/users';
-      
+        : "/api/users";
+
       // TODO: Replace with actual API call
       // const response = await fetch(url, {
       //   method,
@@ -174,19 +182,19 @@ export default function AdminUsers() {
       //   body: JSON.stringify(currentUser),
       // });
       // const data = await response.json();
-      
+
       if (currentUser.id) {
         // Update existing user
-        setUsers(users.map(u => u.id === currentUser.id ? currentUser : u));
+        setUsers(users.map((u) => (u.id === currentUser.id ? currentUser : u)));
       } else {
         // Add new user
         // setUsers([...users, data]);
       }
-      
+
       setIsDialogOpen(false);
       setCurrentUser(null);
     } catch (error) {
-      console.error('Error saving user:', error);
+      console.error("Error saving user:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -197,7 +205,7 @@ export default function AdminUsers() {
     const { name, value, type, checked } = e.target;
     setCurrentUser({
       ...currentUser,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: type === "checkbox" ? checked : value,
     });
   };
 
@@ -213,21 +221,15 @@ export default function AdminUsers() {
               <p className="text-gray-500">Manage all users in the system</p>
             </div>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={() => setCurrentUser(null)}>
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  Add User
-                </Button>
-              </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>
-                    {currentUser?.id ? 'Edit User' : 'Add New User'}
+                    {currentUser?.id ? "Edit User" : "Add New User"}
                   </DialogTitle>
                   <DialogDescription>
-                    {currentUser?.id 
-                      ? 'Update user information'
-                      : 'Add a new user to the system'}
+                    {currentUser?.id
+                      ? "Update user information"
+                      : "Add a new user to the system"}
                   </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -237,7 +239,7 @@ export default function AdminUsers() {
                       <Input
                         id="firstName"
                         name="firstName"
-                        value={currentUser?.firstName || ''}
+                        value={currentUser?.firstName || ""}
                         onChange={handleInputChange}
                         required
                       />
@@ -247,7 +249,7 @@ export default function AdminUsers() {
                       <Input
                         id="lastName"
                         name="lastName"
-                        value={currentUser?.lastName || ''}
+                        value={currentUser?.lastName || ""}
                         onChange={handleInputChange}
                         required
                       />
@@ -259,18 +261,18 @@ export default function AdminUsers() {
                       id="email"
                       name="email"
                       type="email"
-                      value={currentUser?.email || ''}
+                      value={currentUser?.email || ""}
                       onChange={handleInputChange}
                       required
                     />
                   </div>
-                  {(!currentUser?.id || currentUser?.role === 'STUDENT') && (
+                  {(!currentUser?.id || currentUser?.role === "STUDENT") && (
                     <div className="space-y-2">
                       <Label htmlFor="studentId">Student ID</Label>
                       <Input
                         id="studentId"
                         name="studentId"
-                        value={currentUser?.studentId || ''}
+                        value={currentUser?.studentId || ""}
                         onChange={handleInputChange}
                         disabled={!!currentUser?.id}
                       />
@@ -279,9 +281,10 @@ export default function AdminUsers() {
                   <div className="space-y-2">
                     <Label htmlFor="role">Role</Label>
                     <Select
-                      value={currentUser?.role || ''}
-                      onValueChange={(value: UserRole) => 
-                        currentUser && setCurrentUser({ ...currentUser, role: value })
+                      value={currentUser?.role || ""}
+                      onValueChange={(value: UserRole) =>
+                        currentUser &&
+                        setCurrentUser({ ...currentUser, role: value })
                       }
                     >
                       <SelectTrigger>
@@ -319,7 +322,7 @@ export default function AdminUsers() {
                       Cancel
                     </Button>
                     <Button type="submit" disabled={isSubmitting}>
-                      {isSubmitting ? 'Saving...' : 'Save'}
+                      {isSubmitting ? "Saving..." : "Save"}
                     </Button>
                   </DialogFooter>
                 </form>
@@ -360,7 +363,6 @@ export default function AdminUsers() {
                       <TableHead>Email</TableHead>
                       <TableHead>Student ID</TableHead>
                       <TableHead>Role</TableHead>
-                      <TableHead>Status</TableHead>
                       <TableHead>Joined</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -373,23 +375,18 @@ export default function AdminUsers() {
                             {user.firstName} {user.lastName}
                           </TableCell>
                           <TableCell>{user.email}</TableCell>
-                          <TableCell>{user.studentId || '-'}</TableCell>
+                          <TableCell>{user.studentId || "-"}</TableCell>
                           <TableCell>
                             <Badge
                               variant={
-                                user.role === 'ADMIN'
-                                  ? 'default'
-                                  : user.role === 'CLUB_LEADER'
-                                  ? 'secondary'
-                                  : 'outline'
+                                user.role === "ADMIN"
+                                  ? "default"
+                                  : user.role === "CLUB_LEADER"
+                                  ? "secondary"
+                                  : "outline"
                               }
                             >
-                              {user.role.replace('_', ' ')}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={user.isActive ? 'default' : 'destructive'}>
-                              {user.isActive ? 'Active' : 'Inactive'}
+                              {user.role.replace("_", " ")}
                             </Badge>
                           </TableCell>
                           <TableCell>
