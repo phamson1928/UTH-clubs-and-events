@@ -22,8 +22,8 @@ export class MembershipsController {
   @Get('request')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('club_owner')
-  findAllRequests() {
-    return this.membershipsService.findAllRequests();
+  findAllRequests(@Request() req: { clubId: number }) {
+    return this.membershipsService.findAllRequests(req.clubId);
   }
 
   @Post('request')
@@ -31,12 +31,14 @@ export class MembershipsController {
   @Roles('user')
   async requestJoin(
     @Body() createMembershipDto: CreateMembershipDto,
-    @Request() req: { user: { id: number } },
+    @Request() req: { user: { id: number }; clubId: number },
   ) {
     const userId = req.user.id;
+    const clubId = req.clubId;
     return this.membershipsService.createMembershipRequest(
       createMembershipDto,
       userId,
+      clubId,
     );
   }
 
