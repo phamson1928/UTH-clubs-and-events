@@ -17,4 +17,17 @@ export class MailService {
       },
     });
   }
+
+  async sendForgotPasswordMail(email: string, token: string) {
+    const url = `http://localhost:3000/auth/reset-password?token=${token}`;
+
+    await this.mailerService.sendMail({
+      to: email,
+      subject: 'Đặt lại mật khẩu UTH Clubs and Events',
+      template: './forgot-password',
+      context: {
+        url,
+      },
+    });
+  }
 }

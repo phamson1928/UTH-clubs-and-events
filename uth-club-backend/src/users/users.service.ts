@@ -53,4 +53,26 @@ export class UsersService {
       where: { verificationToken: token },
     });
   }
+
+  async findByResetToken(token: string) {
+    return this.usersRepository.findOne({ where: { resetToken: token } });
+  }
+
+  async updateResetToken(id: number, token: string, expires: Date) {
+    await this.usersRepository.update(id, {
+      resetToken: token,
+      resetTokenExpires: expires,
+    });
+  }
+
+  async updatePassword(id: number, hashedPassword: string) {
+    await this.usersRepository.update(id, { password: hashedPassword });
+  }
+
+  async clearResetToken(id: number) {
+    await this.usersRepository.update(id, {
+      resetToken: '',
+      resetTokenExpires: new Date(),
+    });
+  }
 }

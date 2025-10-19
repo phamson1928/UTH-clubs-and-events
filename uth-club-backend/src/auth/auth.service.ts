@@ -2,6 +2,7 @@ import {
   Injectable,
   BadRequestException,
   UnauthorizedException,
+  NotFoundException,
 } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
@@ -87,5 +88,44 @@ export class AuthService {
     });
 
     return { message: 'Xác thực tài khoản thành công ' };
+  }
+
+  async forgotPassword(email: string) {
+    const user = await this.usersService.findByEmail(email);
+    if (!user) throw new NotFoundException('Email không tồn tại');
+
+    // Tạo token ngẫu nhiên
+    const token = randomUUID();
+    const expires = new Date(Date.now() + 15 * 60 * 1000); // 15 phút
+
+    // Lưu token vào DB
+    await this.usersService.updateResetToken(user.id, token, expires);
+
+    // Gửi mail xác nhận
+    await this.mailService.sendForgotPasswordMail(user.email, token);
+
+    return { message: 'Link đặt lại mật khẩu đã được gửi qua email' };
+  }
+
+  /**
+   * Đặt lại mật khẩu bằng token
+   */
+  async resetPassword(token: string, newPassword: string) {
+    const user = await this.usersService.findByResetToken(token);
+    if (!user) throw new BadRequestException('Token không hợp lệ');
+
+    if (user.resetTokenExpires < new Date()) {
+      throw new BadRequestException('Token đã hết hạn');
+    }
+
+    // Hash mật khẩu mới
+    const hashed = await bcrypt.hash(newPassword, 10);
+
+    await this.usersService.updatePassword(user.id, hashed);
+
+    // Xóa token để không reuse
+    await this.usersService.clearResetToken(user.id);
+
+    return { message: 'Mật khẩu đã được đặt lại thành công' };
   }
 }
