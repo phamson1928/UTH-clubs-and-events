@@ -19,6 +19,7 @@ import { Roles } from 'common/decorators/roles.decorator';
 export class MembershipsController {
   constructor(private readonly membershipsService: MembershipsService) {}
 
+  // Lấy danh sách đơn xin tham gia club
   @Get('request')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('club_owner')
@@ -26,20 +27,27 @@ export class MembershipsController {
     return this.membershipsService.findAllRequests(req.clubId);
   }
 
-  @Post('request')
+  @Post(':clubId/join')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('user')
   async requestJoin(
     @Body() createMembershipDto: CreateMembershipDto,
-    @Request() req: { user: { id: number }; clubId: number },
+    @Request() req: { user: { id: number } },
+    @Param('clubId') clubId: number,
   ) {
     const userId = req.user.id;
-    const clubId = req.clubId;
     return this.membershipsService.createMembershipRequest(
       createMembershipDto,
       userId,
       clubId,
     );
+  }
+
+  @Get('members')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('club_owner')
+  findAllMembers(@Request() req: { clubId: number }) {
+    return this.membershipsService.findAllMembers(req.clubId);
   }
 
   @Patch(':id/approve')

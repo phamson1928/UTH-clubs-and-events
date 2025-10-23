@@ -11,17 +11,43 @@ export class MembershipsService {
     private membershipRepository: Repository<Membership>,
   ) {}
 
+  // Đơn xin tham gia club
   async findAllRequests(clubId: number) {
     return await this.membershipRepository
       .createQueryBuilder('membership')
       .leftJoin('membership.user', 'user')
-      .addSelect(['user.id', 'user.name', 'user.email', 'user.mssv'])
+      .addSelect([
+        'user.id',
+        'user.name',
+        'user.email',
+        'user.mssv',
+        'user.createdAt',
+      ])
       .leftJoin('membership.club', 'club')
       .where('membership.status = :status', { status: 'pending' })
       .andWhere('club.id = :clubId', { clubId })
       .getMany();
   }
 
+  // Lấy danh sách thành viên trong club
+  async findAllMembers(clubId: number) {
+    return await this.membershipRepository
+      .createQueryBuilder('membership')
+      .leftJoin('membership.user', 'user')
+      .addSelect([
+        'user.id',
+        'user.name',
+        'user.email',
+        'user.mssv',
+        'user.createdAt',
+      ])
+      .leftJoin('membership.club', 'club')
+      .where('club.id = :clubId', { clubId })
+      .andWhere('membership.status = :status', { status: 'approved' })
+      .getMany();
+  }
+
+  // Tạo đơn xin tham gia club
   async createMembershipRequest(
     createMembershipDto: CreateMembershipDto,
     userId: number,
@@ -33,6 +59,7 @@ export class MembershipsService {
     return await this.membershipRepository.save(membership);
   }
 
+  // Cập nhật đơn xin tham gia club
   async updateMembershipRequest(id: number, status: 'approved' | 'rejected') {
     return await this.membershipRepository.update(id, {
       status,
@@ -40,10 +67,12 @@ export class MembershipsService {
     });
   }
 
+  // Xóa đơn xin tham gia club
   async deleteMembershipRequest(id: number) {
     return await this.membershipRepository.delete(id);
   }
-  //chưa hoàn thiện
+
+  // Lấy danh sách thành viên trong club
   async getMemberInClub(clubId: number) {
     return await this.membershipRepository
       .createQueryBuilder('membership')
