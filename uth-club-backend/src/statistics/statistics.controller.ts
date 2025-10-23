@@ -8,6 +8,7 @@ import { Roles } from 'common/decorators/roles.decorator';
 export class StatisticsController {
   constructor(private readonly statisticsService: StatisticsService) {}
 
+  // Lấy thống kê admin
   @Get('admin_statistics')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
@@ -15,6 +16,7 @@ export class StatisticsController {
     return this.statisticsService.getAdminDashboardStatistics();
   }
 
+  // Lấy thống kê club owner
   @Get('own-club_statistics')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('club_owner')
@@ -23,6 +25,7 @@ export class StatisticsController {
     return this.statisticsService.getOwnClubDashboardStatistics(clubId);
   }
 
+  // Lấy thống kê member
   @Get('member_statistics')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('member')

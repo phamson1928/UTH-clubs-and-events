@@ -1,7 +1,6 @@
 import {
   Controller,
   Get,
-  Post,
   Body,
   Patch,
   Param,
@@ -9,7 +8,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ClubsService } from './clubs.service';
-import { CreateClubDto } from './dto/create-club.dto';
 import { UpdateClubDto } from './dto/update-club.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from 'common/guards/roles.guard';
@@ -19,23 +17,19 @@ import { Roles } from 'common/decorators/roles.decorator';
 export class ClubsController {
   constructor(private readonly clubsService: ClubsService) {}
 
-  @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
-  create(@Body() createClubDto: CreateClubDto) {
-    return this.clubsService.create(createClubDto);
-  }
-
+  // Lấy danh sách club
   @Get()
   findAll() {
     return this.clubsService.findAll();
   }
 
+  // Lấy club theo id (click vào club)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.clubsService.findOne(+id);
   }
 
+  // Cập nhật club
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
@@ -43,6 +37,7 @@ export class ClubsController {
     return this.clubsService.update(+id, updateClubDto);
   }
 
+  // Xóa club
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')

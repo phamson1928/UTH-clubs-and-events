@@ -8,6 +8,7 @@ import {
   Delete,
   Query,
   UseGuards,
+  Request,
 } from '@nestjs/common';
 import { EventsService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
@@ -20,6 +21,7 @@ import { Roles } from 'common/decorators/roles.decorator';
 export class EventsController {
   constructor(private readonly eventsService: EventsService) {}
 
+  // Gửi đơn tạo event
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('club_owner')
   @Post()
@@ -27,6 +29,7 @@ export class EventsController {
     return this.eventsService.create(createEventDto);
   }
 
+  // Lấy event theo status
   @Get()
   findAll(
     @Query('status') status?: 'pending' | 'approved' | 'rejected' | 'canceled',
@@ -34,11 +37,19 @@ export class EventsController {
     return this.eventsService.findAll(status);
   }
 
+  // Lấy event theo club
+  @Get('events')
+  findAllByClub(@Request() req: { clubId: number }) {
+    return this.eventsService.findAllByClub(req.clubId);
+  }
+
+  // Lấy event theo id
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.eventsService.findOne(+id);
   }
 
+  // Cập nhật event
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('club_owner')
   @Patch(':id')
@@ -46,6 +57,7 @@ export class EventsController {
     return this.eventsService.update(+id, updateEventDto);
   }
 
+  // Duyệt event
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @Patch(':id/approved')
@@ -53,6 +65,7 @@ export class EventsController {
     return this.eventsService.update(+id, { status: 'approved' });
   }
 
+  // Từ chối event
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @Patch(':id/rejected')
@@ -60,6 +73,7 @@ export class EventsController {
     return this.eventsService.update(+id, { status: 'rejected' });
   }
 
+  // Xóa event
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @Delete(':id')

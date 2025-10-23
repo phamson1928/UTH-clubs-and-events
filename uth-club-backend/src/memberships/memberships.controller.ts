@@ -27,6 +27,7 @@ export class MembershipsController {
     return this.membershipsService.findAllRequests(req.clubId);
   }
 
+  // Yêu cầu tham gia club
   @Post(':clubId/join')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('user')
@@ -43,6 +44,7 @@ export class MembershipsController {
     );
   }
 
+  // Lấy danh sách thành viên trong club
   @Get('members')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('club_owner')
@@ -50,6 +52,7 @@ export class MembershipsController {
     return this.membershipsService.findAllMembers(req.clubId);
   }
 
+  // Duyệt đơn xin tham gia club
   @Patch(':id/approve')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('club_owner')
@@ -57,6 +60,7 @@ export class MembershipsController {
     return this.membershipsService.updateMembershipRequest(id, 'approved');
   }
 
+  // Từ chối đơn xin tham gia club
   @Patch(':id/reject')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('club_owner')
@@ -64,6 +68,7 @@ export class MembershipsController {
     return this.membershipsService.updateMembershipRequest(id, 'rejected');
   }
 
+  // Xóa đơn xin tham gia club
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('club_owner')

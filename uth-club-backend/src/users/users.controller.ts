@@ -17,6 +17,7 @@ import { Roles } from 'common/decorators/roles.decorator';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  // Lấy danh sách user
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
@@ -24,6 +25,7 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
+  // Cập nhật user
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
@@ -31,6 +33,7 @@ export class UsersController {
     return this.usersService.update(+id, updateUserDto);
   }
 
+  // Xóa user
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
