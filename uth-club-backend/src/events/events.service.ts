@@ -55,6 +55,15 @@ export class EventsService {
       .getMany();
   }
 
+  // Lấy event theo club
+  async findAllByClub(clubId: number) {
+    return await this.eventsRepository
+      .createQueryBuilder('event')
+      .leftJoin('event.club', 'club')
+      .where('club.id = :clubId', { clubId })
+      .getMany();
+  }
+
   async findOne(id: number) {
     return await this.eventsRepository.findOne({
       where: { id },
