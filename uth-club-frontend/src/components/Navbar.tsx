@@ -36,6 +36,10 @@ export default function Navbar() {
         </Link>
 
         <div className="flex items-center gap-4">
+          {/* Primary Navigation */}
+          <Button asChild variant="ghost" size="sm">
+            <Link to="/student/clubs">Clubs</Link>
+          </Button>
           {/* Login and Register Buttons */}
           <div className="flex items-center gap-2">
             <Button asChild variant="outline" size="sm">
