@@ -39,11 +39,11 @@ import { StatisticsModule } from './statistics/statistics.module';
         },
       },
     }),
-    ConfigModule.forRoot(), // 👈 bắt buộc phải có dòng này
+    ConfigModule.forRoot(), //bắt buộc phải có dòng này
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: 'localhost',
-      port: 5432,
+      port: Number(process.env.DB_PORT),
       username: process.env.DB_USER, // tài khoản mặc định
       password: process.env.DB_PASSWORD, // thay bằng mật khẩu của bạn
       database: process.env.DB_NAME, // tên database bạn vừa tạo

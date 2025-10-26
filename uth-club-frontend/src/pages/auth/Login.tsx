@@ -16,15 +16,49 @@ import { Label } from "../../components/ui/label";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const API_BASE = (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log({ email, password, rememberMe });
-    // For now, just redirect to home after "login"
-    navigate("/");
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const res = await fetch(`${API_BASE}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!res.ok) {
+        let details = "";
+        try {
+          const data = await res.json();
+          details = (Array.isArray(data?.message) ? data.message?.join(", ") : data?.message) || data?.error || "";
+        } catch {}
+        throw new Error(details || `Đăng nhập thất bại (HTTP ${res.status})`);
+      }
+
+      const data = await res.json();
+      const { token, user } = data || {};
+
+      if (!token || !user) throw new Error("Phản hồi không hợp lệ từ máy chủ");
+
+      // Lưu thông tin đăng nhập
+      localStorage.setItem("authToken", token);
+      localStorage.setItem("authUser", JSON.stringify(user));
+
+      // Điều hướng sau khi đăng nhập thành công
+      navigate("/");
+    } catch (err: any) {
+      setError(err?.message || "Đã xảy ra lỗi. Vui lòng thử lại.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -76,10 +110,15 @@ export default function Login() {
                 />
               </div>
             </div>
+            {error && (
+              <div className="text-sm text-red-600 bg-red-50 border border-red-200 p-3">
+                {error}
+              </div>
+            )}
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full">
-              Đăng nhập
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? "Đang xử lý..." : "Đăng nhập"}
             </Button>
             <div className="text-sm text-center">
               Chưa có tài khoản?{" "}

@@ -22,7 +22,9 @@ export default function Register() {
     confirmPassword: "",
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const API_BASE = (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -42,19 +44,37 @@ export default function Register() {
     }
 
     setIsLoading(true);
+    setError(null);
 
     try {
-      // TODO: Replace with actual API call
-      console.log("Registering user:", formData);
+      const payload = {
+        name: formData.fullName,
+        email: formData.email,
+        password: formData.password,
+        mssv: formData.studentId,
+      };
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const res = await fetch(`${API_BASE}/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-      // Redirect to login page after successful registration
+      if (!res.ok) {
+        let details = "";
+        try {
+          const data = await res.json();
+          details = (Array.isArray(data?.message) ? data.message?.join(", ") : data?.message) || data?.error || "";
+        } catch {}
+        throw new Error(details || `Đăng ký thất bại (HTTP ${res.status})`);
+      }
+
+      // Optionally, backend returns { user, token }
+      // We keep flow: redirect to login page
       navigate("/login?registered=true");
     } catch (error) {
-      console.error("Registration failed:", error);
-      alert("Đăng ký thất bại. Vui lòng thử lại sau.");
+      const msg = (error as any)?.message || "Đăng ký thất bại. Vui lòng thử lại sau.";
+      setError(msg);
     } finally {
       setIsLoading(false);
     }
@@ -160,6 +180,11 @@ export default function Register() {
                 />
               </div>
             </div>
+            {error && (
+              <div className="text-sm text-red-600 bg-red-50 border border-red-200 p-3">
+                {error}
+              </div>
+            )}
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <Button type="submit" className="w-full" disabled={isLoading}>

@@ -6,9 +6,16 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
 import { UsersModule } from '../users/users.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Club } from 'src/clubs/entities/club.entity';
+import { MailService } from 'src/mail/mail.service';
+import { UsersService } from 'src/users/users.service';
+import { JwtService } from '@nestjs/jwt';
+import { User } from 'src/users/entities/user.entity';
 
 @Module({
   imports: [
+    TypeOrmModule.forFeature([Club, User]),
     ConfigModule,
     UsersModule,
     PassportModule,
@@ -22,7 +29,7 @@ import { UsersModule } from '../users/users.module';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, MailService, UsersService, JwtService],
   exports: [AuthService],
 })
 export class AuthModule {}
