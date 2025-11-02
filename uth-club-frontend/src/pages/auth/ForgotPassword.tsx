@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "../../components/ui/card";
 import { Label } from "../../components/ui/label";
+import axios from "axios";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -19,7 +20,8 @@ export default function ForgotPassword() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const API_BASE = (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
+  const API_BASE =
+    (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -28,17 +30,15 @@ export default function ForgotPassword() {
     setError(null);
 
     try {
-      const res = await fetch(`${API_BASE}/auth/forgot-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+      const res = await axios.post(`${API_BASE}/auth/forgot-password`, {
+        email,
       });
 
-      if (!res.ok) {
+      if (res.status !== 200) {
         // Try to read error message if provided
         let details = "";
         try {
-          const data = await res.json();
+          const data = await res.data;
           details = data?.message || data?.error || "";
         } catch {}
         throw new Error(details || `Yêu cầu thất bại (HTTP ${res.status})`);
@@ -96,7 +96,10 @@ export default function ForgotPassword() {
               {isSubmitting ? "Đang gửi..." : "Gửi hướng dẫn"}
             </Button>
             <Button asChild variant="ghost" className="w-full">
-              <Link to="/login" className="flex items-center justify-center gap-2">
+              <Link
+                to="/login"
+                className="flex items-center justify-center gap-2"
+              >
                 <ArrowLeft className="h-4 w-4" />
                 Quay lại đăng nhập
               </Link>
