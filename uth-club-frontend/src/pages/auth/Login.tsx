@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "../../components/ui/card";
 import { Label } from "../../components/ui/label";
+import axios from "axios";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -20,7 +21,8 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const API_BASE = (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
+  const API_BASE =
+    (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,23 +30,26 @@ export default function Login() {
     setError(null);
 
     try {
-      const res = await fetch(`${API_BASE}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+      const res = await axios.post(`${API_BASE}/auth/login`, {
+        email,
+        password,
       });
 
-      if (!res.ok) {
+      if (!res.data) {
         let details = "";
         try {
-          const data = await res.json();
-          details = (Array.isArray(data?.message) ? data.message?.join(", ") : data?.message) || data?.error || "";
+          const data = await res.data;
+          details =
+            (Array.isArray(data?.message)
+              ? data.message?.join(", ")
+              : data?.message) ||
+            data?.error ||
+            "";
         } catch {}
         throw new Error(details || `Đăng nhập thất bại (HTTP ${res.status})`);
       }
 
-      const data = await res.json();
-      const { token, user } = data || {};
+      const { token, user } = res.data || {};
 
       if (!token || !user) throw new Error("Phản hồi không hợp lệ từ máy chủ");
 

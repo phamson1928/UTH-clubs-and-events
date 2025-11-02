@@ -26,7 +26,7 @@ export class User {
   role: 'user' | 'admin' | 'club_owner';
 
   @Column({ nullable: true })
-  mssv: number;
+  mssv: string;
 
   @Column({ default: false })
   isVerified: boolean;

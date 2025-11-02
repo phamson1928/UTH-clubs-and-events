@@ -1,6 +1,10 @@
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Users, Calendar, MapPin, Mail } from "lucide-react";
 import Navbar from "../../components/Navbar";
+import { useState } from "react";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Textarea } from "../../components/ui/textarea";
 
 export default function StudentClubDetail() {
   const { id } = useParams();
@@ -11,13 +15,35 @@ export default function StudentClubDetail() {
     category: "Technology",
     description:
       "A community for tech enthusiasts to learn, build, and innovate together. We organize workshops, hackathons, and tech talks.",
-    members: 324,
     founded: "2020",
     email: "techclub@uth.edu",
     location: "Engineering Building, Room 301",
     image:
       "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=1600&q=80",
   };
+
+  const members = [
+    {
+      id: 1,
+      user: { name: "Nguyen Van A", email: "a@uth.edu", mssv: "20123456" },
+      join_date: new Date().toISOString(),
+    },
+    {
+      id: 2,
+      user: { name: "Tran Thi B", email: "b@uth.edu", mssv: "20123457" },
+      join_date: new Date().toISOString(),
+    },
+    {
+      id: 3,
+      user: { name: "Le Van C", email: "c@uth.edu", mssv: "20123458" },
+      join_date: new Date().toISOString(),
+    },
+  ];
+
+  const [joinReason, setJoinReason] = useState("");
+  const [skills, setSkills] = useState("");
+  const [promiseText, setPromiseText] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const upcomingEvents = [
     {
@@ -63,13 +89,11 @@ export default function StudentClubDetail() {
               <h1 className="text-5xl md:text-6xl font-black mb-4 leading-tight">
                 {club.name}
               </h1>
-              <p className="text-white/90 text-lg max-w-2xl mb-6">
-                {club.description}
-              </p>
+              <p className="text-white/90 text-lg max-w-2xl mb-6">{club.description}</p>
               <div className="flex flex-wrap gap-6 text-white/90">
                 <div className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
-                  <span className="font-semibold">{club.members} members</span>
+                  <span className="font-semibold">{members.length} members</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Calendar className="h-5 w-5" />
@@ -118,7 +142,7 @@ export default function StudentClubDetail() {
               <div className="grid grid-cols-2 gap-6">
                 <div className="bg-gray-50 border-2 border-gray-200 p-6">
                   <div className="text-3xl font-black text-teal-600 mb-2">
-                    {club.members}
+                    {members.length}
                   </div>
                   <div className="font-bold text-gray-900">Members</div>
                 </div>
@@ -131,6 +155,29 @@ export default function StudentClubDetail() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Members Section */}
+      <section className="py-16 bg-gray-50">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-10">
+            <h2 className="text-4xl md:text-5xl font-black text-gray-900">Members</h2>
+          </div>
+          {members.length === 0 ? (
+            <div className="text-center text-gray-600">No members to show</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+              {members.map((m: any) => (
+                <div key={m.id} className="bg-white border-2 border-gray-200 p-6">
+                  <div className="font-bold text-gray-900">{m?.user?.name || "Member"}</div>
+                  <div className="text-sm text-gray-600">{m?.user?.email}</div>
+                  <div className="text-sm text-gray-600">{m?.user?.mssv}</div>
+                  <div className="text-xs text-gray-500 mt-2">Joined: {m?.join_date ? new Date(m.join_date).toLocaleDateString() : "-"}</div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -182,17 +229,43 @@ export default function StudentClubDetail() {
 
       {/* CTA */}
       <section className="py-20 bg-gradient-to-br from-teal-600 to-cyan-700 text-white">
-        <div className="container mx-auto px-6 text-center">
-          <h2 className="text-4xl md:text-5xl font-black mb-6">Want to Join {club.name}?</h2>
-          <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto opacity-90">
-            Tell us about your interests and how you'd like to contribute. We'll get back to you soon.
-          </p>
-          <a
-            href={`mailto:${club.email}`}
-            className="inline-block px-10 py-4 bg-white text-teal-700 hover:bg-gray-100 font-bold text-lg transition-all"
-          >
-            Contact Club
-          </a>
+        <div className="container mx-auto px-6 max-w-3xl">
+          <div className="text-center mb-8">
+            <h2 className="text-4xl md:text-5xl font-black mb-3">Want to Join {club.name}?</h2>
+            <p className="text-lg md:text-xl opacity-90">Fill in the form below to send a join request.</p>
+          </div>
+          <div className="bg-white text-gray-900 p-6">
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setSubmitting(true);
+                setTimeout(() => {
+                  setJoinReason("");
+                  setSkills("");
+                  setPromiseText("");
+                  setSubmitting(false);
+                  alert("Đã gửi đơn tham gia (mock)");
+                }, 600);
+              }}
+              className="space-y-4"
+            >
+              <div>
+                <label className="block text-sm font-semibold mb-2">Vì sao bạn muốn tham gia?</label>
+                <Textarea value={joinReason} onChange={(e) => setJoinReason(e.target.value)} required placeholder="Mục tiêu, động lực..." />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2">Kỹ năng của bạn</label>
+                <Input value={skills} onChange={(e) => setSkills(e.target.value)} required placeholder="VD: React, thiết kế, tổ chức sự kiện..." />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2">Cam kết khi tham gia</label>
+                <Textarea value={promiseText} onChange={(e) => setPromiseText(e.target.value)} required placeholder="Bạn sẽ đóng góp điều gì?" />
+              </div>
+              <Button type="submit" disabled={submitting} className="bg-teal-600 hover:bg-teal-700 text-white">
+                {submitting ? "Đang gửi..." : "Gửi đơn tham gia"}
+              </Button>
+            </form>
+          </div>
         </div>
       </section>
     </div>

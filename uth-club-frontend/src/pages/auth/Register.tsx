@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "../../components/ui/card";
 import { Label } from "../../components/ui/label";
+import axios from "axios";
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -24,7 +25,8 @@ export default function Register() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const API_BASE = (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
+  const API_BASE =
+    (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -54,17 +56,18 @@ export default function Register() {
         mssv: formData.studentId,
       };
 
-      const res = await fetch(`${API_BASE}/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const res = await axios.post(`${API_BASE}/auth/register`, payload);
 
-      if (!res.ok) {
+      if (!res.data) {
         let details = "";
         try {
-          const data = await res.json();
-          details = (Array.isArray(data?.message) ? data.message?.join(", ") : data?.message) || data?.error || "";
+          const data = await res.data;
+          details =
+            (Array.isArray(data?.message)
+              ? data.message?.join(", ")
+              : data?.message) ||
+            data?.error ||
+            "";
         } catch {}
         throw new Error(details || `Đăng ký thất bại (HTTP ${res.status})`);
       }
@@ -73,7 +76,8 @@ export default function Register() {
       // We keep flow: redirect to login page
       navigate("/login?registered=true");
     } catch (error) {
-      const msg = (error as any)?.message || "Đăng ký thất bại. Vui lòng thử lại sau.";
+      const msg =
+        (error as any)?.message || "Đăng ký thất bại. Vui lòng thử lại sau.";
       setError(msg);
     } finally {
       setIsLoading(false);

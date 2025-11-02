@@ -10,7 +10,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Club } from 'src/clubs/entities/club.entity';
 import { MailService } from 'src/mail/mail.service';
 import { UsersService } from 'src/users/users.service';
-import { JwtService } from '@nestjs/jwt';
 import { User } from 'src/users/entities/user.entity';
 
 @Module({
@@ -23,13 +22,13 @@ import { User } from 'src/users/entities/user.entity';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET') ?? 'change-me',
+        secret: configService.get<string>('JWT_SECRET') || 'change-me',
         signOptions: { expiresIn: '1d' },
       }),
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, MailService, UsersService, JwtService],
+  providers: [AuthService, JwtStrategy, MailService, UsersService],
   exports: [AuthService],
 })
 export class AuthModule {}

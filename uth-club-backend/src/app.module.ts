@@ -29,7 +29,7 @@ import { StatisticsModule } from './statistics/statistics.module';
         },
       },
       defaults: {
-        from: '"UTH Clubs" <no-reply@pson4282@gmail.com>',
+        from: '"UTH Clubs" <pson4282@gmail.com>',
       },
       template: {
         dir: join(__dirname, 'mail', 'templates'),

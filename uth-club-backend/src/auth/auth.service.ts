@@ -26,16 +26,20 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto) {
-    const userExists = await this.usersService.findByEmail(dto.email);
+    const normalizedEmail = dto.email.trim().toLowerCase();
+    console.log('Checking email:', normalizedEmail);
+    const userExists = await this.usersService.findByEmail(normalizedEmail);
+    console.log('userExists =', userExists);
+
     if (userExists) throw new BadRequestException('Email already registered');
 
     const hashed = await bcrypt.hash(dto.password, 10);
     const verificationToken = randomUUID();
     const newUser = await this.usersService.create({
       name: dto.name,
-      email: dto.email,
+      email: normalizedEmail,
       password: hashed,
-      mssv: Number(dto.mssv),
+      mssv: dto.mssv,
       verificationToken: verificationToken,
     });
 
@@ -45,15 +49,20 @@ export class AuthService {
       role: newUser.role,
     });
 
-    await this.mailService.sendVerificationEmail(
-      newUser.email,
-      verificationToken,
-    );
+    try {
+      await this.mailService.sendVerificationEmail(
+        newUser.email,
+        verificationToken,
+      );
+    } catch (e) {
+      console.error('sendVerificationEmail failed', e);
+    }
     return { user: newUser, token };
   }
 
   async login(dto: LoginDto) {
-    const user = await this.usersService.findByEmail(dto.email);
+    const normalizedEmail = dto.email.trim().toLowerCase();
+    const user = await this.usersService.findByEmail(normalizedEmail);
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
     const match = await bcrypt.compare(dto.password, user.password);
