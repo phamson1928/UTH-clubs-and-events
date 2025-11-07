@@ -21,7 +21,7 @@ export class UsersService {
     return await this.usersRepository
       .createQueryBuilder('user')
       .leftJoin('user.memberships', 'membership')
-      .leftJoin('user.ownedClubs', 'club')
+      .leftJoin('membership.club', 'club')
       .select([
         'user.id',
         'user.name',
@@ -29,10 +29,12 @@ export class UsersService {
         'user.role',
         'user.mssv',
         'user.createdAt',
+        'club.id',
+        'club.name',
+        'membership.status',
       ])
-      .addSelect(['membership.id', 'membership.status'])
-      .addSelect(['club.id', 'club.name'])
-      .where('user.isVerified = :isVerified', { isVerified: true })
+      .where('user.isVerified = :isVerified', { isVerified: false })
+      .orderBy('user.createdAt', 'DESC')
       .getMany();
   }
 
