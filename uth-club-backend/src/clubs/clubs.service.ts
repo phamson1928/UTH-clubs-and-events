@@ -20,10 +20,17 @@ export class ClubsService {
   async findAll() {
     return await this.clubsRepository
       .createQueryBuilder('clubs')
+      .select([
+        'clubs.id',
+        'clubs.name',
+        'clubs.category',
+        'clubs.created_at',
+        'clubs.club_image',
+      ])
       .orderBy('clubs.created_at', 'DESC')
-      .leftJoinAndSelect('clubs.owner', 'owner')
-      .loadRelationCountAndMap('clubs.eventsCount', 'clubs.events')
-      .loadRelationCountAndMap('clubs.membershipCount', 'clubs.memberships')
+      .leftJoin('clubs.owner', 'owner')
+      .addSelect(['owner.id', 'owner.name'])
+      .loadRelationCountAndMap('clubs.members', 'clubs.memberships')
       .getMany();
   }
 
