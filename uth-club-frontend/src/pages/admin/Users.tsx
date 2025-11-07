@@ -54,19 +54,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../components/ui/select";
-
+import axios from "axios";
 type UserRole = "ADMIN" | "CLUB_LEADER" | "STUDENT";
-
-interface User {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  studentId?: string;
-  role: UserRole;
-  isActive: boolean;
-  createdAt: string;
-}
 
 const sidebarLinks = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -76,56 +65,39 @@ const sidebarLinks = [
 ];
 
 export default function AdminUsers() {
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<any | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
-  // Mock data - Replace with actual API call
+  const API_BASE =
+    (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
+
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("authToken");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        // TODO: Replace with actual API call
-        // const response = await fetch('/api/users');
-        // const data = await response.json();
-
-        // Mock data
-        const mockUsers: User[] = [
-          {
-            id: "1",
-            email: "admin@example.com",
-            firstName: "Admin",
-            lastName: "User",
-            role: "ADMIN",
-            isActive: true,
-            createdAt: "2023-01-01T00:00:00Z",
+        const res = await axios.get(`${API_BASE}/users`, {
+          headers: {
+            ...getAuthHeaders(),
           },
-          {
-            id: "2",
-            email: "leader@example.com",
-            firstName: "Club",
-            lastName: "Leader",
-            role: "CLUB_LEADER",
-            isActive: true,
-            createdAt: "2023-02-15T00:00:00Z",
-          },
-          {
-            id: "3",
-            email: "student@example.com",
-            firstName: "John",
-            lastName: "Doe",
-            studentId: "65000001",
-            role: "STUDENT",
-            isActive: true,
-            createdAt: "2023-03-20T00:00:00Z",
-          },
-        ];
-
-        setUsers(mockUsers);
+        });
+        setUsers(res.data);
       } catch (error) {
+        if (
+          axios.isAxiosError(error) &&
+          (error.response?.status === 401 || error.response?.status === 403)
+        ) {
+          navigate("/login");
+          return;
+        }
         console.error("Error fetching users:", error);
       } finally {
         setIsLoading(false);
@@ -147,7 +119,7 @@ export default function AdminUsers() {
     );
   });
 
-  const handleEdit = (user: User) => {
+  const handleEdit = (user: any) => {
     setCurrentUser(user);
     setIsDialogOpen(true);
   };
@@ -155,10 +127,20 @@ export default function AdminUsers() {
   const handleDelete = async (userId: string) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
       try {
-        // TODO: Replace with actual API call
-        // await fetch(`/api/users/${userId}`, { method: 'DELETE' });
+        const res = await axios.delete(`${API_BASE}/users/delete/${userId}`, {
+          headers: {
+            ...getAuthHeaders(),
+          },
+        });
         setUsers(users.filter((user) => user.id !== userId));
       } catch (error) {
+        if (
+          axios.isAxiosError(error) &&
+          (error.response?.status === 401 || error.response?.status === 403)
+        ) {
+          navigate("/login");
+          return;
+        }
         console.error("Error deleting user:", error);
       }
     }
@@ -172,28 +154,34 @@ export default function AdminUsers() {
     try {
       const method = currentUser.id ? "PUT" : "POST";
       const url = currentUser.id
-        ? `/api/users/${currentUser.id}`
-        : "/api/users";
+        ? `${API_BASE}/users/update/${currentUser.id}`
+        : `${API_BASE}/users`;
 
-      // TODO: Replace with actual API call
-      // const response = await fetch(url, {
-      //   method,
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(currentUser),
-      // });
-      // const data = await response.json();
+      const res = await axios({
+        method,
+        url,
+        data: currentUser,
+        headers: {
+          ...getAuthHeaders(),
+        },
+      });
 
       if (currentUser.id) {
-        // Update existing user
         setUsers(users.map((u) => (u.id === currentUser.id ? currentUser : u)));
       } else {
-        // Add new user
-        // setUsers([...users, data]);
+        setUsers([...users, res.data]);
       }
 
       setIsDialogOpen(false);
       setCurrentUser(null);
     } catch (error) {
+      if (
+        axios.isAxiosError(error) &&
+        (error.response?.status === 401 || error.response?.status === 403)
+      ) {
+        navigate("/login");
+        return;
+      }
       console.error("Error saving user:", error);
     } finally {
       setIsSubmitting(false);
@@ -364,6 +352,7 @@ export default function AdminUsers() {
                       <TableHead>Student ID</TableHead>
                       <TableHead>Role</TableHead>
                       <TableHead>Joined</TableHead>
+                      <TableHead>Club</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -372,10 +361,10 @@ export default function AdminUsers() {
                       filteredUsers.map((user) => (
                         <TableRow key={user.id}>
                           <TableCell className="font-medium">
-                            {user.firstName} {user.lastName}
+                            {user.name}
                           </TableCell>
                           <TableCell>{user.email}</TableCell>
-                          <TableCell>{user.studentId || "-"}</TableCell>
+                          <TableCell>{user.mssv || "-"}</TableCell>
                           <TableCell>
                             <Badge
                               variant={
@@ -391,6 +380,13 @@ export default function AdminUsers() {
                           </TableCell>
                           <TableCell>
                             {new Date(user.createdAt).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>
+                            {user.memberships.length > 0 ? (
+                              <Badge variant="default">Yes</Badge>
+                            ) : (
+                              <Badge variant="outline">No</Badge>
+                            )}
                           </TableCell>
                           <TableCell className="text-right">
                             <DropdownMenu>
