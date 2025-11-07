@@ -17,8 +17,9 @@ import {
   CardTitle,
 } from "../../components/ui/card";
 import SearchAndFilters, { Filters } from "../../components/SearchAndFilters";
-import { useMemo, useState } from "react";
-import { Badge } from "../../components/ui/badge";
+import { useEffect, useMemo, useState } from "react";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
 import {
   Table,
   TableBody,
@@ -33,6 +34,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../../components/ui/dialog";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const sidebarLinks = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -42,48 +53,32 @@ const sidebarLinks = [
 ];
 
 export default function AdminClubs() {
-  const clubs = [
-    {
-      id: 1,
-      name: "Tech Club",
-      category: "Technology",
-      members: 150,
-      status: "active",
-      owner: "John Doe",
-    },
-    {
-      id: 2,
-      name: "Art Society",
-      category: "Arts",
-      members: 89,
-      status: "active",
-      owner: "Jane Smith",
-    },
-    {
-      id: 3,
-      name: "Sports League",
-      category: "Sports",
-      members: 200,
-      status: "active",
-      owner: "Bob Johnson",
-    },
-    {
-      id: 4,
-      name: "Music Band",
-      category: "Music",
-      members: 67,
-      status: "active",
-      owner: "Alice Williams",
-    },
-    {
-      id: 5,
-      name: "Drama Club",
-      category: "Arts",
-      members: 45,
-      status: "inactive",
-      owner: "Charlie Brown",
-    },
-  ];
+  const [clubs, setClubs] = useState<any[]>([]);
+  const navigate = useNavigate();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [currentClub, setCurrentClub] = useState<any | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const API_BASE =
+    (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
+
+  useEffect(() => {
+    const fetchClubs = async () => {
+      try {
+        const res = await axios.get(`${API_BASE}/clubs`);
+        setClubs(res.data);
+      } catch (error) {
+        if (
+          axios.isAxiosError(error) &&
+          (error.response?.status === 401 || error.response?.status === 403)
+        ) {
+          navigate("/login");
+          return;
+        }
+      }
+    };
+    fetchClubs();
+  }, []);
 
   const [filters, setFilters] = useState<Filters>({
     query: "",
@@ -93,7 +88,10 @@ export default function AdminClubs() {
 
   const stats = useMemo(() => {
     const totalClubs = clubs.length;
-    const totalMembers = clubs.reduce((sum, c) => sum + c.members, 0);
+    const totalMembers = clubs.reduce(
+      (sum, c: any) => sum + Number(c?.members || 0),
+      0
+    );
     const avgMembers =
       totalClubs > 0 ? Math.round(totalMembers / totalClubs) : 0;
 
@@ -109,7 +107,7 @@ export default function AdminClubs() {
         (c) =>
           c.name.toLowerCase().includes(q) ||
           c.category.toLowerCase().includes(q) ||
-          (c.owner && c.owner.toLowerCase().includes(q))
+          (c.owner?.name && c.owner.name.toLowerCase().includes(q))
       );
     }
 
@@ -127,6 +125,73 @@ export default function AdminClubs() {
 
     return items;
   }, [clubs, filters]);
+
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("authToken");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
+  const handleEdit = (club: any) => {
+    setCurrentClub({ ...club });
+    setIsDialogOpen(true);
+  };
+
+  const handleDelete = async (clubId: number) => {
+    if (!window.confirm("Are you sure you want to delete this club?")) return;
+    try {
+      await axios.delete(`${API_BASE}/clubs/${clubId}`, {
+        headers: { ...getAuthHeaders() },
+      });
+      setClubs((prev) => prev.filter((c) => c.id !== clubId));
+    } catch (error) {
+      if (
+        axios.isAxiosError(error) &&
+        (error.response?.status === 401 || error.response?.status === 403)
+      ) {
+        navigate("/login");
+        return;
+      }
+      console.error("Delete club failed", error);
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!currentClub) return;
+    const { name, value } = e.target;
+    setCurrentClub({ ...currentClub, [name]: value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentClub?.id) return;
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        name: currentClub.name,
+        category: currentClub.category,
+        // description or other fields can be added here if needed
+      };
+      await axios.patch(`${API_BASE}/clubs/${currentClub.id}`, payload, {
+        headers: { ...getAuthHeaders() },
+      });
+      setClubs((prev) =>
+        prev.map((c) => (c.id === currentClub.id ? { ...c, ...payload } : c))
+      );
+      setIsDialogOpen(false);
+      setCurrentClub(null);
+    } catch (error) {
+      if (
+        axios.isAxiosError(error) &&
+        (error.response?.status === 401 || error.response?.status === 403)
+      ) {
+        navigate("/login");
+        return;
+      }
+      console.error("Update club failed", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -212,12 +277,12 @@ export default function AdminClubs() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {visible.map((club) => (
+                  {visible.map((club: any) => (
                     <TableRow key={club.id}>
                       <TableCell className="font-medium">{club.name}</TableCell>
                       <TableCell>{club.category}</TableCell>
-                      <TableCell>{club.owner}</TableCell>
-                      <TableCell>{club.members}</TableCell>
+                      <TableCell>{club.owner?.name || "-"}</TableCell>
+                      <TableCell>{Number(club.members || 0)}</TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -226,9 +291,13 @@ export default function AdminClubs() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem>View Details</DropdownMenuItem>
-                            <DropdownMenuItem>Edit</DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive">
+                            <DropdownMenuItem onClick={() => handleEdit(club)}>
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="text-destructive"
+                              onClick={() => handleDelete(club.id)}
+                            >
                               Delete
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -240,6 +309,51 @@ export default function AdminClubs() {
               </Table>
             </CardContent>
           </Card>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Edit Club</DialogTitle>
+                <DialogDescription>Update club information</DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Name</Label>
+                  <Input
+                    id="name"
+                    name="name"
+                    value={currentClub?.name || ""}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category</Label>
+                  <Input
+                    id="category"
+                    name="category"
+                    value={currentClub?.category || ""}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setIsDialogOpen(false);
+                      setCurrentClub(null);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? "Saving..." : "Save"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
         </main>
       </div>
     </div>
