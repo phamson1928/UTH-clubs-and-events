@@ -26,7 +26,7 @@ export class UsersController {
   }
 
   // Cập nhật user
-  @Patch(':id')
+  @Patch('update/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
@@ -34,7 +34,7 @@ export class UsersController {
   }
 
   // Xóa user
-  @Delete(':id')
+  @Delete('delete/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   remove(@Param('id') id: string) {
