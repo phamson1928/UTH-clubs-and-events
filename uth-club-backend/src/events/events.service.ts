@@ -29,9 +29,9 @@ export class EventsService {
           'event.name',
           'event.description',
           'event.date',
-          'event.time',
           'event.location',
           'event.status',
+          'event.activities',
           'club.id',
           'club.name',
         ])
@@ -46,7 +46,6 @@ export class EventsService {
         'event.name',
         'event.description',
         'event.date',
-        'event.time',
         'event.location',
         'event.status',
         'club.id',

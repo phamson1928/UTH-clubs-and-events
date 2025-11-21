@@ -23,8 +23,8 @@ export class MembershipsController {
   @Get('request')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('club_owner')
-  findAllRequests(@Request() req: { clubId: number }) {
-    return this.membershipsService.findAllRequests(req.clubId);
+  findAllRequests(@Request() req: { user: { clubId: number } }) {
+    return this.membershipsService.findAllRequests(req.user.clubId);
   }
 
   // Yêu cầu tham gia club
@@ -48,8 +48,8 @@ export class MembershipsController {
   @Get('members')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('club_owner')
-  findAllMembers(@Request() req: { clubId: number }) {
-    return this.membershipsService.findAllMembers(req.clubId);
+  findAllMembers(@Request() req: { user: { clubId: number } }) {
+    return this.membershipsService.findAllMembers(req.user.clubId);
   }
 
   // Duyệt đơn xin tham gia club

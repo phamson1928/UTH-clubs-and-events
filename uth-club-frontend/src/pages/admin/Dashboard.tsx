@@ -14,17 +14,12 @@ import {
   CardHeader,
   CardTitle,
 } from "../../components/ui/card";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-} from "recharts";
+import axios from "axios";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+const API_BASE =
+  (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
 
 const sidebarLinks = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -32,21 +27,33 @@ const sidebarLinks = [
   { href: "/admin/events", label: "Events", icon: Calendar },
   { href: "/admin/users", label: "Users", icon: Users },
 ];
-
+const getAuthHeaders = () => {
+  const token = localStorage.getItem("authToken");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
 export default function AdminDashboard() {
-  const clubData = [
-    { month: "Jan", clubs: 35 },
-    { month: "Feb", clubs: 38 },
-    { month: "Mar", clubs: 42 },
-    { month: "Apr", clubs: 45 },
-  ];
+  const navigate = useNavigate();
+  const [stats, setStats] = useState<any>({});
 
-  const memberData = [
-    { month: "Jan", members: 980 },
-    { month: "Feb", members: 1050 },
-    { month: "Mar", members: 1150 },
-    { month: "Apr", members: 1234 },
-  ];
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await axios.get(`${API_BASE}/statistics/admin_statistics`, {
+          headers: { ...getAuthHeaders() },
+        });
+        setStats(res.data);
+      } catch (error) {
+        if (
+          axios.isAxiosError(error) &&
+          (error.response?.status === 401 || error.response?.status === 403)
+        ) {
+          navigate("/login");
+          return;
+        }
+      }
+    };
+    fetchStats();
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -72,7 +79,7 @@ export default function AdminDashboard() {
                 <Building2 className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">45</div>
+                <div className="text-2xl font-bold">{stats.totalClubs}</div>
                 <p className="text-xs text-muted-foreground">
                   +3 from last month
                 </p>
@@ -87,7 +94,7 @@ export default function AdminDashboard() {
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">1,234</div>
+                <div className="text-2xl font-bold">{stats.totalMembers}</div>
                 <p className="text-xs text-muted-foreground">
                   +84 from last month
                 </p>
@@ -97,12 +104,12 @@ export default function AdminDashboard() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">
-                  Active Events
+                  Total Events
                 </CardTitle>
                 <Calendar className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">23</div>
+                <div className="text-2xl font-bold">{stats.totalEvents}</div>
                 <p className="text-xs text-muted-foreground">This month</p>
               </CardContent>
             </Card>
@@ -110,57 +117,13 @@ export default function AdminDashboard() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">
-                  Pending Requests
+                  Pending Event
                 </CardTitle>
                 <FileText className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">12</div>
+                <div className="text-2xl font-bold">{stats.pendingEvents}</div>
                 <p className="text-xs text-muted-foreground">Awaiting review</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Charts */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <Card>
-              <CardHeader>
-                <CardTitle>Club Growth</CardTitle>
-                <CardDescription>Number of clubs over time</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={clubData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="clubs" fill="hsl(var(--primary))" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Member Growth</CardTitle>
-                <CardDescription>Total members over time</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={memberData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line
-                      type="monotone"
-                      dataKey="members"
-                      stroke="hsl(var(--primary))"
-                      strokeWidth={2}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
               </CardContent>
             </Card>
           </div>
