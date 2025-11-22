@@ -31,6 +31,9 @@ export class ClubsService {
       .leftJoin('clubs.owner', 'owner')
       .addSelect(['owner.id', 'owner.name'])
       .loadRelationCountAndMap('clubs.members', 'clubs.memberships')
+      .leftJoin('clubs.memberships', 'memberships')
+      .leftJoin('memberships.user', 'user')
+      .addSelect(['user.id', 'user.name'])
       .getMany();
   }
 
@@ -39,6 +42,7 @@ export class ClubsService {
       .createQueryBuilder('clubs')
       .leftJoinAndSelect('clubs.owner', 'owner')
       .leftJoinAndSelect('clubs.memberships', 'memberships')
+      .leftJoinAndSelect('memberships.user', 'user')
       .leftJoinAndSelect('clubs.events', 'events')
       .where('clubs.id = :id', { id })
       .getOne();
