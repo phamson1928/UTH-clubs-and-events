@@ -1,4 +1,10 @@
-import { LayoutDashboard, Building2, Calendar, FileText, Users } from "lucide-react";
+import {
+  LayoutDashboard,
+  Building2,
+  Calendar,
+  FileText,
+  Users,
+} from "lucide-react";
 import Navbar from "../../components/Navbar";
 import Sidebar from "../../components/Sidebar";
 import { Button } from "../../components/ui/button";

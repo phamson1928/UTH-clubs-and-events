@@ -89,11 +89,15 @@ export default function StudentClubDetail() {
               <h1 className="text-5xl md:text-6xl font-black mb-4 leading-tight">
                 {club.name}
               </h1>
-              <p className="text-white/90 text-lg max-w-2xl mb-6">{club.description}</p>
+              <p className="text-white/90 text-lg max-w-2xl mb-6">
+                {club.description}
+              </p>
               <div className="flex flex-wrap gap-6 text-white/90">
                 <div className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
-                  <span className="font-semibold">{members.length} members</span>
+                  <span className="font-semibold">
+                    {members.length} members
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Calendar className="h-5 w-5" />
@@ -162,18 +166,30 @@ export default function StudentClubDetail() {
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-6">
           <div className="text-center mb-10">
-            <h2 className="text-4xl md:text-5xl font-black text-gray-900">Members</h2>
+            <h2 className="text-4xl md:text-5xl font-black text-gray-900">
+              Members
+            </h2>
           </div>
           {members.length === 0 ? (
             <div className="text-center text-gray-600">No members to show</div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
               {members.map((m: any) => (
-                <div key={m.id} className="bg-white border-2 border-gray-200 p-6">
-                  <div className="font-bold text-gray-900">{m?.user?.name || "Member"}</div>
+                <div
+                  key={m.id}
+                  className="bg-white border-2 border-gray-200 p-6"
+                >
+                  <div className="font-bold text-gray-900">
+                    {m?.user?.name || "Member"}
+                  </div>
                   <div className="text-sm text-gray-600">{m?.user?.email}</div>
                   <div className="text-sm text-gray-600">{m?.user?.mssv}</div>
-                  <div className="text-xs text-gray-500 mt-2">Joined: {m?.join_date ? new Date(m.join_date).toLocaleDateString() : "-"}</div>
+                  <div className="text-xs text-gray-500 mt-2">
+                    Joined:{" "}
+                    {m?.join_date
+                      ? new Date(m.join_date).toLocaleDateString()
+                      : "-"}
+                  </div>
                 </div>
               ))}
             </div>
@@ -185,7 +201,9 @@ export default function StudentClubDetail() {
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-6">
           <div className="text-center mb-10">
-            <h2 className="text-4xl md:text-5xl font-black text-gray-900">Upcoming Events</h2>
+            <h2 className="text-4xl md:text-5xl font-black text-gray-900">
+              Upcoming Events
+            </h2>
           </div>
           <div className="grid gap-6 max-w-5xl mx-auto">
             {upcomingEvents.map((event) => (
@@ -211,7 +229,9 @@ export default function StudentClubDetail() {
                           </div>
                           <div className="flex items-center gap-2">
                             <MapPin className="w-4 h-4" />
-                            <span className="font-medium">{event.location}</span>
+                            <span className="font-medium">
+                              {event.location}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -231,8 +251,12 @@ export default function StudentClubDetail() {
       <section className="py-20 bg-gradient-to-br from-teal-600 to-cyan-700 text-white">
         <div className="container mx-auto px-6 max-w-3xl">
           <div className="text-center mb-8">
-            <h2 className="text-4xl md:text-5xl font-black mb-3">Want to Join {club.name}?</h2>
-            <p className="text-lg md:text-xl opacity-90">Fill in the form below to send a join request.</p>
+            <h2 className="text-4xl md:text-5xl font-black mb-3">
+              Want to Join {club.name}?
+            </h2>
+            <p className="text-lg md:text-xl opacity-90">
+              Fill in the form below to send a join request.
+            </p>
           </div>
           <div className="bg-white text-gray-900 p-6">
             <form
@@ -250,18 +274,43 @@ export default function StudentClubDetail() {
               className="space-y-4"
             >
               <div>
-                <label className="block text-sm font-semibold mb-2">Vì sao bạn muốn tham gia?</label>
-                <Textarea value={joinReason} onChange={(e) => setJoinReason(e.target.value)} required placeholder="Mục tiêu, động lực..." />
+                <label className="block text-sm font-semibold mb-2">
+                  Vì sao bạn muốn tham gia?
+                </label>
+                <Textarea
+                  value={joinReason}
+                  onChange={(e) => setJoinReason(e.target.value)}
+                  required
+                  placeholder="Mục tiêu, động lực..."
+                />
               </div>
               <div>
-                <label className="block text-sm font-semibold mb-2">Kỹ năng của bạn</label>
-                <Input value={skills} onChange={(e) => setSkills(e.target.value)} required placeholder="VD: React, thiết kế, tổ chức sự kiện..." />
+                <label className="block text-sm font-semibold mb-2">
+                  Kỹ năng của bạn
+                </label>
+                <Input
+                  value={skills}
+                  onChange={(e) => setSkills(e.target.value)}
+                  required
+                  placeholder="VD: React, thiết kế, tổ chức sự kiện..."
+                />
               </div>
               <div>
-                <label className="block text-sm font-semibold mb-2">Cam kết khi tham gia</label>
-                <Textarea value={promiseText} onChange={(e) => setPromiseText(e.target.value)} required placeholder="Bạn sẽ đóng góp điều gì?" />
+                <label className="block text-sm font-semibold mb-2">
+                  Cam kết khi tham gia
+                </label>
+                <Textarea
+                  value={promiseText}
+                  onChange={(e) => setPromiseText(e.target.value)}
+                  required
+                  placeholder="Bạn sẽ đóng góp điều gì?"
+                />
               </div>
-              <Button type="submit" disabled={submitting} className="bg-teal-600 hover:bg-teal-700 text-white">
+              <Button
+                type="submit"
+                disabled={submitting}
+                className="bg-teal-600 hover:bg-teal-700 text-white"
+              >
                 {submitting ? "Đang gửi..." : "Gửi đơn tham gia"}
               </Button>
             </form>

@@ -371,8 +371,8 @@ export default function AdminUsers() {
                                 user.role === "ADMIN"
                                   ? "default"
                                   : user.role === "CLUB_LEADER"
-                                  ? "secondary"
-                                  : "outline"
+                                    ? "secondary"
+                                    : "outline"
                               }
                             >
                               {user.role.replace("_", " ")}

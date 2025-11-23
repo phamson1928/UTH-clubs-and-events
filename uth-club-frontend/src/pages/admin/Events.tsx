@@ -65,7 +65,7 @@ export default function AdminEvents() {
         {},
         {
           headers: { ...getAuthHeaders() },
-        }
+        },
       );
       const updatedEvents = events.filter((event) => event.id !== id);
       setEvents(updatedEvents);
@@ -87,7 +87,7 @@ export default function AdminEvents() {
         {},
         {
           headers: { ...getAuthHeaders() },
-        }
+        },
       );
       const updatedEvents = events.filter((event) => event.id !== id);
       setEvents(updatedEvents);

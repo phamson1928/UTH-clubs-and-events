@@ -90,7 +90,7 @@ export default function AdminClubs() {
     const totalClubs = clubs.length;
     const totalMembers = clubs.reduce(
       (sum, c: any) => sum + Number(c?.members || 0),
-      0
+      0,
     );
     const avgMembers =
       totalClubs > 0 ? Math.round(totalMembers / totalClubs) : 0;
@@ -107,7 +107,7 @@ export default function AdminClubs() {
         (c) =>
           c.name.toLowerCase().includes(q) ||
           c.category.toLowerCase().includes(q) ||
-          (c.owner?.name && c.owner.name.toLowerCase().includes(q))
+          (c.owner?.name && c.owner.name.toLowerCase().includes(q)),
       );
     }
 
@@ -175,7 +175,7 @@ export default function AdminClubs() {
         headers: { ...getAuthHeaders() },
       });
       setClubs((prev) =>
-        prev.map((c) => (c.id === currentClub.id ? { ...c, ...payload } : c))
+        prev.map((c) => (c.id === currentClub.id ? { ...c, ...payload } : c)),
       );
       setIsDialogOpen(false);
       setCurrentClub(null);

@@ -25,7 +25,8 @@ export default function ResetPassword() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const API_BASE = (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
+  const API_BASE =
+    (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -62,10 +63,16 @@ export default function ResetPassword() {
         throw new Error(details || `Yêu cầu thất bại (HTTP ${res.status})`);
       }
 
-      setMessage("Đặt lại mật khẩu thành công. Đang chuyển về trang đăng nhập...");
+      setMessage(
+        "Đặt lại mật khẩu thành công. Đang chuyển về trang đăng nhập...",
+      );
       setTimeout(() => navigate("/login"), 1200);
     } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || "Đã xảy ra lỗi. Vui lòng thử lại sau.");
+      setError(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Đã xảy ra lỗi. Vui lòng thử lại sau.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -76,7 +83,9 @@ export default function ResetPassword() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-2xl font-bold">Đặt lại mật khẩu</CardTitle>
-          <CardDescription>Nhập mật khẩu mới cho tài khoản của bạn</CardDescription>
+          <CardDescription>
+            Nhập mật khẩu mới cho tài khoản của bạn
+          </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
@@ -119,18 +128,29 @@ export default function ResetPassword() {
             </div>
 
             {message && (
-              <div className="text-sm text-green-600 bg-green-50 border border-green-200 p-3">{message}</div>
+              <div className="text-sm text-green-600 bg-green-50 border border-green-200 p-3">
+                {message}
+              </div>
             )}
             {error && (
-              <div className="text-sm text-red-600 bg-red-50 border border-red-200 p-3">{error}</div>
+              <div className="text-sm text-red-600 bg-red-50 border border-red-200 p-3">
+                {error}
+              </div>
             )}
           </CardContent>
           <CardFooter className="flex flex-col space-y-3">
-            <Button type="submit" className="w-full" disabled={isSubmitting || !token}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isSubmitting || !token}
+            >
               {isSubmitting ? "Đang xử lý..." : "Đặt lại mật khẩu"}
             </Button>
             <Button asChild variant="ghost" className="w-full">
-              <Link to="/login" className="flex items-center justify-center gap-2">
+              <Link
+                to="/login"
+                className="flex items-center justify-center gap-2"
+              >
                 <ArrowLeft className="h-4 w-4" />
                 Quay lại đăng nhập
               </Link>

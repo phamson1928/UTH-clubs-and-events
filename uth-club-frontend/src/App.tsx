@@ -35,7 +35,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/auth/reset-password" element={<ResetPassword />} />
-        
+
         {/* Student Routes */}
         <Route path="/" element={<StudentHome />} />
         <Route path="/student/clubs" element={<StudentClubs />} />

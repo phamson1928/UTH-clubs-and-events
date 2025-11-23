@@ -122,7 +122,7 @@ export default function StudentClubs() {
         (c) =>
           c.name.toLowerCase().includes(q) ||
           c.description.toLowerCase().includes(q) ||
-          c.category.toLowerCase().includes(q)
+          c.category.toLowerCase().includes(q),
       );
     }
 

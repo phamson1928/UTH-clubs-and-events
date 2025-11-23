@@ -1,10 +1,4 @@
-import {
-  LayoutDashboard,
-  Users,
-  FileText,
-  Calendar,
-  Send,
-} from "lucide-react";
+import { LayoutDashboard, Users, FileText, Calendar, Send } from "lucide-react";
 import Navbar from "../../components/Navbar";
 import Sidebar from "../../components/Sidebar";
 import {

@@ -45,7 +45,7 @@ export default function ForgotPassword() {
       }
 
       setMessage(
-        "Nếu email tồn tại trong hệ thống, chúng tôi đã gửi hướng dẫn đặt lại mật khẩu. Vui lòng kiểm tra hộp thư của bạn."
+        "Nếu email tồn tại trong hệ thống, chúng tôi đã gửi hướng dẫn đặt lại mật khẩu. Vui lòng kiểm tra hộp thư của bạn.",
       );
     } catch (err: any) {
       setError(err?.message || "Đã xảy ra lỗi. Vui lòng thử lại sau.");
