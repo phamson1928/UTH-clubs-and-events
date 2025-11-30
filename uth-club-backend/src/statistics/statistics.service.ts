@@ -25,17 +25,15 @@ export class StatisticsService {
   ) {}
 
   async getAdminDashboardStatistics() {
-    const totalClubs = await this.eventsRepository.count();
+    const totalClubs = await this.clubRepository.count();
 
     const totalMembers = await this.userRepository
       .createQueryBuilder('user')
-      .where('user.role = :role', { role: 'member' })
+      .where('user.role = :role', { role: 'user' })
       .andWhere('user.isVerified = :isVerified', { isVerified: true })
       .getCount();
 
-    const totalEvents = await this.eventsRepository.count({
-      where: { status: 'approved' },
-    });
+    const totalEvents = await this.eventsRepository.count();
 
     const pendingEvents = await this.eventsRepository.count({
       where: { status: 'pending' },
@@ -47,6 +45,65 @@ export class StatisticsService {
       totalEvents,
       pendingEvents,
     };
+  }
+
+  // New charts: Events status breakdown and monthly status by year
+  async getEventStatusDistribution() {
+    const result = await this.eventsRepository
+      .createQueryBuilder('event')
+      .select('event.status', 'status')
+      .addSelect('COUNT(event.id)', 'count')
+      .groupBy('event.status')
+      .getRawMany<{ status: string; count: string | number }>();
+
+    const statuses = ['approved', 'pending', 'rejected', 'canceled'];
+    const map = new Map(result.map((r) => [r.status, Number(r.count)]));
+    return statuses.map((s) => ({ status: s, count: map.get(s) || 0 }));
+  }
+
+  async getMonthlyEventsByStatus(year: number) {
+    const rows = await this.eventsRepository
+      .createQueryBuilder('event')
+      .select('EXTRACT(MONTH FROM event.date)', 'month')
+      .addSelect('event.status', 'status')
+      .addSelect('COUNT(event.id)', 'count')
+      .where('EXTRACT(YEAR FROM event.date) = :year', { year })
+      .groupBy('month')
+      .addGroupBy('status')
+      .orderBy('month', 'ASC')
+      .getRawMany<{
+        month: string | number;
+        status: string;
+        count: string | number;
+      }>();
+
+    const months = Array.from({ length: 12 }, (_, i) => ({
+      month: i + 1,
+      approved: 0,
+      pending: 0,
+      rejected: 0,
+      canceled: 0,
+    }));
+
+    rows.forEach((r) => {
+      const idx = Number(r.month) - 1;
+      if (idx >= 0 && idx < 12) {
+        const key = r.status as
+          | 'approved'
+          | 'pending'
+          | 'rejected'
+          | 'canceled';
+        if (key in months[idx]) {
+          // Assign in a type-safe way
+          if (key === 'approved') months[idx].approved = Number(r.count);
+          if (key === 'pending') months[idx].pending = Number(r.count);
+          if (key === 'rejected') months[idx].rejected = Number(r.count);
+          if (key === 'canceled') months[idx].canceled = Number(r.count);
+        }
+      }
+    });
+
+    return months;
   }
 
   async getOwnClubDashboardStatistics(clubId: number) {

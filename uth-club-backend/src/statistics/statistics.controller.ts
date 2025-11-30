@@ -57,6 +57,22 @@ export class StatisticsController {
     return this.statisticsService.getClubCategoryStatistics();
   }
 
+  @Get('admin/events-status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  getEventsStatusDistribution() {
+    return this.statisticsService.getEventStatusDistribution();
+  }
+
+  @Get('admin/events-monthly-status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  getMonthlyEventsByStatus(@Query('year') year: number) {
+    return this.statisticsService.getMonthlyEventsByStatus(
+      year || new Date().getFullYear(),
+    );
+  }
+
   // Chart Statistics for Club Owner
   @Get('club-owner/events-growth')
   @UseGuards(JwtAuthGuard, RolesGuard)

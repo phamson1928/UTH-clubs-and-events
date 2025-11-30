@@ -48,6 +48,12 @@ const getAuthHeaders = () => {
 };
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
+const STATUS_COLORS: Record<string, string> = {
+  approved: "#22c55e",
+  pending: "#f59e0b",
+  rejected: "#ef4444",
+  canceled: "#6b7280",
+};
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -56,27 +62,39 @@ export default function AdminDashboard() {
   const [usersGrowth, setUsersGrowth] = useState<any[]>([]);
   const [clubCategories, setClubCategories] = useState<any[]>([]);
   const [topClubs, setTopClubs] = useState<any[]>([]);
+  const [eventsStatus, setEventsStatus] = useState<any[]>([]);
+  const [eventsMonthlyStatus, setEventsMonthlyStatus] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
         const headers = getAuthHeaders();
-        const [statsRes, eventsGrowthRes, usersGrowthRes, clubCategoriesRes] =
-          await Promise.all([
-            axios.get(`${API_BASE}/statistics/admin_statistics`, { headers }),
-            axios.get(`${API_BASE}/statistics/admin/events-growth`, {
-              headers,
-            }),
-            axios.get(`${API_BASE}/statistics/admin/users-growth`, { headers }),
-            axios.get(`${API_BASE}/statistics/admin/club-categories`, {
-              headers,
-            }),
-          ]);
+        const [
+          statsRes,
+          eventsGrowthRes,
+          usersGrowthRes,
+          clubCategoriesRes,
+          eventsStatusRes,
+          eventsMonthlyStatusRes,
+        ] = await Promise.all([
+          axios.get(`${API_BASE}/statistics/admin_statistics`, { headers }),
+          axios.get(`${API_BASE}/statistics/admin/events-growth`, { headers }),
+          axios.get(`${API_BASE}/statistics/admin/users-growth`, { headers }),
+          axios.get(`${API_BASE}/statistics/admin/club-categories`, {
+            headers,
+          }),
+          axios.get(`${API_BASE}/statistics/admin/events-status`, { headers }),
+          axios.get(`${API_BASE}/statistics/admin/events-monthly-status`, {
+            headers,
+          }),
+        ]);
 
         setStats(statsRes.data);
         setEventsGrowth(eventsGrowthRes.data);
         setUsersGrowth(usersGrowthRes.data);
         setClubCategories(clubCategoriesRes.data);
+        setEventsStatus(eventsStatusRes.data);
+        setEventsMonthlyStatus(eventsMonthlyStatusRes.data);
       } catch (error) {
         if (
           axios.isAxiosError(error) &&
@@ -248,28 +266,81 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
 
-            {/* Top Clubs Bar Chart */}
+            {/* Events Status Pie Chart */}
             <Card>
               <CardHeader>
-                <CardTitle>Top 5 Clubs by Members</CardTitle>
+                <CardTitle>Events by Status</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      layout="vertical"
-                      data={topClubs}
-                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                    >
+                    <PieChart>
+                      <Pie
+                        data={eventsStatus}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) =>
+                          `${name} ${(percent * 100).toFixed(0)}%`
+                        }
+                        outerRadius={80}
+                        dataKey="count"
+                        nameKey="status"
+                      >
+                        {eventsStatus.map((entry, index) => (
+                          <Cell
+                            key={`status-cell-${index}`}
+                            fill={
+                              STATUS_COLORS[entry.status] ||
+                              COLORS[index % COLORS.length]
+                            }
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Monthly Events by Status (stacked) */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Monthly Events by Status (This Year)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={eventsMonthlyStatus}>
                       <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis type="number" />
-                      <YAxis dataKey="clubName" type="category" width={100} />
+                      <XAxis dataKey="month" />
+                      <YAxis />
                       <Tooltip />
                       <Legend />
                       <Bar
-                        dataKey="memberCount"
-                        fill="#ffc658"
-                        name="Members"
+                        dataKey="approved"
+                        stackId="a"
+                        fill={STATUS_COLORS.approved}
+                        name="Approved"
+                      />
+                      <Bar
+                        dataKey="pending"
+                        stackId="a"
+                        fill={STATUS_COLORS.pending}
+                        name="Pending"
+                      />
+                      <Bar
+                        dataKey="rejected"
+                        stackId="a"
+                        fill={STATUS_COLORS.rejected}
+                        name="Rejected"
+                      />
+                      <Bar
+                        dataKey="canceled"
+                        stackId="a"
+                        fill={STATUS_COLORS.canceled}
+                        name="Canceled"
                       />
                     </BarChart>
                   </ResponsiveContainer>
