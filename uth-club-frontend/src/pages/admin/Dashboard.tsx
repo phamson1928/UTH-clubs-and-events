@@ -132,9 +132,11 @@ export default function AdminDashboard() {
                 <Building2 className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.totalClubs}</div>
+                <div className="text-2xl font-bold">
+                  {stats.totalClubs || 0}
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  +3 from last month
+                  Active clubs in system
                 </p>
               </CardContent>
             </Card>
@@ -147,10 +149,10 @@ export default function AdminDashboard() {
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.totalMembers}</div>
-                <p className="text-xs text-muted-foreground">
-                  +84 from last month
-                </p>
+                <div className="text-2xl font-bold">
+                  {stats.totalMembers || 0}
+                </div>
+                <p className="text-xs text-muted-foreground">Verified users</p>
               </CardContent>
             </Card>
 
@@ -162,8 +164,10 @@ export default function AdminDashboard() {
                 <Calendar className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.totalEvents}</div>
-                <p className="text-xs text-muted-foreground">This month</p>
+                <div className="text-2xl font-bold">
+                  {stats.totalEvents || 0}
+                </div>
+                <p className="text-xs text-muted-foreground">Total events</p>
               </CardContent>
             </Card>
 
@@ -175,8 +179,12 @@ export default function AdminDashboard() {
                 <FileText className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.pendingEvents}</div>
-                <p className="text-xs text-muted-foreground">Awaiting review</p>
+                <div className="text-2xl font-bold">
+                  {stats.pendingEvents || 0}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Awaiting approval
+                </p>
               </CardContent>
             </Card>
           </div>
