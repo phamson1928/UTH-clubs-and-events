@@ -1,4 +1,4 @@
-import { Controller, Get, Request, UseGuards } from '@nestjs/common';
+import { Controller, Get, Request, UseGuards, Query } from '@nestjs/common';
 import { StatisticsService } from './statistics.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from 'common/guards/roles.guard';
@@ -25,11 +25,64 @@ export class StatisticsController {
     return this.statisticsService.getOwnClubDashboardStatistics(clubId);
   }
 
-  // Lấy thống kê member
+  // Lấy thống kê trang chủ
   @Get('member_statistics')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('member')
   getMemberDashboardStatistics() {
     return this.statisticsService.getMemberDashboardStatistics();
+  }
+
+  // Chart Statistics for Admin
+  @Get('admin/events-growth')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  getEventsGrowthStatistics(@Query('year') year: number) {
+    return this.statisticsService.getEventsGrowthStatistics(
+      year || new Date().getFullYear(),
+    );
+  }
+
+  @Get('admin/users-growth')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  getUserGrowthStatistics(@Query('year') year: number) {
+    return this.statisticsService.getUserGrowthStatistics(
+      year || new Date().getFullYear(),
+    );
+  }
+
+  @Get('admin/club-categories')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  getClubCategoryStatistics() {
+    return this.statisticsService.getClubCategoryStatistics();
+  }
+
+  // Chart Statistics for Club Owner
+  @Get('club-owner/events-growth')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('club_owner')
+  getClubEventsGrowthStatistics(
+    @Request() req: { user: { clubId: number } },
+    @Query('year') year: number,
+  ) {
+    const clubId = req.user.clubId;
+    return this.statisticsService.getClubEventsGrowthStatistics(
+      clubId,
+      year || new Date().getFullYear(),
+    );
+  }
+
+  @Get('club-owner/members-growth')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('club_owner')
+  getClubMemberGrowthStatistics(
+    @Request() req: { user: { clubId: number } },
+    @Query('year') year: number,
+  ) {
+    const clubId = req.user.clubId;
+    return this.statisticsService.getClubMemberGrowthStatistics(
+      clubId,
+      year || new Date().getFullYear(),
+    );
   }
 }

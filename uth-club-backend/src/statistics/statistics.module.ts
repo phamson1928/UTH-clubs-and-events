@@ -5,9 +5,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Event } from 'src/events/entities/event.entity';
 import { User } from 'src/users/entities/user.entity';
 import { Club } from 'src/clubs/entities/club.entity';
+import { Membership } from 'src/memberships/entities/membership.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Event, User, Club])],
+  imports: [TypeOrmModule.forFeature([Event, User, Club, Membership])],
   controllers: [StatisticsController],
   providers: [StatisticsService],
 })
