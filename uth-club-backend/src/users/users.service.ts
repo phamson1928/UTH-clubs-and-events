@@ -18,24 +18,30 @@ export class UsersService {
   }
 
   async findAll() {
-    return await this.usersRepository
-      .createQueryBuilder('user')
-      .leftJoin('user.memberships', 'membership')
-      .leftJoin('membership.club', 'club')
-      .select([
-        'user.id',
-        'user.name',
-        'user.email',
-        'user.role',
-        'user.mssv',
-        'user.createdAt',
-        'club.id',
-        'club.name',
-        'membership.status',
-      ])
-      .where('user.isVerified = :isVerified', { isVerified: false })
-      .orderBy('user.createdAt', 'DESC')
-      .getMany();
+    return await this.usersRepository.find({
+      relations: ['memberships', 'ownedClubs'],
+      order: {
+        createdAt: 'DESC',
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        mssv: true,
+        createdAt: true,
+        isVerified: true,
+        memberships: {
+          id: true,
+          status: true,
+        },
+        ownedClubs: {
+          id: true,
+          name: true,
+          category: true,
+        },
+      },
+    });
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {

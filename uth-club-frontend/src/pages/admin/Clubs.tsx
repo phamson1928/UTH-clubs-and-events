@@ -54,6 +54,7 @@ const sidebarLinks = [
 
 export default function AdminClubs() {
   const [clubs, setClubs] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const navigate = useNavigate();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentClub, setCurrentClub] = useState<any | null>(null);
@@ -63,10 +64,16 @@ export default function AdminClubs() {
     (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
 
   useEffect(() => {
-    const fetchClubs = async () => {
+    const fetchData = async () => {
       try {
-        const res = await axios.get(`${API_BASE}/clubs`);
-        setClubs(res.data);
+        const [clubsRes, usersRes] = await Promise.all([
+          axios.get(`${API_BASE}/clubs`),
+          axios.get(`${API_BASE}/users`, {
+            headers: { ...getAuthHeaders() },
+          }),
+        ]);
+        setClubs(clubsRes.data);
+        setUsers(usersRes.data);
       } catch (error) {
         if (
           axios.isAxiosError(error) &&
@@ -77,7 +84,7 @@ export default function AdminClubs() {
         }
       }
     };
-    fetchClubs();
+    fetchData();
   }, []);
 
   const [filters, setFilters] = useState<Filters>({
@@ -90,7 +97,7 @@ export default function AdminClubs() {
     const totalClubs = clubs.length;
     const totalMembers = clubs.reduce(
       (sum, c: any) => sum + Number(c?.members || 0),
-      0,
+      0
     );
     const avgMembers =
       totalClubs > 0 ? Math.round(totalMembers / totalClubs) : 0;
@@ -107,7 +114,7 @@ export default function AdminClubs() {
         (c) =>
           c.name.toLowerCase().includes(q) ||
           c.category.toLowerCase().includes(q) ||
-          (c.owner?.name && c.owner.name.toLowerCase().includes(q)),
+          (c.owner?.name && c.owner.name.toLowerCase().includes(q))
       );
     }
 
@@ -132,7 +139,7 @@ export default function AdminClubs() {
   };
 
   const handleEdit = (club: any) => {
-    setCurrentClub({ ...club });
+    setCurrentClub({ ...club, ownerId: club.owner?.id });
     setIsDialogOpen(true);
   };
 
@@ -169,14 +176,16 @@ export default function AdminClubs() {
       const payload = {
         name: currentClub.name,
         category: currentClub.category,
-        // description or other fields can be added here if needed
+        ownerId: currentClub.ownerId,
       };
       await axios.patch(`${API_BASE}/clubs/${currentClub.id}`, payload, {
         headers: { ...getAuthHeaders() },
       });
-      setClubs((prev) =>
-        prev.map((c) => (c.id === currentClub.id ? { ...c, ...payload } : c)),
-      );
+
+      // Refresh clubs to get updated owner info
+      const clubsRes = await axios.get(`${API_BASE}/clubs`);
+      setClubs(clubsRes.data);
+
       setIsDialogOpen(false);
       setCurrentClub(null);
     } catch (error) {
@@ -335,6 +344,29 @@ export default function AdminClubs() {
                     onChange={handleInputChange}
                     required
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="ownerId">Owner</Label>
+                  <select
+                    id="ownerId"
+                    name="ownerId"
+                    value={currentClub?.ownerId || currentClub?.owner?.id || ""}
+                    onChange={(e) =>
+                      setCurrentClub({
+                        ...currentClub,
+                        ownerId: Number(e.target.value),
+                      })
+                    }
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    required
+                  >
+                    <option value="">Select owner</option>
+                    {users.map((user) => (
+                      <option key={user.id} value={user.id}>
+                        {user.name} ({user.email})
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <DialogFooter>
                   <Button

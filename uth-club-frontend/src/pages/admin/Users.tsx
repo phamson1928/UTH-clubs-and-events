@@ -111,16 +111,26 @@ export default function AdminUsers() {
     const searchLower = searchTerm.toLowerCase();
     return (
       user.email.toLowerCase().includes(searchLower) ||
-      `${user.firstName} ${user.lastName}`
-        .toLowerCase()
-        .includes(searchLower) ||
-      (user.studentId && user.studentId.includes(searchTerm)) ||
+      user.name.toLowerCase().includes(searchLower) ||
+      (user.mssv && user.mssv.includes(searchTerm)) ||
       user.role.toLowerCase().includes(searchLower)
     );
   });
 
   const handleEdit = (user: any) => {
     setCurrentUser(user);
+    setIsDialogOpen(true);
+  };
+
+  const handleCreate = () => {
+    setCurrentUser({
+      name: "",
+      email: "",
+      password: "",
+      mssv: "",
+      role: "user",
+      verificationToken: "admin-created",
+    });
     setIsDialogOpen(true);
   };
 
@@ -152,15 +162,18 @@ export default function AdminUsers() {
 
     setIsSubmitting(true);
     try {
-      const method = currentUser.id ? "PUT" : "POST";
+      const method = currentUser.id ? "PATCH" : "POST";
       const url = currentUser.id
         ? `${API_BASE}/users/update/${currentUser.id}`
-        : `${API_BASE}/users`;
+        : `${API_BASE}/users/create`;
+
+      // Only send necessary fields, exclude relations
+      const { memberships, ownedClubs, createdAt, ...userData } = currentUser;
 
       const res = await axios({
         method,
         url,
-        data: currentUser,
+        data: userData,
         headers: {
           ...getAuthHeaders(),
         },
@@ -208,115 +221,104 @@ export default function AdminUsers() {
               <h1 className="text-2xl font-bold">User Management</h1>
               <p className="text-gray-500">Manage all users in the system</p>
             </div>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>
-                    {currentUser?.id ? "Edit User" : "Add New User"}
-                  </DialogTitle>
-                  <DialogDescription>
-                    {currentUser?.id
-                      ? "Update user information"
-                      : "Add a new user to the system"}
-                  </DialogDescription>
-                </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="firstName">First Name</Label>
-                      <Input
-                        id="firstName"
-                        name="firstName"
-                        value={currentUser?.firstName || ""}
-                        onChange={handleInputChange}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="lastName">Last Name</Label>
-                      <Input
-                        id="lastName"
-                        name="lastName"
-                        value={currentUser?.lastName || ""}
-                        onChange={handleInputChange}
-                        required
-                      />
-                    </div>
-                  </div>
+            <Button onClick={handleCreate}>
+              <UserPlus className="mr-2 h-4 w-4" />
+              Add User
+            </Button>
+          </div>
+
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>
+                  {currentUser?.id ? "Edit User" : "Add New User"}
+                </DialogTitle>
+                <DialogDescription>
+                  {currentUser?.id
+                    ? "Update user information"
+                    : "Add a new user to the system"}
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Name</Label>
+                  <Input
+                    id="name"
+                    name="name"
+                    value={currentUser?.name || ""}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={currentUser?.email || ""}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+                {!currentUser?.id && (
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="password">Password</Label>
                     <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      value={currentUser?.email || ""}
+                      id="password"
+                      name="password"
+                      type="password"
+                      value={currentUser?.password || ""}
                       onChange={handleInputChange}
                       required
                     />
                   </div>
-                  {(!currentUser?.id || currentUser?.role === "STUDENT") && (
-                    <div className="space-y-2">
-                      <Label htmlFor="studentId">Student ID</Label>
-                      <Input
-                        id="studentId"
-                        name="studentId"
-                        value={currentUser?.studentId || ""}
-                        onChange={handleInputChange}
-                        disabled={!!currentUser?.id}
-                      />
-                    </div>
-                  )}
-                  <div className="space-y-2">
-                    <Label htmlFor="role">Role</Label>
-                    <Select
-                      value={currentUser?.role || ""}
-                      onValueChange={(value: UserRole) =>
-                        currentUser &&
-                        setCurrentUser({ ...currentUser, role: value })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="ADMIN">Admin</SelectItem>
-                        <SelectItem value="CLUB_LEADER">Club Leader</SelectItem>
-                        <SelectItem value="STUDENT">Student</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      id="isActive"
-                      name="isActive"
-                      type="checkbox"
-                      checked={currentUser?.isActive || false}
-                      onChange={handleInputChange}
-                      className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                    />
-                    <Label htmlFor="isActive" className="text-sm font-medium">
-                      Active
-                    </Label>
-                  </div>
-                  <DialogFooter className="mt-6">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        setIsDialogOpen(false);
-                        setCurrentUser(null);
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                    <Button type="submit" disabled={isSubmitting}>
-                      {isSubmitting ? "Saving..." : "Save"}
-                    </Button>
-                  </DialogFooter>
-                </form>
-              </DialogContent>
-            </Dialog>
-          </div>
+                )}
+                <div className="space-y-2">
+                  <Label htmlFor="mssv">Student ID (MSSV)</Label>
+                  <Input
+                    id="mssv"
+                    name="mssv"
+                    value={currentUser?.mssv || ""}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="role">Role</Label>
+                  <Select
+                    value={currentUser?.role || ""}
+                    onValueChange={(value: string) =>
+                      currentUser &&
+                      setCurrentUser({ ...currentUser, role: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="user">User</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <DialogFooter className="mt-6">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setIsDialogOpen(false);
+                      setCurrentUser(null);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? "Saving..." : "Save"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
 
           <Card>
             <CardHeader>
@@ -368,11 +370,11 @@ export default function AdminUsers() {
                           <TableCell>
                             <Badge
                               variant={
-                                user.role === "ADMIN"
+                                user.role === "admin"
                                   ? "default"
-                                  : user.role === "CLUB_LEADER"
-                                    ? "secondary"
-                                    : "outline"
+                                  : user.role === "club_owner"
+                                  ? "secondary"
+                                  : "outline"
                               }
                             >
                               {user.role.replace("_", " ")}
@@ -382,10 +384,23 @@ export default function AdminUsers() {
                             {new Date(user.createdAt).toLocaleDateString()}
                           </TableCell>
                           <TableCell>
-                            {user.memberships.length > 0 ? (
-                              <Badge variant="default">Yes</Badge>
+                            {user.role === "club_owner" &&
+                            user.ownedClubs &&
+                            user.ownedClubs.length > 0 ? (
+                              <div className="flex flex-col gap-1">
+                                {user.ownedClubs.map((club: any) => (
+                                  <Badge key={club.id} variant="default">
+                                    {club.name}
+                                  </Badge>
+                                ))}
+                              </div>
+                            ) : user.memberships &&
+                              user.memberships.length > 0 ? (
+                              <Badge variant="secondary">
+                                {user.memberships.length} club(s)
+                              </Badge>
                             ) : (
-                              <Badge variant="outline">No</Badge>
+                              <Badge variant="outline">No club</Badge>
                             )}
                           </TableCell>
                           <TableCell className="text-right">
