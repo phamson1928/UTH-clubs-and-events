@@ -49,7 +49,12 @@ export class ClubsService {
   }
 
   async update(id: number, updateClubDto: UpdateClubDto) {
-    return await this.clubsRepository.update(id, updateClubDto);
+    const club = await this.clubsRepository.findOneBy({ id });
+    if (!club) {
+      throw new Error('Club not found');
+    }
+    Object.assign(club, updateClubDto);
+    return await this.clubsRepository.save(club);
   }
 
   async remove(id: number) {

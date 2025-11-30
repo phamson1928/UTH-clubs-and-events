@@ -59,6 +59,8 @@ export default function AdminClubs() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentClub, setCurrentClub] = useState<any | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
 
   const API_BASE =
     (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
@@ -168,14 +170,48 @@ export default function AdminClubs() {
     setCurrentClub({ ...currentClub, [name]: value });
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentClub?.id) return;
     setIsSubmitting(true);
     try {
+      let uploadedImageUrl = currentClub.club_image;
+
+      // Upload image if a new file was selected
+      if (imageFile) {
+        const formData = new FormData();
+        formData.append("file", imageFile);
+
+        const uploadRes = await axios.post(
+          `${API_BASE}/upload/image`,
+          formData,
+          {
+            headers: {
+              ...getAuthHeaders(),
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+        uploadedImageUrl = uploadRes.data.path;
+      }
+
       const payload = {
         name: currentClub.name,
+        description: currentClub.description,
         category: currentClub.category,
+        club_image: uploadedImageUrl,
         ownerId: currentClub.ownerId,
       };
       await axios.patch(`${API_BASE}/clubs/${currentClub.id}`, payload, {
@@ -188,6 +224,8 @@ export default function AdminClubs() {
 
       setIsDialogOpen(false);
       setCurrentClub(null);
+      setImageFile(null);
+      setImagePreview("");
     } catch (error) {
       if (
         axios.isAxiosError(error) &&
@@ -336,6 +374,15 @@ export default function AdminClubs() {
                   />
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Input
+                    id="description"
+                    name="description"
+                    value={currentClub?.description || ""}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="category">Category</Label>
                   <Input
                     id="category"
@@ -344,6 +391,25 @@ export default function AdminClubs() {
                     onChange={handleInputChange}
                     required
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="club_image">Club Image</Label>
+                  <Input
+                    id="club_image"
+                    name="club_image"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                  />
+                  {(imagePreview || currentClub?.club_image) && (
+                    <div className="mt-2">
+                      <img
+                        src={imagePreview || currentClub?.club_image}
+                        alt="Preview"
+                        className="w-32 h-32 object-cover rounded-md border"
+                      />
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="ownerId">Owner</Label>
@@ -375,6 +441,8 @@ export default function AdminClubs() {
                     onClick={() => {
                       setIsDialogOpen(false);
                       setCurrentClub(null);
+                      setImageFile(null);
+                      setImagePreview("");
                     }}
                   >
                     Cancel
