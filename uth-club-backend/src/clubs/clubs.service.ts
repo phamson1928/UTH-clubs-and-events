@@ -4,12 +4,15 @@ import { UpdateClubDto } from './dto/update-club.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Club } from './entities/club.entity';
 import { Repository } from 'typeorm';
+import { User } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class ClubsService {
   constructor(
     @InjectRepository(Club)
     private clubsRepository: Repository<Club>,
+    @InjectRepository(User)
+    private usersRepository: Repository<User>,
   ) {}
 
   async create(createClubDto: CreateClubDto) {
@@ -49,11 +52,26 @@ export class ClubsService {
   }
 
   async update(id: number, updateClubDto: UpdateClubDto) {
-    const club = await this.clubsRepository.findOneBy({ id });
+    const club = await this.clubsRepository.preload({
+      id: id,
+      ...updateClubDto,
+    });
+
     if (!club) {
-      throw new Error('Club not found');
+      throw new Error(`Club with ID ${id} not found`);
     }
-    Object.assign(club, updateClubDto);
+
+    if (updateClubDto.ownerId) {
+      const owner = await this.usersRepository.findOne({
+        where: { id: updateClubDto.ownerId },
+      });
+      if (!owner) {
+        throw new Error(`Owner with ID ${updateClubDto.ownerId} not found`);
+      }
+      owner.role = 'club_owner';
+      await this.usersRepository.save(owner);
+    }
+
     return await this.clubsRepository.save(club);
   }
 

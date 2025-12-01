@@ -5,6 +5,7 @@ import {
   ManyToOne,
   OneToMany,
   CreateDateColumn,
+  JoinColumn,
 } from 'typeorm';
 import { User } from 'src/users/entities/user.entity';
 import { Membership } from 'src/memberships/entities/membership.entity';
@@ -22,7 +23,11 @@ export class Club {
   description: string;
 
   @ManyToOne(() => User, (user) => user.ownedClubs)
+  @JoinColumn({ name: 'ownerId' })
   owner: User;
+
+  @Column()
+  ownerId: number;
 
   @Column()
   category: string;
