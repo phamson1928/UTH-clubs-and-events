@@ -16,7 +16,16 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  LineChart,
+  Line,
+  Legend,
 } from "recharts";
+import axios from "axios";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+const API_BASE =
+  (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
 
 const sidebarLinks = [
   { href: "/club-owner/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -26,13 +35,51 @@ const sidebarLinks = [
   { href: "/club-owner/requests", label: "Requests", icon: Send },
 ];
 
+const getAuthHeaders = () => {
+  const token = localStorage.getItem("authToken");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
 export default function ClubOwnerDashboard() {
-  const chartData = [
-    { month: "Jan", members: 120 },
-    { month: "Feb", members: 132 },
-    { month: "Mar", members: 145 },
-    { month: "Apr", members: 150 },
-  ];
+  const navigate = useNavigate();
+  const [stats, setStats] = useState<any>({});
+  const [eventsGrowth, setEventsGrowth] = useState<any[]>([]);
+  const [membersGrowth, setMembersGrowth] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const headers = getAuthHeaders();
+        const [statsRes, eventsGrowthRes, membersGrowthRes] = await Promise.all(
+          [
+            axios.get(`${API_BASE}/statistics/own-club_statistics`, {
+              headers,
+            }),
+            axios.get(`${API_BASE}/statistics/club-owner/events-growth`, {
+              headers,
+            }),
+            axios.get(`${API_BASE}/statistics/club-owner/members-growth`, {
+              headers,
+            }),
+          ]
+        );
+
+        setStats(statsRes.data);
+        setEventsGrowth(eventsGrowthRes.data);
+        setMembersGrowth(membersGrowthRes.data);
+      } catch (error) {
+        if (
+          axios.isAxiosError(error) &&
+          (error.response?.status === 401 || error.response?.status === 403)
+        ) {
+          navigate("/login");
+          return;
+        }
+        console.error("Failed to fetch statistics", error);
+      }
+    };
+    fetchStats();
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -58,9 +105,11 @@ export default function ClubOwnerDashboard() {
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">150</div>
+                <div className="text-2xl font-bold">
+                  {stats.totalMembersInClub || 0}
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  +12 from last month
+                  Active members in your club
                 </p>
               </CardContent>
             </Card>
@@ -68,12 +117,29 @@ export default function ClubOwnerDashboard() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">
-                  Pending Requests
+                  Total Events
+                </CardTitle>
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {stats.totalEvents || 0}
+                </div>
+                <p className="text-xs text-muted-foreground">Approved events</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Pending Events
                 </CardTitle>
                 <FileText className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">8</div>
+                <div className="text-2xl font-bold">
+                  {stats.pendingEvents || 0}
+                </div>
                 <p className="text-xs text-muted-foreground">Awaiting review</p>
               </CardContent>
             </Card>
@@ -81,101 +147,81 @@ export default function ClubOwnerDashboard() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">
-                  Upcoming Events
+                  Past Events
                 </CardTitle>
                 <Calendar className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">3</div>
-                <p className="text-xs text-muted-foreground">This month</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Active Rate
-                </CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">87%</div>
+                <div className="text-2xl font-bold">
+                  {stats.pastEvents || 0}
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  Member engagement
+                  Completed events
                 </p>
               </CardContent>
             </Card>
           </div>
 
-          {/* Chart */}
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>Member Growth</CardTitle>
-              <CardDescription>
-                Your club's member count over time
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="members" fill="hsl(var(--primary))" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          {/* Recent Activity */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <div className="h-2 w-2 rounded-full bg-primary" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">New member joined</p>
-                    <p className="text-xs text-muted-foreground">
-                      John Doe joined the club
-                    </p>
-                  </div>
-                  <span className="text-xs text-muted-foreground">
-                    2 hours ago
-                  </span>
+          {/* Charts Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            {/* Member Growth Chart */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Member Growth (This Year)</CardTitle>
+                <CardDescription>
+                  Your club's member count over time
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={membersGrowth}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar
+                        dataKey="count"
+                        fill="hsl(var(--primary))"
+                        name="New Members"
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
+              </CardContent>
+            </Card>
 
-                <div className="flex items-center gap-4">
-                  <div className="h-2 w-2 rounded-full bg-primary" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Event created</p>
-                    <p className="text-xs text-muted-foreground">
-                      React Workshop scheduled
-                    </p>
-                  </div>
-                  <span className="text-xs text-muted-foreground">
-                    5 hours ago
-                  </span>
+            {/* Events Growth Chart */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Events Growth (This Year)</CardTitle>
+                <CardDescription>
+                  Number of events created each month
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={eventsGrowth}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Line
+                        type="monotone"
+                        dataKey="count"
+                        stroke="#8884d8"
+                        strokeWidth={2}
+                        name="Events"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </div>
-
-                <div className="flex items-center gap-4">
-                  <div className="h-2 w-2 rounded-full bg-primary" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Application received</p>
-                    <p className="text-xs text-muted-foreground">
-                      Jane Smith applied to join
-                    </p>
-                  </div>
-                  <span className="text-xs text-muted-foreground">
-                    1 day ago
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </main>
       </div>
     </div>

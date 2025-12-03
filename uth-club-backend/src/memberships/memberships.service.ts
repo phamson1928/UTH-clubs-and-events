@@ -22,7 +22,7 @@ export class MembershipsService {
         'user.email',
         'user.mssv',
         'user.createdAt',
-        'membership.join_resason',
+        'membership.join_reason',
         'membership.skills',
         'membership.request_date',
         'membership.join_date',
@@ -46,7 +46,7 @@ export class MembershipsService {
         'user.mssv',
         'user.createdAt',
         'membership.join_date',
-        'membership.join_resason',
+        'membership.join_reason',
         'membership.skills',
         'membership.promise',
       ])
