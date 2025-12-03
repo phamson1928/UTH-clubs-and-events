@@ -27,7 +27,6 @@ export class UsersController {
   findAll() {
     return this.usersService.findAll();
   }
-
   // Tạo user mới
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')

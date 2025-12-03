@@ -107,13 +107,12 @@ export class StatisticsService {
   }
 
   async getOwnClubDashboardStatistics(clubId: number) {
-    const totalMembersInClub = await this.userRepository
-      .createQueryBuilder('user')
-      .where('user.role = :role', { role: 'member' })
-      .andWhere('user.isVerified = :isVerified', { isVerified: true })
-      .leftJoin('user.memberships', 'membership')
+    const totalMembersInClub = await this.membershipRepository
+      .createQueryBuilder('membership')
       .leftJoin('membership.club', 'club')
-      .andWhere('club.id = :clubId', { clubId })
+      .leftJoin('membership.user', 'user')
+      .where('club.id = :clubId', { clubId })
+      .andWhere('membership.status = :status', { status: 'approved' })
       .getCount();
 
     const totalEvents = await this.eventsRepository
@@ -134,7 +133,7 @@ export class StatisticsService {
       .createQueryBuilder('event')
       .leftJoin('event.club', 'club')
       .where('club.id = :clubId', { clubId })
-      .andWhere('event.status = :status', { status: 'pending' })
+      .andWhere('event.status = :status', { status: 'approved' })
       .andWhere('event.date < :date', { date: new Date() })
       .getCount();
 

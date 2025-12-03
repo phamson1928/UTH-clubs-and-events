@@ -11,7 +11,7 @@ export class MembershipsService {
     private membershipRepository: Repository<Membership>,
   ) {}
 
-  // Đơn xin tham gia club
+  // Lấy đơn xin tham gia club
   async findAllRequests(clubId: number) {
     return await this.membershipRepository
       .createQueryBuilder('membership')
@@ -22,6 +22,11 @@ export class MembershipsService {
         'user.email',
         'user.mssv',
         'user.createdAt',
+        'membership.join_resason',
+        'membership.skills',
+        'membership.request_date',
+        'membership.join_date',
+        'membership.promise',
       ])
       .leftJoin('membership.club', 'club')
       .where('membership.status = :status', { status: 'pending' })
@@ -40,6 +45,10 @@ export class MembershipsService {
         'user.email',
         'user.mssv',
         'user.createdAt',
+        'membership.join_date',
+        'membership.join_resason',
+        'membership.skills',
+        'membership.promise',
       ])
       .leftJoin('membership.club', 'club')
       .where('club.id = :clubId', { clubId })
