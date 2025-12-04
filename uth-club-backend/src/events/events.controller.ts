@@ -37,10 +37,12 @@ export class EventsController {
     return this.eventsService.findAll(status);
   }
 
-  // Lấy event theo club
-  @Get('events')
-  findAllByClub(@Request() req: { clubId: number }) {
-    return this.eventsService.findAllByClub(req.clubId);
+  // Lấy event theo club với status pending
+  @Get('pending_events')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('club_owner')
+  findAllByClub(@Request() req: { user: { clubId: number } }) {
+    return this.eventsService.findAllByClub(req.user.clubId);
   }
 
   // Lấy event theo id

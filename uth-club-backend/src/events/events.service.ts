@@ -58,8 +58,9 @@ export class EventsService {
   async findAllByClub(clubId: number) {
     return await this.eventsRepository
       .createQueryBuilder('event')
-      .leftJoin('event.club', 'club')
+      .leftJoinAndSelect('event.club', 'club')
       .where('club.id = :clubId', { clubId })
+      .andWhere('event.status = :status', { status: 'pending' })
       .getMany();
   }
 

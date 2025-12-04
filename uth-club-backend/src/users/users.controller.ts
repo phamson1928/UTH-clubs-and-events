@@ -54,4 +54,33 @@ export class UsersController {
   remove(@Param('id') id: string) {
     return this.usersService.remove(+id);
   }
+
+  // Sửa thông tin user bởi admin
+  @Post('admin/edit/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  async adminEditUser(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    if (updateUserDto.password) {
+      const hashedPassword = await bcrypt.hash(updateUserDto.password, 10);
+      updateUserDto.password = hashedPassword;
+    }
+    return this.usersService.update(+id, updateUserDto);
+  }
+
+  // Sửa thông tin email user bởi club owner
+  @Post('club-owner/edit-email/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('club_owner')
+  async clubOwnerEditUserEmail(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    const allowedFields: Partial<UpdateUserDto> = {
+      email: updateUserDto.email,
+    };
+    return this.usersService.update(+id, allowedFields);
+  }
 }
