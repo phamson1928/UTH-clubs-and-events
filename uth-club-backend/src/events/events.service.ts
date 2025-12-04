@@ -54,7 +54,7 @@ export class EventsService {
       .getMany();
   }
 
-  // Lấy event theo club
+  // Lấy event theo club cho request của club owner
   async findAllByClub(clubId: number) {
     return await this.eventsRepository
       .createQueryBuilder('event')
@@ -62,6 +62,23 @@ export class EventsService {
       .where('club.id = :clubId', { clubId })
       .andWhere('event.status = :status', { status: 'pending' })
       .getMany();
+  }
+
+  // Lấy event theo club và status cho member của club owner
+  async findAllByClubAndStatus(
+    clubId: number,
+    status?: 'pending' | 'approved' | 'rejected' | 'canceled',
+  ) {
+    const query = this.eventsRepository
+      .createQueryBuilder('event')
+      .leftJoinAndSelect('event.club', 'club')
+      .where('club.id = :clubId', { clubId });
+
+    if (status) {
+      query.andWhere('event.status = :status', { status });
+    }
+
+    return await query.getMany();
   }
 
   async findOne(id: number) {

@@ -45,6 +45,17 @@ export class EventsController {
     return this.eventsService.findAllByClub(req.user.clubId);
   }
 
+  // Lấy event theo status cho club owner
+  @Get('club_owner')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('club_owner')
+  findAllByClubAndStatus(
+    @Request() req: { user: { clubId: number } },
+    @Query('status') status?: 'pending' | 'approved' | 'rejected' | 'canceled',
+  ) {
+    return this.eventsService.findAllByClubAndStatus(req.user.clubId, status);
+  }
+
   // Lấy event theo id
   @Get(':id')
   findOne(@Param('id') id: string) {
