@@ -9,27 +9,8 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import { useEffect, useState } from "react";
-// Lightweight JWT decode (no verification). Parses payload base64.
-function decodeJwt(token: string): any | null {
-  try {
-    const parts = token.split(".");
-    if (parts.length !== 3) return null;
-    const payload = parts[1].replace(/-/g, "+").replace(/_/g, "/");
-    const json = decodeURIComponent(
-      atob(payload)
-        .split("")
-        .map(function (c) {
-          return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
-        })
-        .join("")
-    );
-    return JSON.parse(json);
-  } catch (e) {
-    console.error("[Members] Failed to decode JWT", e);
-    return null;
-  }
-}
 import { useNavigate } from "react-router-dom";
+import { useToast } from "../../hooks/use-toast";
 import Navbar from "../../components/Navbar";
 import Sidebar from "../../components/Sidebar";
 import { Button } from "../../components/ui/button";
@@ -60,6 +41,35 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "../../components/ui/avatar";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../../components/ui/dialog";
+import { Label } from "../../components/ui/label";
+
+// Lightweight JWT decode (no verification). Parses payload base64.
+function decodeJwt(token: string): any | null {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const payload = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const json = decodeURIComponent(
+      atob(payload)
+        .split("")
+        .map(function (c) {
+          return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+        })
+        .join("")
+    );
+    return JSON.parse(json);
+  } catch (e) {
+    console.error("[Members] Failed to decode JWT", e);
+    return null;
+  }
+}
 
 const API_BASE =
   (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
@@ -81,7 +91,143 @@ export default function ClubOwnerMembers() {
   const [members, setMembers] = useState<any[]>([]);
   const [owner, setOwner] = useState<any | null>(null);
   const [search, setSearch] = useState("");
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [candidates, setCandidates] = useState<any[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isEditEmailOpen, setIsEditEmailOpen] = useState(false);
+  const [editingMemberId, setEditingMemberId] = useState<number | null>(null);
+  const [newEmail, setNewEmail] = useState("");
+  const [confirmRemoveId, setConfirmRemoveId] = useState<number | null>(null);
   const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const openAddDialog = async () => {
+    try {
+      const res = await axios.get(`${API_BASE}/memberships/no-club-users`, {
+        headers: getAuthHeaders(),
+      });
+      const items = Array.isArray(res.data)
+        ? res.data.map((u: any) => ({
+            id: u.id ?? u.user?.id,
+            name: u.name ?? u.user?.name,
+            email: u.email ?? u.user?.email,
+          }))
+        : [];
+      setCandidates(items.filter((x: any) => x?.id));
+      setIsAddOpen(true);
+    } catch (error) {
+      console.error("[Members] candidates error:", error);
+    }
+  };
+
+  const handleAddMember = async () => {
+    if (!selectedUserId) return;
+    setIsSubmitting(true);
+    try {
+      await axios.post(
+        `${API_BASE}/memberships/${selectedUserId}/add-to-club`,
+        {},
+        { headers: getAuthHeaders() }
+      );
+      await reloadMembers();
+      setIsAddOpen(false);
+      setSelectedUserId("");
+      toast({
+        title: "Success",
+        description: "Member added successfully",
+      });
+    } catch (error) {
+      console.error("[Members] add member error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add member",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const reloadMembers = async () => {
+    try {
+      const res = await axios.get(`${API_BASE}/memberships/members`, {
+        headers: getAuthHeaders(),
+      });
+      setMembers(
+        res.data.map((m: any) => ({
+          id: m.id,
+          userId: m.user?.id,
+          name: m.user?.name,
+          email: m.user?.email,
+          mssv: m.user?.mssv,
+          joinedDate: m.join_date
+            ? new Date(m.join_date).toLocaleDateString()
+            : "",
+          joinReason: m.join_reason || "",
+          skills: m.skills || "",
+          promise: m.promise || "",
+          avatar: "/placeholder.svg",
+        }))
+      );
+    } catch (e) {
+      console.error("[Members] reload failed", e);
+    }
+  };
+
+  const handleRemoveMember = async (memberId: number) => {
+    try {
+      await axios.delete(`${API_BASE}/memberships/members/${memberId}`, {
+        headers: getAuthHeaders(),
+      });
+      setMembers((prev) => prev.filter((m) => m.id !== memberId));
+      setConfirmRemoveId(null);
+      toast({
+        title: "Success",
+        description: "Member removed from club",
+      });
+    } catch (error) {
+      console.error("[Members] remove failed", error);
+      toast({
+        title: "Error",
+        description: "Failed to remove member",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEditEmail = async () => {
+    if (!editingMemberId || !newEmail) return;
+    try {
+      const member = members.find((m) => m.id === editingMemberId);
+      if (!member?.userId) return;
+
+      await axios.post(
+        `${API_BASE}/users/club-owner/edit-email/${member.userId}`,
+        { email: newEmail },
+        { headers: getAuthHeaders() }
+      );
+      setMembers((prev) =>
+        prev.map((m) =>
+          m.id === editingMemberId ? { ...m, email: newEmail } : m
+        )
+      );
+      setIsEditEmailOpen(false);
+      setEditingMemberId(null);
+      setNewEmail("");
+      toast({
+        title: "Success",
+        description: "Email updated successfully",
+      });
+    } catch (error) {
+      console.error("[Members] edit email failed", error);
+      toast({
+        title: "Error",
+        description: "Failed to update email",
+        variant: "destructive",
+      });
+    }
+  };
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -183,7 +329,6 @@ export default function ClubOwnerMembers() {
                     A list of all members in your club
                   </CardDescription>
                 </div>
-                <Button>Add Member</Button>
               </div>
             </CardHeader>
             <CardContent>
@@ -281,9 +426,19 @@ export default function ClubOwnerMembers() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem>View Profile</DropdownMenuItem>
-                            <DropdownMenuItem>Change Role</DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive">
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setEditingMemberId(member.id);
+                                setNewEmail(member.email);
+                                setIsEditEmailOpen(true);
+                              }}
+                            >
+                              Change Email
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="text-destructive"
+                              onClick={() => setConfirmRemoveId(member.id)}
+                            >
                               Remove
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -295,6 +450,95 @@ export default function ClubOwnerMembers() {
               </Table>
             </CardContent>
           </Card>
+
+          <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add Member to Club</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label htmlFor="candidate">Select User</Label>
+                  <select
+                    id="candidate"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    value={selectedUserId}
+                    onChange={(e) => setSelectedUserId(e.target.value)}
+                  >
+                    <option value="">-- Choose a user --</option>
+                    {candidates.map((u: any) => (
+                      <option key={u.id} value={u.id}>
+                        {u.name} ({u.email})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsAddOpen(false)}>
+                  Cancel
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={isEditEmailOpen} onOpenChange={setIsEditEmailOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Change Email</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label htmlFor="email">New Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    placeholder="Enter new email"
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsEditEmailOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={handleEditEmail}>Save</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {confirmRemoveId !== null && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <Card className="w-96">
+                <CardHeader>
+                  <CardTitle>Remove Member</CardTitle>
+                  <CardDescription>
+                    Are you sure you want to remove this member from the club?
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex gap-3 justify-end">
+                    <Button
+                      variant="outline"
+                      onClick={() => setConfirmRemoveId(null)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={() => handleRemoveMember(confirmRemoveId)}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </main>
       </div>
     </div>

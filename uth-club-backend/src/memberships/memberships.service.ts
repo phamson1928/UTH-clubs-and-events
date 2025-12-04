@@ -125,4 +125,9 @@ export class MembershipsService {
       .where('club.id = :clubId', { clubId })
       .getMany();
   }
+
+  // Xóa thành viên khỏi club
+  async removeMemberFromClub(membershipId: number) {
+    return await this.membershipRepository.delete(membershipId);
+  }
 }

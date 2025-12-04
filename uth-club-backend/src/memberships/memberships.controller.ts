@@ -60,17 +60,6 @@ export class MembershipsController {
     return this.membershipsService.findUsersWithoutClub();
   }
 
-  // Thêm user vào club
-  @Post(':userId/add-to-club')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('club_owner')
-  async addUserToClub(
-    @Param('userId') userId: number,
-    @Request() req: { user: { clubId: number } },
-  ) {
-    return this.membershipsService.addUserToClub(userId, req.user.clubId);
-  }
-
   // Duyệt đơn xin tham gia club
   @Patch(':id/approve')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -93,5 +82,13 @@ export class MembershipsController {
   @Roles('club_owner')
   async delete(@Param('id') id: number) {
     return this.membershipsService.deleteMembershipRequest(id);
+  }
+
+  // Xóa thành viên khỏi club
+  @Delete('members/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('club_owner')
+  async removeMember(@Param('id') id: number) {
+    return this.membershipsService.removeMemberFromClub(id);
   }
 }
