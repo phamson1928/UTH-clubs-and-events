@@ -3,6 +3,8 @@ import { CreateMembershipDto } from './dto/create-membership.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Membership } from './entities/membership.entity';
 import { Repository } from 'typeorm';
+import { User } from 'src/users/entities/user.entity';
+import { Club } from 'src/clubs/entities/club.entity';
 
 @Injectable()
 export class MembershipsService {
@@ -56,6 +58,26 @@ export class MembershipsService {
       .getMany();
   }
 
+  // Lấy danh sách những người chưa có trong club nào
+  async findUsersWithoutClub() {
+    return await this.membershipRepository
+      .createQueryBuilder('membership')
+      .leftJoin('membership.user', 'user')
+      .leftJoin('membership.club', 'club')
+      .where('club.id IS NULL')
+      .getMany();
+  }
+
+  // Thêm user vào club
+  async addUserToClub(userId: number, clubId: number) {
+    return await this.membershipRepository.save({
+      userId,
+      clubId,
+      status: 'approved',
+      join_date: new Date(),
+    });
+  }
+
   // Tạo đơn xin tham gia club
   async createMembershipRequest(
     createMembershipDto: CreateMembershipDto,
@@ -65,6 +87,19 @@ export class MembershipsService {
     const membership = this.membershipRepository.create(createMembershipDto);
     membership.user.id = userId;
     membership.club.id = clubId;
+    return await this.membershipRepository.save(membership);
+  }
+
+  // Club owner thêm thành viên trực tiếp (approved)
+  async addApprovedMember(userId: number, clubId: number) {
+    const membership = new Membership();
+    membership.join_reason = '';
+    membership.skills = '';
+    membership.promise = '';
+    membership.status = 'approved';
+    membership.join_date = new Date();
+    membership.user = { id: userId } as unknown as User;
+    membership.club = { id: clubId } as unknown as Club;
     return await this.membershipRepository.save(membership);
   }
 

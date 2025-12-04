@@ -52,6 +52,25 @@ export class MembershipsController {
     return this.membershipsService.findAllMembers(req.user.clubId);
   }
 
+  // Lấy danh sách những người chưa có trong club nào
+  @Get('no-club-users')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('club_owner')
+  findUsersWithoutClub() {
+    return this.membershipsService.findUsersWithoutClub();
+  }
+
+  // Thêm user vào club
+  @Post(':userId/add-to-club')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('club_owner')
+  async addUserToClub(
+    @Param('userId') userId: number,
+    @Request() req: { user: { clubId: number } },
+  ) {
+    return this.membershipsService.addUserToClub(userId, req.user.clubId);
+  }
+
   // Duyệt đơn xin tham gia club
   @Patch(':id/approve')
   @UseGuards(JwtAuthGuard, RolesGuard)
