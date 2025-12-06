@@ -7,96 +7,17 @@ import {
   Quote,
   ArrowRight,
 } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import axios from "axios";
 import Navbar from "../../components/Navbar";
 import { Link } from "react-router-dom";
 
+const API_BASE =
+  (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
+
 export default function StudentClubs() {
-  const clubs = [
-    {
-      id: 1,
-      name: "Tech Innovators Hub",
-      members: 324,
-      category: "Technology",
-      description:
-        "Building the future with cutting-edge technology and innovation",
-      image:
-        "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&q=80",
-    },
-    {
-      id: 2,
-      name: "Creative Arts Collective",
-      members: 187,
-      category: "Arts",
-      description:
-        "Express yourself through various forms of artistic expression",
-      image:
-        "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=800&q=80",
-    },
-    {
-      id: 3,
-      name: "Athletic Excellence",
-      members: 412,
-      category: "Sports",
-      description: "Push your physical limits and achieve sporting greatness",
-      image:
-        "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800&q=80",
-    },
-    {
-      id: 4,
-      name: "Music Production Studio",
-      members: 156,
-      category: "Music",
-      description: "Create, produce, and perform music with talented musicians",
-      image:
-        "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=800&q=80",
-    },
-    {
-      id: 5,
-      name: "Business Leaders Forum",
-      members: 289,
-      category: "Business",
-      description: "Develop entrepreneurial skills and business acumen",
-      image:
-        "https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80",
-    },
-    {
-      id: 6,
-      name: "Digital Design Lab",
-      members: 198,
-      category: "Arts",
-      description: "Master digital design tools and create stunning visuals",
-      image:
-        "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&q=80",
-    },
-    {
-      id: 7,
-      name: "Robotics Engineering",
-      members: 145,
-      category: "Technology",
-      description: "Design, build, and program advanced robotic systems",
-      image:
-        "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800&q=80",
-    },
-    {
-      id: 8,
-      name: "Dance Performance",
-      members: 234,
-      category: "Arts",
-      description: "Express through movement and choreography",
-      image:
-        "https://images.unsplash.com/photo-1508807526345-15e9b5f4eaff?w=800&q=80",
-    },
-    {
-      id: 9,
-      name: "E-Sports Champions",
-      members: 378,
-      category: "Sports",
-      description: "Compete in professional gaming tournaments",
-      image:
-        "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&q=80",
-    },
-  ];
+  const [clubs, setClubs] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [filters, setFilters] = useState({
     query: "",
@@ -104,14 +25,46 @@ export default function StudentClubs() {
     sort: "popular",
   });
 
-  const categories = [
-    "all",
-    "Technology",
-    "Arts",
-    "Sports",
-    "Music",
-    "Business",
-  ];
+  const [categories, setCategories] = useState<string[]>(["all"]);
+
+  useEffect(() => {
+    fetchClubs();
+  }, []);
+
+  const fetchClubs = async () => {
+    setIsLoading(true);
+    try {
+      const res = await axios.get(`${API_BASE}/clubs`);
+      const items = Array.isArray(res.data)
+        ? res.data.map((club: any) => ({
+            id: club.id,
+            name: club.name || "Unnamed Club",
+            members: club.members || 0,
+            category: club.category || "General",
+            description: club.description || "No description available",
+            image:
+              club.club_image ||
+              "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&q=80",
+            owner: club.owner?.name || "Unknown",
+            createdAt: club.created_at,
+          }))
+        : [];
+      setClubs(items);
+
+      // Extract unique categories
+      const uniqueCategories = [
+        "all",
+        ...Array.from(new Set(items.map((c: any) => c.category))).filter(
+          Boolean
+        ),
+      ];
+      setCategories(uniqueCategories as string[]);
+    } catch (error) {
+      console.error("[Clubs] Failed to fetch clubs", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const visible = useMemo(() => {
     let items = clubs.slice();
@@ -122,7 +75,7 @@ export default function StudentClubs() {
         (c) =>
           c.name.toLowerCase().includes(q) ||
           c.description.toLowerCase().includes(q) ||
-          c.category.toLowerCase().includes(q),
+          c.category.toLowerCase().includes(q)
       );
     }
 
@@ -267,7 +220,15 @@ export default function StudentClubs() {
       {/* Clubs Grid */}
       <section className="py-16">
         <div className="container mx-auto px-6">
-          {visible.length === 0 ? (
+          {isLoading ? (
+            <div className="text-center py-20">
+              <div className="text-4xl mb-4">⏳</div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                Loading clubs...
+              </h3>
+              <p className="text-gray-600">Please wait a moment</p>
+            </div>
+          ) : visible.length === 0 ? (
             <div className="text-center py-20">
               <div className="text-6xl mb-4">🔍</div>
               <h3 className="text-2xl font-bold text-gray-900 mb-2">

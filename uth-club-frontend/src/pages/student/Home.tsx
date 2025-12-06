@@ -8,50 +8,56 @@ import {
   Star,
   Quote,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 import Navbar from "../../components/Navbar";
+
+const API_BASE =
+  (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
 
 export default function StudentHome() {
   const [heroQuery, setHeroQuery] = useState("");
+  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
+  const [isLoadingEvents, setIsLoadingEvents] = useState(true);
 
-  const upcomingEvents = [
-    {
-      id: 1,
-      title: "Hackathon 2025: AI Revolution",
-      club: "Innovation Lab",
-      date: "Nov 15, 2025",
-      time: "9:00 AM",
-      attendees: 156,
-      color: "bg-teal-500",
-    },
-    {
-      id: 2,
-      title: "Digital Art Showcase",
-      club: "Creative Collective",
-      date: "Nov 18, 2025",
-      time: "6:00 PM",
-      attendees: 89,
-      color: "bg-purple-500",
-    },
-    {
-      id: 3,
-      title: "Inter-University Championship",
-      club: "Velocity Sports",
-      date: "Nov 22, 2025",
-      time: "2:00 PM",
-      attendees: 340,
-      color: "bg-orange-500",
-    },
-    {
-      id: 4,
-      title: "Leadership Summit",
-      club: "Global Leaders",
-      date: "Nov 25, 2025",
-      time: "10:00 AM",
-      attendees: 124,
-      color: "bg-blue-500",
-    },
-  ];
+  useEffect(() => {
+    fetchApprovedEvents();
+  }, []);
+
+  const fetchApprovedEvents = async () => {
+    setIsLoadingEvents(true);
+    try {
+      const res = await axios.get(`${API_BASE}/events?status=approved`);
+      const items = Array.isArray(res.data)
+        ? res.data.map((event: any, index: number) => ({
+            id: event.id,
+            title: event.name || event.title || "Untitled Event",
+            club: event.club?.name || "Unknown Club",
+            date: event.date
+              ? new Date(event.date).toLocaleDateString()
+              : "TBA",
+            time: event.time || "TBA",
+            attendees: event.attendees || 0,
+            description: event.description || "",
+            location: event.location || "",
+            activities: event.activities || "",
+            color: [
+              "bg-teal-500",
+              "bg-purple-500",
+              "bg-orange-500",
+              "bg-blue-500",
+              "bg-green-500",
+              "bg-pink-500",
+            ][index % 6],
+          }))
+        : [];
+      setUpcomingEvents(items);
+    } catch (error) {
+      console.error("[Home] Failed to fetch events", error);
+    } finally {
+      setIsLoadingEvents(false);
+    }
+  };
 
   const stats = [
     {
@@ -368,48 +374,63 @@ export default function StudentHome() {
             </p>
           </div>
 
-          <div className="grid gap-6 max-w-5xl mx-auto">
-            {upcomingEvents.map((event) => (
-              <div
-                key={event.id}
-                className="bg-white border-2 border-gray-200 hover:border-teal-500 hover:shadow-xl transition-all group"
-              >
-                <div className="flex items-center">
-                  <div className={`w-2 h-full ${event.color}`}></div>
-                  <div className="flex-1 p-8">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-teal-600 transition-colors">
-                          {event.title}
-                        </h3>
-                        <p className="text-gray-600 font-medium mb-4">
-                          {event.club}
-                        </p>
-                        <div className="flex items-center gap-8 text-sm text-gray-600">
-                          <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4" />
-                            <span className="font-medium">{event.date}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">{event.time}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Users className="w-4 h-4" />
-                            <span className="font-medium">
-                              {event.attendees} attending
-                            </span>
+          {isLoadingEvents ? (
+            <div className="text-center py-12">
+              <div className="text-4xl mb-4">⏳</div>
+              <p className="text-gray-600">Loading events...</p>
+            </div>
+          ) : upcomingEvents.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">📅</div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                No Upcoming Events
+              </h3>
+              <p className="text-gray-600">Check back soon for new events!</p>
+            </div>
+          ) : (
+            <div className="grid gap-6 max-w-5xl mx-auto">
+              {upcomingEvents.map((event) => (
+                <div
+                  key={event.id}
+                  className="bg-white border-2 border-gray-200 hover:border-teal-500 hover:shadow-xl transition-all group"
+                >
+                  <div className="flex items-center">
+                    <div className={`w-2 h-full ${event.color}`}></div>
+                    <div className="flex-1 p-8">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-teal-600 transition-colors">
+                            {event.title}
+                          </h3>
+                          <p className="text-gray-600 font-medium mb-4">
+                            {event.club}
+                          </p>
+                          <div className="flex items-center gap-8 text-sm text-gray-600">
+                            <div className="flex items-center gap-2">
+                              <Calendar className="w-4 h-4" />
+                              <span className="font-medium">{event.date}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{event.time}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Users className="w-4 h-4" />
+                              <span className="font-medium">
+                                {event.attendees} attending
+                              </span>
+                            </div>
                           </div>
                         </div>
+                        <button className="px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-bold transition-all">
+                          Register Now
+                        </button>
                       </div>
-                      <button className="px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-bold transition-all">
-                        Register Now
-                      </button>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           <div className="text-center mt-12">
             <button className="px-8 py-4 border-2 border-gray-900 hover:bg-gray-900 hover:text-white text-gray-900 font-bold transition-all inline-flex items-center gap-2">
