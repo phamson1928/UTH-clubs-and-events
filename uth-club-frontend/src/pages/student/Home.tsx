@@ -31,13 +31,13 @@ export default function StudentHome() {
       const items = Array.isArray(res.data)
         ? res.data.map((event: any, index: number) => ({
             id: event.id,
-            title: event.name || event.title || "Untitled Event",
+            title: event.name || "Untitled Event",
             club: event.club?.name || "Unknown Club",
             date: event.date
               ? new Date(event.date).toLocaleDateString()
               : "TBA",
             time: event.time || "TBA",
-            attendees: event.attendees || 0,
+            attendees: event.attending_users_number || 0,
             description: event.description || "",
             location: event.location || "",
             activities: event.activities || "",
@@ -394,10 +394,10 @@ export default function StudentHome() {
                   key={event.id}
                   className="bg-white border-2 border-gray-200 hover:border-teal-500 hover:shadow-xl transition-all group"
                 >
-                  <div className="flex items-center">
+                  <div className="flex items-start">
                     <div className={`w-2 h-full ${event.color}`}></div>
                     <div className="flex-1 p-8">
-                      <div className="flex items-start justify-between">
+                      <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
                           <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-teal-600 transition-colors">
                             {event.title}
@@ -405,7 +405,7 @@ export default function StudentHome() {
                           <p className="text-gray-600 font-medium mb-4">
                             {event.club}
                           </p>
-                          <div className="flex items-center gap-8 text-sm text-gray-600">
+                          <div className="flex flex-wrap items-center gap-6 text-sm text-gray-600 mb-4">
                             <div className="flex items-center gap-2">
                               <Calendar className="w-4 h-4" />
                               <span className="font-medium">{event.date}</span>
@@ -421,10 +421,46 @@ export default function StudentHome() {
                             </div>
                           </div>
                         </div>
-                        <button className="px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-bold transition-all">
+                        <button className="px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-bold transition-all whitespace-nowrap">
                           Register Now
                         </button>
                       </div>
+
+                      {/* Description */}
+                      {event.description && (
+                        <div className="mb-4">
+                          <h4 className="text-sm font-semibold text-gray-900 mb-1">
+                            Description:
+                          </h4>
+                          <p className="text-sm text-gray-700 leading-relaxed">
+                            {event.description}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Location */}
+                      {event.location && (
+                        <div className="mb-4">
+                          <h4 className="text-sm font-semibold text-gray-900 mb-1">
+                            Location:
+                          </h4>
+                          <p className="text-sm text-gray-700">
+                            {event.location}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Activities */}
+                      {event.activities && (
+                        <div>
+                          <h4 className="text-sm font-semibold text-gray-900 mb-1">
+                            Activities:
+                          </h4>
+                          <p className="text-sm text-gray-700 leading-relaxed">
+                            {event.activities}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

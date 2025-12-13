@@ -32,6 +32,8 @@ export class EventsService {
           'event.location',
           'event.status',
           'event.activities',
+          'event.event_image',
+          'event.attending_users_number',
           'club.id',
           'club.name',
         ])
@@ -48,6 +50,9 @@ export class EventsService {
         'event.date',
         'event.location',
         'event.status',
+        'event.activities',
+        'event.event_image',
+        'event.attending_users_number',
         'club.id',
         'club.name',
       ])

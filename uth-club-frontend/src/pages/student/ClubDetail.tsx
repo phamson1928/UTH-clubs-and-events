@@ -60,10 +60,13 @@ export default function StudentClubDetail() {
           Array.isArray(data.events)
             ? data.events.map((e: any) => ({
                 id: e.id,
-                title: e.title || e.name,
+                title: e.name,
                 date: e.date ? new Date(e.date).toLocaleDateString() : "",
                 time: e.time || "",
                 location: e.location || "",
+                description: e.description || "",
+                activities: e.activities || "",
+                attendees: e.attending_users_number || 0,
                 color: "bg-teal-500",
               }))
             : []
@@ -271,40 +274,76 @@ export default function StudentClubDetail() {
                 {upcomingEvents.map((event) => (
                   <div
                     key={event.id}
-                    className="bg-white border-2 border-gray-200 hover:border-teal-500 hover:shadow-xl transition-all group"
+                    className="bg-white border-2 border-gray-200 hover:border-teal-500 hover:shadow-xl transition-all group overflow-hidden"
                   >
-                    <div className="flex items-center">
-                      <div className={`w-2 h-full ${event.color}`}></div>
-                      <div className="flex-1 p-8">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-teal-600 transition-colors">
-                              {event.title}
-                            </h3>
-                            <div className="flex flex-wrap items-center gap-6 text-sm text-gray-600">
-                              <div className="flex items-center gap-2">
-                                <Calendar className="w-4 h-4" />
-                                <span className="font-medium">
-                                  {event.date}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium">
-                                  {event.time}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <MapPin className="w-4 h-4" />
-                                <span className="font-medium">
-                                  {event.location}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          <button className="px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-bold transition-all">
+                    <div className="flex">
+                      <div className={`w-2 ${event.color}`}></div>
+                      <div className="flex-1 p-6">
+                        {/* Header với title và button */}
+                        <div className="flex items-start justify-between mb-4">
+                          <h3 className="text-2xl font-bold text-gray-900 group-hover:text-teal-600 transition-colors flex-1">
+                            {event.title}
+                          </h3>
+                          <button className="px-6 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold transition-all ml-4 whitespace-nowrap">
                             Register
                           </button>
                         </div>
+
+                        {/* Grid thông tin cơ bản */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 pb-4 border-b border-gray-200">
+                          <div>
+                            <div className="text-xs text-gray-500 mb-1">
+                              Date
+                            </div>
+                            <div className="flex items-center gap-1 text-sm font-medium text-gray-900">
+                              <Calendar className="w-4 h-4 text-teal-600" />
+                              {event.date}
+                            </div>
+                          </div>
+
+                          <div>
+                            <div className="text-xs text-gray-500 mb-1">
+                              Location
+                            </div>
+                            <div className="flex items-center gap-1 text-sm font-medium text-gray-900">
+                              <MapPin className="w-4 h-4 text-teal-600" />
+                              {event.location}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-gray-500 mb-1">
+                              Attendees
+                            </div>
+                            <div className="flex items-center gap-1 text-sm font-medium text-gray-900">
+                              <Users className="w-4 h-4 text-teal-600" />
+                              {event.attendees}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Description */}
+                        {event.description && (
+                          <div className="mb-3">
+                            <div className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">
+                              Description
+                            </div>
+                            <p className="text-sm text-gray-700 leading-relaxed">
+                              {event.description}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Activities */}
+                        {event.activities && (
+                          <div>
+                            <div className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">
+                              Activities
+                            </div>
+                            <p className="text-sm text-gray-700 leading-relaxed">
+                              {event.activities}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

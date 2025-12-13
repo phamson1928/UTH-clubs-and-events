@@ -65,7 +65,7 @@ export default function AdminEvents() {
         {},
         {
           headers: { ...getAuthHeaders() },
-        },
+        }
       );
       const updatedEvents = events.filter((event) => event.id !== id);
       setEvents(updatedEvents);
@@ -87,7 +87,7 @@ export default function AdminEvents() {
         {},
         {
           headers: { ...getAuthHeaders() },
-        },
+        }
       );
       const updatedEvents = events.filter((event) => event.id !== id);
       setEvents(updatedEvents);
@@ -158,6 +158,14 @@ export default function AdminEvents() {
                       <div>
                         <span className="text-muted-foreground">Location:</span>
                         <p className="font-medium">{event.location}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">
+                          Attending Users:
+                        </span>
+                        <p className="font-medium">
+                          {event.attending_users_number || 0}
+                        </p>
                       </div>
                     </div>
 
