@@ -92,7 +92,7 @@ export default function StudentClubs() {
     }
 
     return items;
-  }, [filters]);
+  }, [filters, clubs]);
 
   const testimonials = [
     {
