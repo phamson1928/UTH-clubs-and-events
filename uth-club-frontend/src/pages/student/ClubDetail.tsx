@@ -329,13 +329,58 @@ export default function StudentClubDetail() {
                   onSubmit={async (e) => {
                     e.preventDefault();
                     setSubmitting(true);
-                    setTimeout(() => {
-                      setJoinReason("");
-                      setSkills("");
-                      setPromiseText("");
+                    try {
+                      const token = localStorage.getItem("authToken");
+                      if (!token) {
+                        alert("Vui lòng đăng nhập trước");
+                        setSubmitting(false);
+                        return;
+                      }
+
+                      // Debug: Decode token để kiểm tra role
+                      const parts = token.split(".");
+                      const payload = JSON.parse(atob(parts[1]));
+                      console.log("[ClubDetail] Token payload:", payload);
+
+                      const response = await axios.post(
+                        `${API_BASE}/memberships/${id}/join`,
+                        {
+                          join_reason: joinReason,
+                          skills: skills,
+                          promise: promiseText,
+                        },
+                        {
+                          headers: {
+                            Authorization: `Bearer ${token}`,
+                            "Content-Type": "application/json",
+                          },
+                        }
+                      );
+
+                      if (response.status === 201 || response.status === 200) {
+                        alert("Đã gửi đơn tham gia thành công!");
+                        setJoinReason("");
+                        setSkills("");
+                        setPromiseText("");
+                      }
+                    } catch (error: any) {
+                      console.error("[ClubDetail] join request error", error);
+                      const errorMsg =
+                        error.response?.data?.message ||
+                        error.message ||
+                        "Có lỗi xảy ra";
+                      console.error(
+                        "[ClubDetail] Status:",
+                        error.response?.status
+                      );
+                      console.error(
+                        "[ClubDetail] Response:",
+                        error.response?.data
+                      );
+                      alert(`Lỗi: ${errorMsg}`);
+                    } finally {
                       setSubmitting(false);
-                      alert("Đã gửi đơn tham gia (mock)");
-                    }, 600);
+                    }
                   }}
                   className="space-y-4"
                 >
