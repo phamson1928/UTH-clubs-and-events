@@ -200,7 +200,7 @@ export default function StudentClubDetail() {
                   to="/student/clubs"
                   className="inline-flex items-center gap-2 text-white/90 hover:text-white"
                 >
-                  <ArrowLeft className="h-4 w-4" /> Back to Clubs
+                  <ArrowLeft className="h-4 w-4" /> Quay Lại Danh Sách CLB
                 </Link>
               </div>
 
@@ -216,13 +216,13 @@ export default function StudentClubDetail() {
                     <div className="flex items-center gap-2">
                       <Users className="h-5 w-5" />
                       <span className="font-semibold">
-                        {members.length} members
+                        {members.length} thành viên
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Calendar className="h-5 w-5" />
                       <span className="font-semibold">
-                        Founded {club.founded}
+                        Thành lập {club.founded}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -260,7 +260,7 @@ export default function StudentClubDetail() {
                 </div>
                 <div>
                   <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-6">
-                    About {club.name}
+                    Giới Thiệu {club.name}
                   </h2>
                   <p className="text-lg text-gray-700 leading-relaxed mb-6">
                     {club.description}
@@ -270,13 +270,13 @@ export default function StudentClubDetail() {
                       <div className="text-3xl font-black text-teal-600 mb-2">
                         {members.length}
                       </div>
-                      <div className="font-bold text-gray-900">Members</div>
+                      <div className="font-bold text-gray-900">Thành Viên</div>
                     </div>
                     <div className="bg-gray-50 border-2 border-gray-200 p-6">
                       <div className="text-3xl font-black text-purple-600 mb-2">
                         {club.founded}
                       </div>
-                      <div className="font-bold text-gray-900">Founded</div>
+                      <div className="font-bold text-gray-900">Thành Lập</div>
                     </div>
                   </div>
                 </div>
@@ -289,12 +289,12 @@ export default function StudentClubDetail() {
             <div className="container mx-auto px-6">
               <div className="text-center mb-10">
                 <h2 className="text-4xl md:text-5xl font-black text-gray-900">
-                  Members
+                  Thành Viên
                 </h2>
               </div>
               {members.length === 0 ? (
                 <div className="text-center text-gray-600">
-                  No members to show
+                  Chưa có thành viên
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
@@ -313,7 +313,7 @@ export default function StudentClubDetail() {
                         {m?.user?.mssv}
                       </div>
                       <div className="text-xs text-gray-500 mt-2">
-                        Joined:{" "}
+                        Tham gia:{" "}
                         {m?.join_date
                           ? new Date(m.join_date).toLocaleDateString()
                           : "-"}
@@ -330,7 +330,7 @@ export default function StudentClubDetail() {
             <div className="container mx-auto px-6">
               <div className="text-center mb-10">
                 <h2 className="text-4xl md:text-5xl font-black text-gray-900">
-                  Upcoming Events
+                  Sự Kiện Sắp Tới
                 </h2>
               </div>
               <div className="grid gap-6 max-w-5xl mx-auto">
@@ -352,7 +352,7 @@ export default function StudentClubDetail() {
                             className="px-6 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold transition-all ml-4 whitespace-nowrap disabled:bg-gray-300 disabled:text-gray-600 disabled:cursor-not-allowed"
                             disabled={event.registered}
                           >
-                            {event.registered ? "Đăng ký rồi" : "Register"}
+                            {event.registered ? "Đăng ký rồi" : "Đăng Ký"}
                           </button>
                         </div>
 
@@ -360,7 +360,7 @@ export default function StudentClubDetail() {
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4 pb-4 border-b border-gray-200">
                           <div>
                             <div className="text-xs text-gray-500 mb-1">
-                              Date
+                              Ngày
                             </div>
                             <div className="flex items-center gap-1 text-sm font-medium text-gray-900">
                               <Calendar className="w-4 h-4 text-teal-600" />
@@ -370,7 +370,7 @@ export default function StudentClubDetail() {
 
                           <div>
                             <div className="text-xs text-gray-500 mb-1">
-                              Location
+                              Địa Điểm
                             </div>
                             <div className="flex items-center gap-1 text-sm font-medium text-gray-900">
                               <MapPin className="w-4 h-4 text-orange-600" />
@@ -380,7 +380,7 @@ export default function StudentClubDetail() {
 
                           <div>
                             <div className="text-xs text-gray-500 mb-1">
-                              Attendees
+                              Người Tham Gia
                             </div>
                             <div className="flex items-center gap-1 text-sm font-medium text-gray-900">
                               <Users className="w-4 h-4 text-blue-600" />
@@ -393,7 +393,7 @@ export default function StudentClubDetail() {
                         {event.description && (
                           <div className="mb-3">
                             <div className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">
-                              Description
+                              Mô Tả
                             </div>
                             <p className="text-sm text-gray-700 leading-relaxed">
                               {event.description}
@@ -405,7 +405,7 @@ export default function StudentClubDetail() {
                         {event.activities && (
                           <div>
                             <div className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">
-                              Activities
+                              Hoạt Động
                             </div>
                             <p className="text-sm text-gray-700 leading-relaxed">
                               {event.activities}
@@ -425,10 +425,10 @@ export default function StudentClubDetail() {
             <div className="container mx-auto px-6 max-w-3xl">
               <div className="text-center mb-8">
                 <h2 className="text-4xl md:text-5xl font-black mb-3">
-                  Want to Join {club.name}?
+                  Muốn Tham Gia {club.name}?
                 </h2>
                 <p className="text-lg md:text-xl opacity-90">
-                  Fill in the form below to send a join request.
+                  Điền vào biểu mẫu dưới đây để gửi yêu cầu tham gia.
                 </p>
               </div>
               <div className="bg-white text-gray-900 p-6">

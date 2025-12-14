@@ -120,9 +120,9 @@ export default function StudentClubs() {
       <section className="bg-gradient-to-br from-[#008689] via-teal-600 to-cyan-700 text-white py-20">
         <div className="container mx-auto px-6">
           <div className="max-w-3xl mx-auto text-center">
-            <h1 className="text-6xl font-black mb-6">Explore Our Clubs</h1>
+            <h1 className="text-6xl font-black mb-6">Khám Phá Câu Lạc Bộ</h1>
             <p className="text-xl text-white/90 mb-10">
-              Find the perfect community to match your interests and passions
+              Tìm cộng đồng hoàn hảo phù hợp với sở thích và đam mê của bạn
             </p>
           </div>
         </div>
@@ -139,7 +139,7 @@ export default function StudentClubs() {
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="Search clubs by name, description..."
+                    placeholder="Tìm kiếm câu lạc bộ theo tên, mô tả..."
                     className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 focus:border-teal-500 focus:outline-none text-gray-900"
                     value={filters.query}
                     onChange={(e) =>
@@ -160,7 +160,7 @@ export default function StudentClubs() {
                 >
                   {categories.map((cat) => (
                     <option key={cat} value={cat}>
-                      {cat === "all" ? "All Categories" : cat}
+                      {cat === "all" ? "Tất Cả Danh Mục" : cat}
                     </option>
                   ))}
                 </select>
@@ -171,7 +171,7 @@ export default function StudentClubs() {
             {/* Sort Options */}
             <div className="flex items-center gap-4 mt-4 pt-4 border-t-2 border-gray-100">
               <span className="text-sm font-semibold text-gray-700">
-                Sort by:
+                Sắp xếp theo:
               </span>
               <div className="flex gap-2">
                 <button
@@ -182,7 +182,7 @@ export default function StudentClubs() {
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                 >
-                  Most Popular
+                  Phổ Biến Nhất
                 </button>
                 <button
                   onClick={() => setFilters({ ...filters, sort: "name" })}
@@ -192,7 +192,7 @@ export default function StudentClubs() {
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                 >
-                  Name A-Z
+                  Tên A-Z
                 </button>
                 <button
                   onClick={() => setFilters({ ...filters, sort: "newest" })}
@@ -202,7 +202,7 @@ export default function StudentClubs() {
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                 >
-                  Newest
+                  Mới Nhất
                 </button>
               </div>
             </div>
@@ -211,7 +211,7 @@ export default function StudentClubs() {
           {/* Results Count */}
           <div className="mt-4">
             <p className="text-gray-600 font-medium">
-              Showing {visible.length} {visible.length === 1 ? "club" : "clubs"}
+              Hiển thị {visible.length} câu lạc bộ
             </p>
           </div>
         </div>
@@ -224,18 +224,18 @@ export default function StudentClubs() {
             <div className="text-center py-20">
               <div className="text-4xl mb-4">⏳</div>
               <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                Loading clubs...
+                Đang tải câu lạc bộ...
               </h3>
-              <p className="text-gray-600">Please wait a moment</p>
+              <p className="text-gray-600">Vui lòng đợi trong giây lát</p>
             </div>
           ) : visible.length === 0 ? (
             <div className="text-center py-20">
               <div className="text-6xl mb-4">🔍</div>
               <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                No clubs found
+                Không tìm thấy câu lạc bộ
               </h3>
               <p className="text-gray-600">
-                Try adjusting your search or filters
+                Thử điều chỉnh tìm kiếm hoặc bộ lọc của bạn
               </p>
             </div>
           ) : (
@@ -268,14 +268,14 @@ export default function StudentClubs() {
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <Users className="h-5 w-5 text-teal-600" />
                         <span className="font-semibold">
-                          {club.members} members
+                          {club.members} thành viên
                         </span>
                       </div>
                       <Link
                         to={`/student/clubs/${club.id}`}
                         className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold transition-all"
                       >
-                        View Details
+                        Xem Chi Tiết
                       </Link>
                     </div>
                   </div>
@@ -300,12 +300,12 @@ export default function StudentClubs() {
             </div>
             <div>
               <h2 className="text-5xl font-black text-gray-900 mb-6">
-                Why Join a Club?
+                Tại Sao Nên Tham Gia Câu Lạc Bộ?
               </h2>
               <p className="text-xl text-gray-700 mb-6 leading-relaxed">
-                Clubs are more than just extracurricular activities - they're
-                where you'll build lifelong friendships, develop valuable
-                skills, and create memories that will last forever.
+                Câu lạc bộ không chỉ là hoạt động ngoại khóa - đây là nơi bạn
+                xây dựng tình bạn suốt đời, phát triển kỹ năng quý giá và tạo
+                nên những kỷ niệm không thể nào quên.
               </p>
               <div className="space-y-4 mb-8">
                 <div className="flex items-start gap-4">
@@ -314,10 +314,10 @@ export default function StudentClubs() {
                   </div>
                   <div>
                     <h3 className="font-bold text-gray-900 mb-1">
-                      Build Your Network
+                      Xây Dựng Mạng Lưới Quan Hệ
                     </h3>
                     <p className="text-gray-600">
-                      Connect with peers who share your passions
+                      Kết nối với những người cùng đam mê
                     </p>
                   </div>
                 </div>
@@ -327,10 +327,10 @@ export default function StudentClubs() {
                   </div>
                   <div>
                     <h3 className="font-bold text-gray-900 mb-1">
-                      Develop New Skills
+                      Phát Triển Kỹ Năng Mới
                     </h3>
                     <p className="text-gray-600">
-                      Learn through hands-on experience and mentorship
+                      Học hỏi qua kinh nghiệm thực tế và được hướng dẫn
                     </p>
                   </div>
                 </div>
@@ -340,10 +340,10 @@ export default function StudentClubs() {
                   </div>
                   <div>
                     <h3 className="font-bold text-gray-900 mb-1">
-                      Career Opportunities
+                      Cơ Hội Nghề Nghiệp
                     </h3>
                     <p className="text-gray-600">
-                      Open doors to internships and job prospects
+                      Mở ra cơ hội thực tập và việc làm
                     </p>
                   </div>
                 </div>
@@ -358,10 +358,10 @@ export default function StudentClubs() {
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-5xl font-black text-gray-900 mb-4">
-              Member Experiences
+              Trải Nghiệm Thành Viên
             </h2>
             <p className="text-xl text-gray-600">
-              Hear what our club members have to say
+              Nghe chia sẻ từ các thành viên câu lạc bộ
             </p>
           </div>
 
@@ -408,14 +408,14 @@ export default function StudentClubs() {
       <section className="py-24 bg-gradient-to-br from-teal-600 to-cyan-700 text-white">
         <div className="container mx-auto px-6 text-center">
           <h2 className="text-5xl font-black mb-6">
-            Can't Find What You're Looking For?
+            Không Tìm Thấy Điều Bạn Muốn?
           </h2>
           <p className="text-xl mb-10 max-w-2xl mx-auto opacity-90">
-            Start your own club and bring together students who share your
-            unique interests
+            Tạo câu lạc bộ của riêng bạn và kết nối những sinh viên có chung sở
+            thích độc đáo
           </p>
           <button className="px-10 py-5 bg-white text-teal-700 hover:bg-gray-100 font-bold text-lg transition-all">
-            Create a New Club
+            Tạo Câu Lạc Bộ Mới
           </button>
         </div>
       </section>
@@ -425,13 +425,15 @@ export default function StudentClubs() {
         <div className="container mx-auto px-6">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-black mb-2">UTH Student Clubs</div>
+              <div className="text-2xl font-black mb-2">
+                Câu Lạc Bộ Sinh Viên UTH
+              </div>
               <div className="text-gray-400">
-                Building community, one connection at a time
+                Xây dựng cộng đồng, từng kết nối một
               </div>
             </div>
             <div className="text-sm text-gray-400">
-              © 2025 University of Technology Ho Chi Minh. All rights reserved.
+              © 2025 Trường Đại học Công nghệ TP.HCM. Bảo lưu mọi quyền.
             </div>
           </div>
         </div>

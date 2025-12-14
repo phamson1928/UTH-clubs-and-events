@@ -69,30 +69,30 @@ export default function StudentHome() {
 
   const stats = [
     {
-      label: "Active Clubs",
+      label: "Câu Lạc Bộ Hoạt Động",
       value: "52",
-      subtext: "Across all categories",
+      subtext: "Trên tất cả các danh mục",
       icon: Users,
       color: "text-teal-600",
     },
     {
-      label: "Monthly Events",
+      label: "Sự Kiện Hàng Tháng",
       value: "38",
-      subtext: "Join something new",
+      subtext: "Tham gia điều gì đó mới",
       icon: Calendar,
       color: "text-purple-600",
     },
     {
-      label: "Active Members",
+      label: "Thành Viên Hoạt Động",
       value: "2,847",
-      subtext: "Growing community",
+      subtext: "Cộng đồng đang phát triển",
       icon: TrendingUp,
       color: "text-orange-600",
     },
     {
-      label: "Success Stories",
+      label: "Câu Chuyện Thành Công",
       value: "500+",
-      subtext: "Achievements made",
+      subtext: "Thành tựu đạt được",
       icon: Sparkles,
       color: "text-blue-600",
     },
@@ -101,27 +101,27 @@ export default function StudentHome() {
   const testimonials = [
     {
       id: 1,
-      name: "Sarah Chen",
-      club: "Tech Innovation Club",
+      name: "Nguyễn Minh Anh",
+      club: "Câu Lạc Bộ Công Nghệ Sáng Tạo",
       image:
         "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&q=80",
-      text: "Joining the Tech Club was the best decision of my university life. I've learned so much, made incredible friends, and even landed my dream internship through connections here!",
+      text: "Tham gia CLB Công Nghệ là quyết định đúng đắn nhất trong đời sinh viên của mình. Mình đã học được rất nhiều, kết bạn với những người tuyệt vời, và thậm chí còn có được công việc thực tập mơ ước nhờ những mối quan hệ ở đây!",
     },
     {
       id: 2,
-      name: "Marcus Johnson",
-      club: "Arts & Culture Society",
+      name: "Trần Hoàng Nam",
+      club: "Hội Nghệ Thuật & Văn Hóa",
       image:
         "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80",
-      text: "The creative freedom and support I've found here is unmatched. Every event is an opportunity to showcase our work and collaborate with talented peers.",
+      text: "Sự tự do sáng tạo và hỗ trợ mà mình tìm thấy ở đây là vô song. Mỗi sự kiện đều là cơ hội để giới thiệu tác phẩm và cộng tác với những người bạn tài năng.",
     },
     {
       id: 3,
-      name: "Aisha Patel",
-      club: "Global Leaders Forum",
+      name: "Lê Hồng Phương",
+      club: "Diễn Đàn Lãnh Đạo Toàn Cầu",
       image:
         "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=400&q=80",
-      text: "This club opened doors I never knew existed. From networking events to leadership workshops, I've grown both personally and professionally.",
+      text: "CLB này đã mở ra những cánh cửa mà mình không bao giờ nghĩ tới. Từ các sự kiện kết nối đến workshop lãnh đạo, mình đã phát triển cả về mặt cá nhân lẫn nghề nghiệp.",
     },
   ];
 
@@ -183,19 +183,20 @@ export default function StudentHome() {
             <div className="inline-flex items-center gap-2 px-5 py-2 bg-white/20 backdrop-blur-sm border border-white/30 mb-8">
               <Sparkles className="w-4 h-4" />
               <span className="text-sm font-medium">
-                Welcome to UTH Student Community
+                Chào Mừng Đến Cộng Đồng Sinh Viên UTH
               </span>
             </div>
 
             <h1 className="text-6xl md:text-7xl font-black mb-6 leading-tight">
-              Discover Your
+              Khám Phá Cộng Đồng
               <br />
-              Community at UTH
+              Của Bạn Tại UTH
             </h1>
 
             <p className="text-xl text-white/90 mb-10 max-w-2xl mx-auto leading-relaxed">
-              Connect with passionate students, join exciting clubs, and create
-              unforgettable memories. Your university journey starts here.
+              Kết nối với những sinh viên đam mê, tham gia câu lạc bộ thú vị và
+              tạo nên những kỷ niệm khó quên. Hành trình đại học của bạn bắt đầu
+              từ đây.
             </p>
 
             <div className="flex gap-4 max-w-2xl mx-auto mb-8">
@@ -203,7 +204,7 @@ export default function StudentHome() {
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search for clubs, events, or interests..."
+                  placeholder="Tìm kiếm câu lạc bộ, sự kiện, hoặc sở thích..."
                   className="w-full pl-12 pr-4 py-4 bg-white text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
                   value={heroQuery}
                   onChange={(e) => setHeroQuery(e.target.value)}
@@ -214,18 +215,18 @@ export default function StudentHome() {
                 onClick={onHeroSearch}
                 className="px-8 py-4 bg-white text-teal-700 hover:bg-gray-100 font-bold transition-all"
               >
-                Search
+                Tìm Kiếm
               </button>
             </div>
 
             <div className="flex flex-wrap items-center justify-center gap-3">
               {[
-                "Technology",
-                "Arts & Design",
-                "Sports",
-                "Business",
-                "Leadership",
-                "Social",
+                "Công Nghệ",
+                "Nghệ Thuật & Thiết Kế",
+                "Thể Thao",
+                "Kinh Doanh",
+                "Lãnh Đạo",
+                "Xã Hội",
               ].map((cat) => (
                 <button
                   key={cat}
@@ -279,20 +280,20 @@ export default function StudentHome() {
             </div>
             <div>
               <h2 className="text-5xl font-black text-gray-900 mb-6">
-                Events That
+                Sự Kiện Truyền Cảm Hứng
                 <br />
-                Inspire Growth
+                Phát Triển Bản Thân
               </h2>
               <p className="text-xl text-gray-700 mb-6 leading-relaxed">
-                From hackathons to art exhibitions, leadership summits to sports
-                tournaments - our diverse events calendar offers something for
-                everyone.
+                Từ hackathon đến triển lãm nghệ thuật, hội nghị lãnh đạo đến
+                giải đấu thể thao - lịch sự kiện đa dạng của chúng tôi có điều
+                gì đó dành cho tất cả mọi người.
               </p>
               <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-                Each event is carefully designed to foster learning,
-                collaboration, and fun. Whether you're looking to develop new
-                skills, network with peers, or simply enjoy your university
-                experience, you'll find opportunities that match your interests.
+                Mỗi sự kiện được thiết kế cẩn thận để thúc đẩy việc học tập,
+                cộng tác và vui chơi. Dù bạn đang muốn phát triển kỹ năng mới,
+                kết nối với bạn bè hay đơn giản là tận hưởng trải nghiệm đại
+                học, bạn sẽ tìm thấy cơ hội phù hợp với sở thích của mình.
               </p>
               <div className="space-y-4 mb-8">
                 <div className="flex items-start gap-4">
@@ -301,10 +302,10 @@ export default function StudentHome() {
                   </div>
                   <div>
                     <h3 className="font-bold text-gray-900 mb-1">
-                      38+ Monthly Events
+                      38+ Sự Kiện Hàng Tháng
                     </h3>
                     <p className="text-gray-600">
-                      Regular activities across all categories
+                      Hoạt động thường xuyên trên tất cả các danh mục
                     </p>
                   </div>
                 </div>
@@ -314,10 +315,10 @@ export default function StudentHome() {
                   </div>
                   <div>
                     <h3 className="font-bold text-gray-900 mb-1">
-                      Open to All Students
+                      Mở Cho Tất Cả Sinh Viên
                     </h3>
                     <p className="text-gray-600">
-                      Everyone is welcome to participate
+                      Mọi người đều được chào đón tham gia
                     </p>
                   </div>
                 </div>
@@ -327,16 +328,16 @@ export default function StudentHome() {
                   </div>
                   <div>
                     <h3 className="font-bold text-gray-900 mb-1">
-                      Skill Development
+                      Phát Triển Kỹ Năng
                     </h3>
                     <p className="text-gray-600">
-                      Workshops and hands-on experiences
+                      Workshop và trải nghiệm thực hành
                     </p>
                   </div>
                 </div>
               </div>
               <button className="px-8 py-4 bg-teal-600 hover:bg-teal-700 text-white font-bold transition-all">
-                Explore All Events
+                Khám Phá Tất Cả Sự Kiện
               </button>
             </div>
           </div>
@@ -349,51 +350,53 @@ export default function StudentHome() {
           <div className="grid md:grid-cols-2 gap-16 items-center">
             <div>
               <h2 className="text-5xl font-black text-gray-900 mb-6">
-                Activities That
+                Hoạt Động
                 <br />
-                Build Community
+                Xây Dựng Cộng Đồng
               </h2>
               <p className="text-xl text-gray-700 mb-6 leading-relaxed">
-                Beyond events, our clubs organize regular activities that bring
-                students together in meaningful ways. From weekly meetups to
-                collaborative projects.
+                Ngoài các sự kiện, câu lạc bộ của chúng tôi tổ chức các hoạt
+                động thường xuyên gắn kết sinh viên với nhau theo những cách ý
+                nghĩa. Từ các buổi gặp mặt hàng tuần đến các dự án cộng tác.
               </p>
               <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-                These activities are where lasting friendships are formed and
-                real learning happens. Whether it's a coding session, art
-                workshop, sports practice, or community service project, you'll
-                find your people here.
+                Đây là nơi hình thành tình bạn bền vững và học hỏi thực sự. Cho
+                dù đó là buổi coding, workshop nghệ thuật, luyện tập thể thao
+                hay dự án phục vụ cộng đồng, bạn sẽ tìm thấy những người đồng
+                hành.
               </p>
               <div className="grid grid-cols-2 gap-6 mb-8">
                 <div className="bg-white border-2 border-gray-200 p-6">
                   <div className="text-4xl font-black text-teal-600 mb-2">
                     52
                   </div>
-                  <div className="font-bold text-gray-900">Active Clubs</div>
+                  <div className="font-bold text-gray-900">CLB Hoạt Động</div>
                 </div>
                 <div className="bg-white border-2 border-gray-200 p-6">
                   <div className="text-4xl font-black text-purple-600 mb-2">
                     2.8K
                   </div>
-                  <div className="font-bold text-gray-900">Members</div>
+                  <div className="font-bold text-gray-900">Thành Viên</div>
                 </div>
                 <div className="bg-white border-2 border-gray-200 p-6">
                   <div className="text-4xl font-black text-orange-600 mb-2">
                     150+
                   </div>
                   <div className="font-bold text-gray-900">
-                    Weekly Activities
+                    Hoạt Động Hàng Tuần
                   </div>
                 </div>
                 <div className="bg-white border-2 border-gray-200 p-6">
                   <div className="text-4xl font-black text-blue-600 mb-2">
                     500+
                   </div>
-                  <div className="font-bold text-gray-900">Success Stories</div>
+                  <div className="font-bold text-gray-900">
+                    Câu Chuyện Thành Công
+                  </div>
                 </div>
               </div>
               <button className="px-8 py-4 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-bold transition-all">
-                Join a Club Today
+                Tham Gia CLB Ngay Hôm Nay
               </button>
             </div>
             <div className="relative">
@@ -413,25 +416,27 @@ export default function StudentHome() {
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-5xl font-black text-gray-900 mb-4">
-              Upcoming Events
+              Sự Kiện Sắp Diễn Ra
             </h2>
             <p className="text-xl text-gray-600">
-              Don't miss these exciting opportunities
+              Đừng bỏ lỡ những cơ hội thú vị này
             </p>
           </div>
 
           {isLoadingEvents ? (
             <div className="text-center py-12">
               <div className="text-4xl mb-4">⏳</div>
-              <p className="text-gray-600">Loading events...</p>
+              <p className="text-gray-600">Đang tải sự kiện...</p>
             </div>
           ) : upcomingEvents.length === 0 ? (
             <div className="text-center py-12">
               <div className="text-6xl mb-4">📅</div>
               <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                No Upcoming Events
+                Không Có Sự Kiện Sắp Tới
               </h3>
-              <p className="text-gray-600">Check back soon for new events!</p>
+              <p className="text-gray-600">
+                Hãy quay lại sớm để xem sự kiện mới!
+              </p>
             </div>
           ) : (
             <div className="grid gap-6 max-w-5xl mx-auto">
@@ -452,13 +457,13 @@ export default function StudentHome() {
                           className="px-6 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold transition-all ml-4 whitespace-nowrap disabled:bg-gray-300 disabled:text-gray-600 disabled:cursor-not-allowed"
                           disabled={event.registered}
                         >
-                          {event.registered ? "Đăng ký rồi" : "Register"}
+                          {event.registered ? "Đăng ký rồi" : "Đăng Ký"}
                         </button>
                       </div>
 
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4 pb-4 border-b border-gray-200">
                         <div>
-                          <div className="text-xs text-gray-500 mb-1">Date</div>
+                          <div className="text-xs text-gray-500 mb-1">Ngày</div>
                           <div className="flex items-center gap-1 text-sm font-medium text-gray-900">
                             <Calendar className="w-4 h-4 text-teal-600" />
                             {event.date}
@@ -466,7 +471,7 @@ export default function StudentHome() {
                         </div>
                         <div>
                           <div className="text-xs text-gray-500 mb-1">
-                            Location
+                            Địa Điểm
                           </div>
                           <div className="flex items-center gap-1 text-sm font-medium text-gray-900">
                             <MapPin className="w-4 h-4 text-orange-600" />
@@ -475,7 +480,7 @@ export default function StudentHome() {
                         </div>
                         <div>
                           <div className="text-xs text-gray-500 mb-1">
-                            Attendees
+                            Người Tham Gia
                           </div>
                           <div className="flex items-center gap-1 text-sm font-medium text-gray-900">
                             <Users className="w-4 h-4 text-blue-600" />
@@ -487,7 +492,7 @@ export default function StudentHome() {
                       {event.description && (
                         <div className="mb-3">
                           <div className="text-xs text-gray-500 mb-1">
-                            Description
+                            Mô Tả
                           </div>
                           <p className="text-sm text-gray-700">
                             {event.description}
@@ -498,7 +503,7 @@ export default function StudentHome() {
                       {event.activities && (
                         <div>
                           <div className="text-xs text-gray-500 mb-1">
-                            Activities
+                            Hoạt Động
                           </div>
                           <p className="text-sm text-gray-700">
                             {event.activities}
@@ -514,7 +519,7 @@ export default function StudentHome() {
 
           <div className="text-center mt-12">
             <button className="px-8 py-4 border-2 border-gray-900 hover:bg-gray-900 hover:text-white text-gray-900 font-bold transition-all inline-flex items-center gap-2">
-              View All Events <ArrowRight className="w-5 h-5" />
+              Xem Tất Cả Sự Kiện <ArrowRight className="w-5 h-5" />
             </button>
           </div>
         </div>
@@ -525,10 +530,10 @@ export default function StudentHome() {
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-5xl font-black text-gray-900 mb-4">
-              What Students Say
+              Sinh Viên Nói Gì
             </h2>
             <p className="text-xl text-gray-600">
-              Hear from our community members
+              Lắng nghe từ các thành viên cộng đồng
             </p>
           </div>
 
@@ -574,17 +579,17 @@ export default function StudentHome() {
       {/* CTA Section */}
       <section className="py-24 bg-gradient-to-br from-teal-600 to-cyan-700 text-white">
         <div className="container mx-auto px-6 text-center">
-          <h2 className="text-5xl font-black mb-6">Ready to Get Started?</h2>
+          <h2 className="text-5xl font-black mb-6">Sẵn Sàng Bắt Đầu?</h2>
           <p className="text-xl mb-10 max-w-2xl mx-auto opacity-90">
-            Join thousands of students who have found their community at UTH.
-            Your journey begins today.
+            Tham gia cùng hàng ngàn sinh viên đã tìm thấy cộng đồng của họ tại
+            UTH. Hành trình của bạn bắt đầu hôm nay.
           </p>
           <div className="flex gap-4 justify-center">
             <button className="px-10 py-5 bg-white text-teal-700 hover:bg-gray-100 font-bold text-lg transition-all">
-              Browse All Clubs
+              Duyệt Tất Cả Câu Lạc Bộ
             </button>
             <button className="px-10 py-5 border-2 border-white hover:bg-white hover:text-teal-700 text-white font-bold text-lg transition-all">
-              View Events Calendar
+              Xem Lịch Sự Kiện
             </button>
           </div>
         </div>
