@@ -65,6 +65,23 @@ export default function AdminClubs() {
   const API_BASE =
     (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
 
+  // Helper function to normalize image URLs
+  const normalizeImageUrl = (imagePath: string | null | undefined): string => {
+    if (!imagePath) {
+      return "";
+    }
+    // If it's already a full URL (starts with http:// or https://), return as is
+    if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
+      return imagePath;
+    }
+    // If it's a relative path starting with /uploads/, prepend API_BASE
+    if (imagePath.startsWith("/uploads/")) {
+      return `${API_BASE}${imagePath}`;
+    }
+    // Otherwise, assume it's a relative path and prepend API_BASE
+    return `${API_BASE}${imagePath.startsWith("/") ? "" : "/"}${imagePath}`;
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -404,7 +421,10 @@ export default function AdminClubs() {
                   {(imagePreview || currentClub?.club_image) && (
                     <div className="mt-2">
                       <img
-                        src={imagePreview || currentClub?.club_image}
+                        src={
+                          imagePreview ||
+                          normalizeImageUrl(currentClub?.club_image)
+                        }
                         alt="Preview"
                         className="w-32 h-32 object-cover rounded-md border"
                       />

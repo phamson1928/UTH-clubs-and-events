@@ -11,6 +11,23 @@ import axios from "axios";
 const API_BASE =
   (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
 
+// Helper function to normalize image URLs
+const normalizeImageUrl = (imagePath: string | null | undefined): string => {
+  if (!imagePath) {
+    return "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=1600&q=80";
+  }
+  // If it's already a full URL (starts with http:// or https://), return as is
+  if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
+    return imagePath;
+  }
+  // If it's a relative path starting with /uploads/, prepend API_BASE
+  if (imagePath.startsWith("/uploads/")) {
+    return `${API_BASE}${imagePath}`;
+  }
+  // Otherwise, assume it's a relative path and prepend API_BASE
+  return `${API_BASE}${imagePath.startsWith("/") ? "" : "/"}${imagePath}`;
+};
+
 export default function StudentClubDetail() {
   const { id } = useParams();
   const { toast } = useToast();
@@ -44,9 +61,7 @@ export default function StudentClubDetail() {
             : "",
           email: data.owner?.email || data.email || "",
           location: data.location || "",
-          image:
-            data.club_image ||
-            "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=1600&q=80",
+          image: normalizeImageUrl(data.club_image),
         });
         setMembers(
           Array.isArray(data.memberships)

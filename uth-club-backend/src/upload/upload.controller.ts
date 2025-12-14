@@ -1,13 +1,18 @@
 import {
   Controller,
   Post,
+  Get,
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  Res,
+  Param,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { extname, join } from 'path';
+import type { Response } from 'express';
+import { existsSync } from 'fs';
 
 @Controller('upload')
 export class UploadController {
@@ -34,7 +39,7 @@ export class UploadController {
         callback(null, true);
       },
       limits: {
-        fileSize: 5 * 1024 * 1024,
+        fileSize: 50 * 1024 * 1024,
       },
     }),
   )
@@ -48,5 +53,17 @@ export class UploadController {
       path: `/uploads/images/${file.filename}`,
       url: `${process.env.API_URL || 'http://localhost:3000'}/uploads/images/${file.filename}`,
     };
+  }
+
+  // Serve images directly
+  @Get('images/:filename')
+  async getImage(@Param('filename') filename: string, @Res() res: Response) {
+    const filePath = join(process.cwd(), 'uploads', 'images', filename);
+
+    if (!existsSync(filePath)) {
+      throw new BadRequestException('Image not found');
+    }
+
+    return res.sendFile(filePath);
   }
 }

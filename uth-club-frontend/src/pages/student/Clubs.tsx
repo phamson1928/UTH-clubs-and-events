@@ -15,6 +15,23 @@ import { Link } from "react-router-dom";
 const API_BASE =
   (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
 
+// Helper function to normalize image URLs
+const normalizeImageUrl = (imagePath: string | null | undefined): string => {
+  if (!imagePath) {
+    return "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&q=80";
+  }
+  // If it's already a full URL (starts with http:// or https://), return as is
+  if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
+    return imagePath;
+  }
+  // If it's a relative path starting with /uploads/, prepend API_BASE
+  if (imagePath.startsWith("/uploads/")) {
+    return `${API_BASE}${imagePath}`;
+  }
+  // Otherwise, assume it's a relative path and prepend API_BASE
+  return `${API_BASE}${imagePath.startsWith("/") ? "" : "/"}${imagePath}`;
+};
+
 export default function StudentClubs() {
   const [clubs, setClubs] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -42,9 +59,7 @@ export default function StudentClubs() {
             members: club.members || 0,
             category: club.category || "General",
             description: club.description || "No description available",
-            image:
-              club.club_image ||
-              "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&q=80",
+            image: normalizeImageUrl(club.club_image),
             owner: club.owner?.name || "Unknown",
             createdAt: club.created_at,
           }))

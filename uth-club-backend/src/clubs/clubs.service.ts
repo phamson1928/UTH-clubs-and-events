@@ -30,6 +30,7 @@ export class ClubsService {
         'clubs.id',
         'clubs.name',
         'clubs.category',
+        'clubs.description',
         'clubs.created_at',
         'clubs.club_image',
       ])
