@@ -1,4 +1,4 @@
-import { Club } from 'src/clubs/entities/club.entity';
+import { Club } from '../../clubs/entities/club.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,

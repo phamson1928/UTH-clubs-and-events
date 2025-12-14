@@ -10,9 +10,9 @@ import * as bcrypt from 'bcrypt';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { randomUUID } from 'crypto';
-import { MailService } from 'src/mail/mail.service';
+import { MailService } from '../mail/mail.service';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Club } from 'src/clubs/entities/club.entity';
+import { Club } from '../clubs/entities/club.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()

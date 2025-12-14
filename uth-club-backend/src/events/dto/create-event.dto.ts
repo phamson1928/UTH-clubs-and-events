@@ -22,4 +22,11 @@ export class CreateEventDto {
   @IsNotEmpty()
   @IsString()
   activities: string;
+
+  @IsString()
+  @IsNotEmpty()
+  location: string;
+
+  @IsOptional()
+  attending_users_number?: number;
 }

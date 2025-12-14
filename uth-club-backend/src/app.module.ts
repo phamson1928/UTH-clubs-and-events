@@ -8,6 +8,7 @@ import { User } from './users/entities/user.entity';
 import { Club } from './clubs/entities/club.entity';
 import { Membership } from './memberships/entities/membership.entity';
 import { Event } from './events/entities/event.entity';
+import { EventRegistration } from './event_registrations/entities/event_registration.entity';
 import { ClubsModule } from './clubs/clubs.module';
 import { MembershipsModule } from './memberships/memberships.module';
 import { EventsModule } from './events/events.module';
@@ -17,6 +18,7 @@ import { join } from 'path';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { StatisticsModule } from './statistics/statistics.module';
 import { UploadModule } from './upload/upload.module';
+import { EventRegistrationsModule } from './event_registrations/event_registrations.module';
 @Module({
   imports: [
     MailerModule.forRoot({
@@ -50,7 +52,7 @@ import { UploadModule } from './upload/upload.module';
       database: process.env.DB_NAME, // tên database bạn vừa tạo
       autoLoadEntities: true,
       synchronize: true, // Tự tạo bảng khi chạy (chỉ dùng trong dev)
-      entities: [User, Club, Membership, Event],
+      entities: [User, Club, Membership, Event, EventRegistration],
     }),
     UsersModule,
     ClubsModule,
@@ -59,6 +61,7 @@ import { UploadModule } from './upload/upload.module';
     AuthModule,
     StatisticsModule,
     UploadModule,
+    EventRegistrationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -6,6 +6,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Request,
 } from '@nestjs/common';
 import { ClubsService } from './clubs.service';
 import { UpdateClubDto } from './dto/update-club.dto';
@@ -25,8 +26,9 @@ export class ClubsController {
 
   // Lấy club theo id (click vào club)
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.clubsService.findOne(+id);
+  findOne(@Param('id') id: string, @Request() req?: { user?: { id: number } }) {
+    const userId = req?.user?.id;
+    return this.clubsService.findOne(+id, userId);
   }
 
   // Cập nhật club

@@ -33,8 +33,10 @@ export class EventsController {
   @Get()
   findAll(
     @Query('status') status?: 'pending' | 'approved' | 'rejected' | 'canceled',
+    @Request() req?: { user?: { id: number } },
   ) {
-    return this.eventsService.findAll(status);
+    const userId = req?.user?.id;
+    return this.eventsService.findAll(status, userId);
   }
 
   // Lấy event theo club với status pending

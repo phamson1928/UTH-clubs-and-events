@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Textarea } from "../../components/ui/textarea";
+import { useToast } from "../../hooks/use-toast";
 import axios from "axios";
 
 const API_BASE =
@@ -12,6 +13,7 @@ const API_BASE =
 
 export default function StudentClubDetail() {
   const { id } = useParams();
+  const { toast } = useToast();
 
   const [club, setClub] = useState<any>(null);
   const [members, setMembers] = useState<any[]>([]);
@@ -24,7 +26,10 @@ export default function StudentClubDetail() {
       setIsLoading(true);
       setError("");
       try {
-        const res = await axios.get(`${API_BASE}/clubs/${id}`);
+        const token = localStorage.getItem("authToken");
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+        const res = await axios.get(`${API_BASE}/clubs/${id}`, { headers });
         const data = res.data;
         if (!data) {
           throw new Error("Not found");
@@ -62,11 +67,11 @@ export default function StudentClubDetail() {
                 id: e.id,
                 title: e.name,
                 date: e.date ? new Date(e.date).toLocaleDateString() : "",
-                time: e.time || "",
                 location: e.location || "",
                 description: e.description || "",
                 activities: e.activities || "",
                 attendees: e.attending_users_number || 0,
+                registered: e.isRegistered || false,
                 color: "bg-teal-500",
               }))
             : []
@@ -86,6 +91,64 @@ export default function StudentClubDetail() {
   const [skills, setSkills] = useState("");
   const [promiseText, setPromiseText] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  const handleRegisterEvent = async (eventId: number) => {
+    try {
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        alert("Vui lòng đăng nhập để đăng ký tham gia event");
+        return;
+      }
+
+      await axios.post(
+        `${API_BASE}/event-registrations/${eventId}/register`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      toast({
+        title: "Thành công!",
+        description: "Bạn đã đăng ký tham gia sự kiện thành công.",
+        variant: "default",
+      });
+
+      // Refresh club data để lấy dữ liệu mới nhất từ server
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await axios.get(`${API_BASE}/clubs/${id}`, { headers });
+      const data = res.data;
+
+      if (data && data.events) {
+        setUpcomingEvents(
+          Array.isArray(data.events)
+            ? data.events.map((e: any) => ({
+                id: e.id,
+                title: e.name,
+                date: e.date ? new Date(e.date).toLocaleDateString() : "",
+                location: e.location || "",
+                description: e.description || "",
+                activities: e.activities || "",
+                attendees: e.attending_users_number || 0,
+                registered: e.isRegistered || false,
+                color: "bg-teal-500",
+              }))
+            : []
+        );
+      }
+    } catch (error: any) {
+      console.error("[ClubDetail] Register event error:", error);
+      const errorMsg =
+        error.response?.data?.message || "Không thể đăng ký tham gia event";
+      toast({
+        title: "Lỗi!",
+        description: errorMsg,
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -284,13 +347,17 @@ export default function StudentClubDetail() {
                           <h3 className="text-2xl font-bold text-gray-900 group-hover:text-teal-600 transition-colors flex-1">
                             {event.title}
                           </h3>
-                          <button className="px-6 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold transition-all ml-4 whitespace-nowrap">
-                            Register
+                          <button
+                            onClick={() => handleRegisterEvent(event.id)}
+                            className="px-6 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold transition-all ml-4 whitespace-nowrap disabled:bg-gray-300 disabled:text-gray-600 disabled:cursor-not-allowed"
+                            disabled={event.registered}
+                          >
+                            {event.registered ? "Đăng ký rồi" : "Register"}
                           </button>
                         </div>
 
                         {/* Grid thông tin cơ bản */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 pb-4 border-b border-gray-200">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4 pb-4 border-b border-gray-200">
                           <div>
                             <div className="text-xs text-gray-500 mb-1">
                               Date
@@ -306,17 +373,18 @@ export default function StudentClubDetail() {
                               Location
                             </div>
                             <div className="flex items-center gap-1 text-sm font-medium text-gray-900">
-                              <MapPin className="w-4 h-4 text-teal-600" />
+                              <MapPin className="w-4 h-4 text-orange-600" />
                               {event.location}
                             </div>
                           </div>
+
                           <div>
                             <div className="text-xs text-gray-500 mb-1">
                               Attendees
                             </div>
                             <div className="flex items-center gap-1 text-sm font-medium text-gray-900">
-                              <Users className="w-4 h-4 text-teal-600" />
-                              {event.attendees}
+                              <Users className="w-4 h-4 text-blue-600" />
+                              {event.attendees} người
                             </div>
                           </div>
                         </div>

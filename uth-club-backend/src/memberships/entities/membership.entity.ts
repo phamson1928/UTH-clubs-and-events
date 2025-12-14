@@ -1,5 +1,5 @@
-import { Club } from 'src/clubs/entities/club.entity';
-import { User } from 'src/users/entities/user.entity';
+import { Club } from '../../clubs/entities/club.entity';
+import { User } from '../../users/entities/user.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,

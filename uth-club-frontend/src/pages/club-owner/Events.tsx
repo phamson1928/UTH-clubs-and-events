@@ -6,7 +6,6 @@ import {
   Send,
   Plus,
   Edit,
-  Trash2,
 } from "lucide-react";
 import axios from "axios";
 import { useEffect, useState } from "react";
@@ -55,6 +54,9 @@ export default function ClubOwnerEvents() {
   const [events, setEvents] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState<EventStatus>("all");
+  const [participants, setParticipants] = useState<
+    Record<number, { loading: boolean; data: any[]; error?: string }>
+  >({});
 
   const fetchEvents = async (status?: EventStatus) => {
     setIsLoading(true);
@@ -74,11 +76,11 @@ export default function ClubOwnerEvents() {
             title: event.name || event.title || "Untitled Event",
             description: event.description || "",
             date: event.date ? new Date(event.date).toLocaleDateString() : "",
-            time: event.time || "",
             location: event.location || "",
             activities: event.activities || "",
             status: event.status || "pending",
             club: event.club?.name || "Unknown",
+            attendees: event.attending_users_number || 0,
           }))
         : [];
       setEvents(items);
@@ -104,6 +106,46 @@ export default function ClubOwnerEvents() {
   const handleStatusChange = (value: EventStatus) => {
     setStatusFilter(value);
     fetchEvents(value);
+  };
+
+  const loadParticipants = async (eventId: number) => {
+    setParticipants((prev) => ({
+      ...prev,
+      [eventId]: { loading: true, data: prev[eventId]?.data || [] },
+    }));
+
+    try {
+      const res = await axios.get(
+        `${API_BASE}/event-registrations/${eventId}/participants`,
+        {
+          headers: getAuthHeaders(),
+        }
+      );
+
+      const list = Array.isArray(res.data?.participants)
+        ? res.data.participants
+        : [];
+
+      setParticipants((prev) => ({
+        ...prev,
+        [eventId]: { loading: false, data: list },
+      }));
+    } catch (error) {
+      console.error("[Events] Load participants error", error);
+      setParticipants((prev) => ({
+        ...prev,
+        [eventId]: {
+          loading: false,
+          data: prev[eventId]?.data || [],
+          error: "Không thể tải danh sách người tham gia",
+        },
+      }));
+      toast({
+        title: "Lỗi",
+        description: "Không thể tải danh sách người tham gia",
+        variant: "destructive",
+      });
+    }
   };
 
   const getStatusBadgeVariant = (status: string) => {
@@ -193,15 +235,25 @@ export default function ClubOwnerEvents() {
                         </Badge>
                       </div>
                       <CardDescription>
-                        {event.date && event.time && (
-                          <>
-                            {event.date} at {event.time}
-                          </>
-                        )}
+                        {event.date && <>{event.date}</>}
                         {event.location && <> • {event.location}</>}
                       </CardDescription>
+                      <div className="text-sm text-muted-foreground mt-2">
+                        <span className="font-semibold">Club:</span>{" "}
+                        {event.club}
+                      </div>
                     </div>
                     <div className="flex gap-2">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => loadParticipants(event.id)}
+                        disabled={participants[event.id]?.loading}
+                      >
+                        {participants[event.id]?.loading
+                          ? "Đang tải..."
+                          : "Xem người tham gia"}
+                      </Button>
                       <Button variant="outline" size="sm">
                         <Edit className="h-4 w-4 mr-1" />
                         Edit
@@ -224,6 +276,61 @@ export default function ClubOwnerEvents() {
                       <p className="text-sm text-muted-foreground">
                         {event.activities}
                       </p>
+                    </div>
+                  )}
+                  {event.location && (
+                    <div className="text-sm text-muted-foreground">
+                      <span className="font-semibold">Location:</span>{" "}
+                      {event.location}
+                    </div>
+                  )}
+
+                  {participants[event.id]?.data && (
+                    <div className="border rounded p-3 bg-muted/30">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-semibold">Người tham gia</h4>
+                        {participants[event.id]?.loading && (
+                          <span className="text-xs text-muted-foreground">
+                            Đang tải...
+                          </span>
+                        )}
+                      </div>
+                      {participants[event.id]?.error && (
+                        <p className="text-sm text-destructive mb-2">
+                          {participants[event.id]?.error}
+                        </p>
+                      )}
+                      {participants[event.id]?.data?.length ? (
+                        <div className="space-y-2 max-h-64 overflow-auto">
+                          {participants[event.id].data.map((p) => (
+                            <div
+                              key={p.id}
+                              className="flex items-center justify-between text-sm bg-white rounded border px-3 py-2"
+                            >
+                              <div>
+                                <div className="font-semibold">{p.name}</div>
+                                <div className="text-muted-foreground text-xs">
+                                  {p.email}
+                                </div>
+                                {p.mssv && (
+                                  <div className="text-muted-foreground text-xs">
+                                    MSSV: {p.mssv}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {p.registered_at
+                                  ? new Date(p.registered_at).toLocaleString()
+                                  : ""}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">
+                          Chưa có người đăng ký.
+                        </p>
+                      )}
                     </div>
                   )}
                 </CardContent>

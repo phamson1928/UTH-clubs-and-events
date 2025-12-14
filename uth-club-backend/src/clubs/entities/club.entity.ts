@@ -7,9 +7,9 @@ import {
   CreateDateColumn,
   JoinColumn,
 } from 'typeorm';
-import { User } from 'src/users/entities/user.entity';
-import { Membership } from 'src/memberships/entities/membership.entity';
-import { Event } from 'src/events/entities/event.entity';
+import { User } from '../../users/entities/user.entity';
+import { Membership } from '../../memberships/entities/membership.entity';
+import { Event } from '../../events/entities/event.entity';
 
 @Entity()
 export class Club {

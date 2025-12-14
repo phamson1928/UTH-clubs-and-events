@@ -3,8 +3,8 @@ import { CreateMembershipDto } from './dto/create-membership.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Membership } from './entities/membership.entity';
 import { Repository } from 'typeorm';
-import { User } from 'src/users/entities/user.entity';
-import { Club } from 'src/clubs/entities/club.entity';
+import { User } from '../users/entities/user.entity';
+import { Club } from '../clubs/entities/club.entity';
 
 @Injectable()
 export class MembershipsService {

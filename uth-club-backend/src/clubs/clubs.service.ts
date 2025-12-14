@@ -4,7 +4,8 @@ import { UpdateClubDto } from './dto/update-club.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Club } from './entities/club.entity';
 import { Repository } from 'typeorm';
-import { User } from 'src/users/entities/user.entity';
+import { User } from '../users/entities/user.entity';
+import { EventRegistration } from '../event_registrations/entities/event_registration.entity';
 
 @Injectable()
 export class ClubsService {
@@ -13,6 +14,8 @@ export class ClubsService {
     private clubsRepository: Repository<Club>,
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    @InjectRepository(EventRegistration)
+    private registrationsRepository: Repository<EventRegistration>,
   ) {}
 
   async create(createClubDto: CreateClubDto) {
@@ -40,8 +43,8 @@ export class ClubsService {
       .getMany();
   }
 
-  async findOne(id: number) {
-    return await this.clubsRepository
+  async findOne(id: number, userId?: number) {
+    const club = await this.clubsRepository
       .createQueryBuilder('clubs')
       .leftJoinAndSelect('clubs.owner', 'owner')
       .leftJoinAndSelect('clubs.memberships', 'memberships')
@@ -49,6 +52,34 @@ export class ClubsService {
       .leftJoinAndSelect('clubs.events', 'events')
       .where('clubs.id = :id', { id })
       .getOne();
+
+    if (!club) {
+      return null;
+    }
+
+    // If user is authenticated, check registration status for each event
+    if (userId && club.events) {
+      const eventsWithRegistration = await Promise.all(
+        club.events.map(async (event) => {
+          const registration = await this.registrationsRepository.findOne({
+            where: {
+              event: { id: event.id },
+              user: { id: userId },
+            },
+          });
+          return {
+            ...event,
+            isRegistered: !!registration,
+          };
+        }),
+      );
+      return {
+        ...club,
+        events: eventsWithRegistration,
+      };
+    }
+
+    return club;
   }
 
   async update(id: number, updateClubDto: UpdateClubDto) {

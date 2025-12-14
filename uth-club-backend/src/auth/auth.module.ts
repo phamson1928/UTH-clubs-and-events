@@ -7,10 +7,10 @@ import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
 import { UsersModule } from '../users/users.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Club } from 'src/clubs/entities/club.entity';
-import { MailService } from 'src/mail/mail.service';
-import { UsersService } from 'src/users/users.service';
-import { User } from 'src/users/entities/user.entity';
+import { Club } from '../clubs/entities/club.entity';
+import { MailService } from '../mail/mail.service';
+import { UsersService } from '../users/users.service';
+import { User } from '../users/entities/user.entity';
 
 @Module({
   imports: [

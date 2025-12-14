@@ -7,15 +7,18 @@ import {
   Sparkles,
   Star,
   Quote,
+  MapPin,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import Navbar from "../../components/Navbar";
+import { useToast } from "../../hooks/use-toast";
 
 const API_BASE =
   (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
 
 export default function StudentHome() {
+  const { toast } = useToast();
   const [heroQuery, setHeroQuery] = useState("");
   const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
@@ -27,7 +30,12 @@ export default function StudentHome() {
   const fetchApprovedEvents = async () => {
     setIsLoadingEvents(true);
     try {
-      const res = await axios.get(`${API_BASE}/events?status=approved`);
+      const token = localStorage.getItem("authToken");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+      const res = await axios.get(`${API_BASE}/events?status=approved`, {
+        headers,
+      });
       const items = Array.isArray(res.data)
         ? res.data.map((event: any, index: number) => ({
             id: event.id,
@@ -36,8 +44,8 @@ export default function StudentHome() {
             date: event.date
               ? new Date(event.date).toLocaleDateString()
               : "TBA",
-            time: event.time || "TBA",
             attendees: event.attending_users_number || 0,
+            registered: event.isRegistered || false,
             description: event.description || "",
             location: event.location || "",
             activities: event.activities || "",
@@ -121,6 +129,44 @@ export default function StudentHome() {
     e.preventDefault();
     console.log("Searching for:", heroQuery);
   }
+
+  const handleRegisterEvent = async (eventId: number) => {
+    try {
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        alert("Vui lòng đăng nhập để đăng ký tham gia event");
+        return;
+      }
+
+      await axios.post(
+        `${API_BASE}/event-registrations/${eventId}/register`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      toast({
+        title: "Thành công!",
+        description: "Bạn đã đăng ký tham gia sự kiện thành công.",
+        variant: "default",
+      });
+
+      // Refresh events để lấy dữ liệu mới nhất từ server
+      await fetchApprovedEvents();
+    } catch (error: any) {
+      console.error("[Home] Register event error:", error);
+      const errorMsg =
+        error.response?.data?.message || "Không thể đăng ký tham gia event";
+      toast({
+        title: "Lỗi!",
+        description: errorMsg,
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -396,67 +442,65 @@ export default function StudentHome() {
                 >
                   <div className="flex items-start">
                     <div className={`w-2 h-full ${event.color}`}></div>
-                    <div className="flex-1 p-8">
+                    <div className="flex-1 p-6">
                       <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-teal-600 transition-colors">
-                            {event.title}
-                          </h3>
-                          <p className="text-gray-600 font-medium mb-4">
-                            {event.club}
-                          </p>
-                          <div className="flex flex-wrap items-center gap-6 text-sm text-gray-600 mb-4">
-                            <div className="flex items-center gap-2">
-                              <Calendar className="w-4 h-4" />
-                              <span className="font-medium">{event.date}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium">{event.time}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Users className="w-4 h-4" />
-                              <span className="font-medium">
-                                {event.attendees} attending
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <button className="px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-bold transition-all whitespace-nowrap">
-                          Register Now
+                        <h3 className="text-2xl font-bold text-gray-900 group-hover:text-teal-600 transition-colors flex-1">
+                          {event.title}
+                        </h3>
+                        <button
+                          onClick={() => handleRegisterEvent(event.id)}
+                          className="px-6 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold transition-all ml-4 whitespace-nowrap disabled:bg-gray-300 disabled:text-gray-600 disabled:cursor-not-allowed"
+                          disabled={event.registered}
+                        >
+                          {event.registered ? "Đăng ký rồi" : "Register"}
                         </button>
                       </div>
 
-                      {/* Description */}
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4 pb-4 border-b border-gray-200">
+                        <div>
+                          <div className="text-xs text-gray-500 mb-1">Date</div>
+                          <div className="flex items-center gap-1 text-sm font-medium text-gray-900">
+                            <Calendar className="w-4 h-4 text-teal-600" />
+                            {event.date}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-500 mb-1">
+                            Location
+                          </div>
+                          <div className="flex items-center gap-1 text-sm font-medium text-gray-900">
+                            <MapPin className="w-4 h-4 text-orange-600" />
+                            {event.location}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-500 mb-1">
+                            Attendees
+                          </div>
+                          <div className="flex items-center gap-1 text-sm font-medium text-gray-900">
+                            <Users className="w-4 h-4 text-blue-600" />
+                            {event.attendees} người
+                          </div>
+                        </div>
+                      </div>
+
                       {event.description && (
-                        <div className="mb-4">
-                          <h4 className="text-sm font-semibold text-gray-900 mb-1">
-                            Description:
-                          </h4>
-                          <p className="text-sm text-gray-700 leading-relaxed">
+                        <div className="mb-3">
+                          <div className="text-xs text-gray-500 mb-1">
+                            Description
+                          </div>
+                          <p className="text-sm text-gray-700">
                             {event.description}
                           </p>
                         </div>
                       )}
 
-                      {/* Location */}
-                      {event.location && (
-                        <div className="mb-4">
-                          <h4 className="text-sm font-semibold text-gray-900 mb-1">
-                            Location:
-                          </h4>
-                          <p className="text-sm text-gray-700">
-                            {event.location}
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Activities */}
                       {event.activities && (
                         <div>
-                          <h4 className="text-sm font-semibold text-gray-900 mb-1">
-                            Activities:
-                          </h4>
-                          <p className="text-sm text-gray-700 leading-relaxed">
+                          <div className="text-xs text-gray-500 mb-1">
+                            Activities
+                          </div>
+                          <p className="text-sm text-gray-700">
                             {event.activities}
                           </p>
                         </div>

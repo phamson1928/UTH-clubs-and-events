@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from 'src/users/entities/user.entity';
-import { Event } from 'src/events/entities/event.entity';
-import { Club } from 'src/clubs/entities/club.entity';
-import { Membership } from 'src/memberships/entities/membership.entity';
+import { User } from '../users/entities/user.entity';
+import { Event } from '../events/entities/event.entity';
+import { Club } from '../clubs/entities/club.entity';
+import { Membership } from '../memberships/entities/membership.entity';
 
 interface MonthlyData {
   month: string | number;
