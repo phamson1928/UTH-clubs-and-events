@@ -1,4 +1,11 @@
-import { LayoutDashboard, Users, FileText, Calendar, Send } from "lucide-react";
+import {
+  LayoutDashboard,
+  Users,
+  FileText,
+  Calendar,
+  Send,
+  Building2,
+} from "lucide-react";
 import Navbar from "../../components/Navbar";
 import Sidebar from "../../components/Sidebar";
 import {
@@ -45,28 +52,62 @@ export default function ClubOwnerDashboard() {
   const [stats, setStats] = useState<any>({});
   const [eventsGrowth, setEventsGrowth] = useState<any[]>([]);
   const [membersGrowth, setMembersGrowth] = useState<any[]>([]);
+  const [clubName, setClubName] = useState<string>("");
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
         const headers = getAuthHeaders();
-        const [statsRes, eventsGrowthRes, membersGrowthRes] = await Promise.all(
-          [
-            axios.get(`${API_BASE}/statistics/own-club_statistics`, {
+
+        // Get clubId from JWT token
+        const token = localStorage.getItem("authToken");
+        let clubId: number | null = null;
+        if (token) {
+          try {
+            const parts = token.split(".");
+            const payload = JSON.parse(atob(parts[1]));
+            clubId = payload.clubId || null;
+          } catch (e) {
+            console.error("Failed to decode token", e);
+          }
+        }
+
+        // Fetch all data including club info
+        const promises = [
+          axios.get(`${API_BASE}/statistics/own-club_statistics`, {
+            headers,
+          }),
+          axios.get(`${API_BASE}/statistics/club-owner/events-growth`, {
+            headers,
+          }),
+          axios.get(`${API_BASE}/statistics/club-owner/members-growth`, {
+            headers,
+          }),
+        ];
+
+        // If we have clubId, fetch club info
+        if (clubId) {
+          promises.push(
+            axios.get(`${API_BASE}/clubs/${clubId}`, {
               headers,
-            }),
-            axios.get(`${API_BASE}/statistics/club-owner/events-growth`, {
-              headers,
-            }),
-            axios.get(`${API_BASE}/statistics/club-owner/members-growth`, {
-              headers,
-            }),
-          ]
-        );
+            })
+          );
+        }
+
+        const results = await Promise.all(promises);
+        const [statsRes, eventsGrowthRes, membersGrowthRes, ...rest] = results;
 
         setStats(statsRes.data);
         setEventsGrowth(eventsGrowthRes.data);
         setMembersGrowth(membersGrowthRes.data);
+
+        // If club info was fetched, set club name
+        if (clubId && rest.length > 0) {
+          const clubRes = rest[0] as any;
+          if (clubRes?.data?.name) {
+            setClubName(clubRes.data.name);
+          }
+        }
       } catch (error) {
         if (
           axios.isAxiosError(error) &&
@@ -89,10 +130,26 @@ export default function ClubOwnerDashboard() {
 
         <main className="flex-1 p-8">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
-            <p className="text-muted-foreground">
-              Welcome back! Here's your club overview
-            </p>
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
+                <p className="text-muted-foreground">
+                  Welcome back! Here's your club overview
+                </p>
+              </div>
+              {clubName && (
+                <div className="flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-lg border border-primary/20">
+                  <Building2 className="h-5 w-5" />
+                  <span className="font-semibold text-lg">{clubName}</span>
+                </div>
+              )}
+            </div>
+            {clubName && (
+              <div className="text-sm text-muted-foreground">
+                Quản lý câu lạc bộ:{" "}
+                <span className="font-medium text-foreground">{clubName}</span>
+              </div>
+            )}
           </div>
 
           {/* Stats Cards */}
