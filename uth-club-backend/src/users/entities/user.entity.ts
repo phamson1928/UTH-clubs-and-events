@@ -19,10 +19,15 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @Column()
+  @Column({ select: false })
   password: string;
 
-  @Column({ default: 'user' })
+  // type: 'enum' adds a DB-level enum constraint (requires migration if column already exists as varchar)
+  @Column({
+    type: 'enum',
+    enum: ['user', 'admin', 'club_owner'],
+    default: 'user',
+  })
   role: 'user' | 'admin' | 'club_owner';
 
   @Column({ nullable: true })
@@ -37,11 +42,11 @@ export class User {
   @CreateDateColumn()
   createdAt: Date;
 
-  @Column({ nullable: true })
-  resetToken: string;
+  @Column({ type: 'varchar', nullable: true })
+  resetToken: string | null;
 
   @Column({ type: 'timestamp', nullable: true })
-  resetTokenExpires: Date;
+  resetTokenExpires: Date | null;
 
   @OneToMany(() => Membership, (membership) => membership.user)
   memberships: Membership[];

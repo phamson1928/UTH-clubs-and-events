@@ -62,7 +62,7 @@ function decodeJwt(token: string): any | null {
         .map(function (c) {
           return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
         })
-        .join("")
+        .join(""),
     );
     return JSON.parse(json);
   } catch (e) {
@@ -128,7 +128,7 @@ export default function ClubOwnerMembers() {
       await axios.post(
         `${API_BASE}/memberships/${selectedUserId}/add-to-club`,
         {},
-        { headers: getAuthHeaders() }
+        { headers: getAuthHeaders() },
       );
       await reloadMembers();
       setIsAddOpen(false);
@@ -168,7 +168,7 @@ export default function ClubOwnerMembers() {
           skills: m.skills || "",
           promise: m.promise || "",
           avatar: "/placeholder.svg",
-        }))
+        })),
       );
     } catch (e) {
       console.error("[Members] reload failed", e);
@@ -205,12 +205,12 @@ export default function ClubOwnerMembers() {
       await axios.post(
         `${API_BASE}/users/club-owner/edit-email/${member.userId}`,
         { email: newEmail },
-        { headers: getAuthHeaders() }
+        { headers: getAuthHeaders() },
       );
       setMembers((prev) =>
         prev.map((m) =>
-          m.id === editingMemberId ? { ...m, email: newEmail } : m
-        )
+          m.id === editingMemberId ? { ...m, email: newEmail } : m,
+        ),
       );
       setIsEditEmailOpen(false);
       setEditingMemberId(null);
@@ -238,7 +238,7 @@ export default function ClubOwnerMembers() {
         });
         console.log(
           "[Members] memberships response count:",
-          Array.isArray(res.data) ? res.data.length : "non-array"
+          Array.isArray(res.data) ? res.data.length : "non-array",
         );
         if (Array.isArray(res.data) && res.data.length > 0) {
           console.log("[Members] first membership sample:", res.data[0]);
@@ -257,7 +257,7 @@ export default function ClubOwnerMembers() {
             skills: m.skills || "",
             promise: m.promise || "",
             avatar: "/placeholder.svg",
-          }))
+          })),
         );
         // Also fetch owner info via clubId decoded from JWT
         const token = localStorage.getItem("authToken");
@@ -277,7 +277,7 @@ export default function ClubOwnerMembers() {
                     mssv: club.owner.mssv,
                     avatar: "/placeholder.svg",
                   }
-                : null
+                : null,
             );
           }
         }
@@ -285,7 +285,7 @@ export default function ClubOwnerMembers() {
         if (axios.isAxiosError(error)) {
           console.error(
             "[Members] fetch error status:",
-            error.response?.status
+            error.response?.status,
           );
           console.error("[Members] fetch error data:", error.response?.data);
         }
@@ -300,12 +300,12 @@ export default function ClubOwnerMembers() {
       }
     };
     fetchMembers();
-  }, []);
+  }, [navigate]);
 
   const filteredMembers = members.filter(
     (m) =>
-      m.name.toLowerCase().includes(search.toLowerCase()) ||
-      m.email.toLowerCase().includes(search.toLowerCase())
+      (m.name ?? "").toLowerCase().includes(search.toLowerCase()) ||
+      (m.email ?? "").toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
@@ -477,6 +477,9 @@ export default function ClubOwnerMembers() {
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsAddOpen(false)}>
                   Cancel
+                </Button>
+                <Button onClick={handleAddMember} disabled={!selectedUserId}>
+                  Confirm
                 </Button>
               </DialogFooter>
             </DialogContent>

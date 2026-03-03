@@ -1,12 +1,7 @@
 import { IsNotEmpty } from 'class-validator';
 
+// clubId comes from @Param, userId comes from JWT — do NOT expose them in the body
 export class CreateMembershipDto {
-  @IsNotEmpty()
-  clubId: number;
-
-  @IsNotEmpty()
-  userId: number;
-
   @IsNotEmpty()
   join_reason: string;
 

@@ -105,15 +105,15 @@ export default function ClubOwnerRequests() {
       await axios.post(
         `${API_BASE}/events`,
         {
-          title: formData.title,
+          name: formData.title,
           description: formData.description,
-          event_date: formData.event_date,
-          event_time: formData.event_time,
+          date: new Date(
+            `${formData.event_date}T${formData.event_time || "00:00"}`,
+          ).toISOString(),
           location: formData.location,
-          expected_attendees: parseInt(formData.expected_attendees) || 0,
           activities: formData.activities,
         },
-        { headers: getAuthHeaders() }
+        { headers: getAuthHeaders() },
       );
       setIsCreateOpen(false);
       setFormData({

@@ -1,6 +1,12 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import { Toaster } from "./components/ui/toaster";
 import Footer from "./components/Footer";
+import { ReactNode } from "react";
 
 // Auth Pages
 import Login from "./pages/auth/Login";
@@ -24,7 +30,35 @@ import ClubOwnerRequests from "./pages/club-owner/Requests";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminClubs from "./pages/admin/Clubs";
 import AdminEvents from "./pages/admin/Events";
+import AdminRequests from "./pages/admin/Requests";
 import AdminUsers from "./pages/admin/Users";
+
+function ProtectedRoute({
+  children,
+  roles,
+}: {
+  children: ReactNode;
+  roles?: string[];
+}) {
+  const token = localStorage.getItem("authToken");
+  const userRaw = localStorage.getItem("authUser");
+  const user = userRaw ? (JSON.parse(userRaw) as { role: string }) : null;
+
+  if (!token || !user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (roles && !roles.includes(user.role)) {
+    // Redirect đến trang phù hợp với role thực tế
+    if (user.role === "admin")
+      return <Navigate to="/admin/dashboard" replace />;
+    if (user.role === "club_owner")
+      return <Navigate to="/club-owner/dashboard" replace />;
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
+}
 
 function App() {
   return (
@@ -42,20 +76,88 @@ function App() {
         <Route path="/student/clubs/:id" element={<StudentClubDetail />} />
 
         {/* Club Owner Routes */}
-        <Route path="/club-owner/dashboard" element={<ClubOwnerDashboard />} />
-        <Route path="/club-owner/members" element={<ClubOwnerMembers />} />
+        <Route
+          path="/club-owner/dashboard"
+          element={
+            <ProtectedRoute roles={["club_owner"]}>
+              <ClubOwnerDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/club-owner/members"
+          element={
+            <ProtectedRoute roles={["club_owner"]}>
+              <ClubOwnerMembers />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/club-owner/applications"
-          element={<ClubOwnerApplications />}
+          element={
+            <ProtectedRoute roles={["club_owner"]}>
+              <ClubOwnerApplications />
+            </ProtectedRoute>
+          }
         />
-        <Route path="/club-owner/events" element={<ClubOwnerEvents />} />
-        <Route path="/club-owner/requests" element={<ClubOwnerRequests />} />
+        <Route
+          path="/club-owner/events"
+          element={
+            <ProtectedRoute roles={["club_owner"]}>
+              <ClubOwnerEvents />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/club-owner/requests"
+          element={
+            <ProtectedRoute roles={["club_owner"]}>
+              <ClubOwnerRequests />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Admin Routes */}
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/clubs" element={<AdminClubs />} />
-        <Route path="/admin/events" element={<AdminEvents />} />
-        <Route path="/admin/users" element={<AdminUsers />} />
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute roles={["admin"]}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/clubs"
+          element={
+            <ProtectedRoute roles={["admin"]}>
+              <AdminClubs />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/events"
+          element={
+            <ProtectedRoute roles={["admin"]}>
+              <AdminEvents />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/requests"
+          element={
+            <ProtectedRoute roles={["admin"]}>
+              <AdminRequests />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute roles={["admin"]}>
+              <AdminUsers />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
       <Footer />
       <Toaster />

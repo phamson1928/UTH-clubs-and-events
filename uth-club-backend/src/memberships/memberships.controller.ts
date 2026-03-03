@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Get,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { MembershipsService } from './memberships.service';
 import { CreateMembershipDto } from './dto/create-membership.dto';
@@ -27,21 +28,12 @@ export class MembershipsController {
     return this.membershipsService.findAllRequests(req.user.clubId);
   }
 
-  // Yêu cầu tham gia club
-  @Post(':clubId/join')
+  // Admin: lấy tất cả pending requests across all clubs
+  @Get('admin/all-requests')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('user')
-  async requestJoin(
-    @Body() createMembershipDto: CreateMembershipDto,
-    @Request() req: { user: { id: number } },
-    @Param('clubId') clubId: number,
-  ) {
-    const userId = req.user.id;
-    return this.membershipsService.createMembershipRequest(
-      createMembershipDto,
-      userId,
-      clubId,
-    );
+  @Roles('admin')
+  findAllPendingForAdmin() {
+    return this.membershipsService.findAllPendingForAdmin();
   }
 
   // Lấy danh sách thành viên trong club
@@ -63,32 +55,49 @@ export class MembershipsController {
   // Duyệt đơn xin tham gia club
   @Patch(':id/approve')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('club_owner')
-  async approve(@Param('id') id: number) {
+  @Roles('club_owner', 'admin')
+  async approve(@Param('id', ParseIntPipe) id: number) {
     return this.membershipsService.updateMembershipRequest(id, 'approved');
   }
 
   // Từ chối đơn xin tham gia club
   @Patch(':id/reject')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('club_owner')
-  async reject(@Param('id') id: number) {
+  @Roles('club_owner', 'admin')
+  async reject(@Param('id', ParseIntPipe) id: number) {
     return this.membershipsService.updateMembershipRequest(id, 'rejected');
+  }
+
+  // Yêu cầu tham gia club
+  @Post(':clubId/join')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('user')
+  async requestJoin(
+    @Body() createMembershipDto: CreateMembershipDto,
+    @Request() req: { user: { id: number } },
+    @Param('clubId', ParseIntPipe) clubId: number,
+  ) {
+    const userId = req.user.id;
+    return this.membershipsService.createMembershipRequest(
+      createMembershipDto,
+      userId,
+      clubId,
+    );
+  }
+
+  // Xóa thành viên khỏi club — khai báo TRƯỚC :id để tránh routing conflict
+  @Delete('members/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('club_owner')
+  async removeMember(@Param('id', ParseIntPipe) id: number) {
+    return this.membershipsService.removeMemberFromClub(id);
   }
 
   // Xóa đơn xin tham gia club
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('club_owner')
-  async delete(@Param('id') id: number) {
+  async delete(@Param('id', ParseIntPipe) id: number) {
     return this.membershipsService.deleteMembershipRequest(id);
-  }
-
-  // Xóa thành viên khỏi club
-  @Delete('members/:id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('club_owner')
-  async removeMember(@Param('id') id: number) {
-    return this.membershipsService.removeMemberFromClub(id);
   }
 }

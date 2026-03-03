@@ -3,7 +3,7 @@ import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Event } from './entities/event.entity';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { EventRegistration } from '../event_registrations/entities/event_registration.entity';
 
 @Injectable()
@@ -49,23 +49,20 @@ export class EventsService {
 
     const events = await query.getMany();
 
-    // If user is authenticated, check registration status for each event
+    // If user is authenticated, batch-check registration in ONE query (no N+1)
     if (userId) {
-      const eventsWithRegistration = await Promise.all(
-        events.map(async (event) => {
-          const registration = await this.registrationsRepository.findOne({
-            where: {
-              event: { id: event.id },
-              user: { id: userId },
-            },
-          });
-          return {
-            ...event,
-            isRegistered: !!registration,
-          };
-        }),
-      );
-      return eventsWithRegistration;
+      if (events.length === 0)
+        return events.map((e) => ({ ...e, isRegistered: false }));
+      const eventIds = events.map((e) => e.id);
+      const registrations = await this.registrationsRepository.find({
+        where: { event: { id: In(eventIds) }, user: { id: userId } },
+        relations: ['event'],
+      });
+      const registeredEventIds = new Set(registrations.map((r) => r.event.id));
+      return events.map((event) => ({
+        ...event,
+        isRegistered: registeredEventIds.has(event.id),
+      }));
     }
 
     return events.map((event) => ({ ...event, isRegistered: false }));
@@ -79,21 +76,6 @@ export class EventsService {
       .where('club.id = :clubId', { clubId })
       .andWhere('event.status = :status', { status: 'pending' })
       .getMany();
-  }
-
-  // Cập nhật khi user register tham gia event
-  async updateAttendingUsersNumber(eventId: number) {
-    const event = await this.eventsRepository.findOne({
-      where: { id: eventId },
-    });
-    if (!event) {
-      throw new Error('Event not found');
-    }
-
-    const newNumber = (event.attending_users_number || 0) + 1;
-    return await this.eventsRepository.update(eventId, {
-      attending_users_number: newNumber,
-    });
   }
 
   // Lấy event theo club và status cho member của club owner

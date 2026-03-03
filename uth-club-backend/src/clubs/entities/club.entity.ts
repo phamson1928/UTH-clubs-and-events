@@ -35,7 +35,7 @@ export class Club {
   @CreateDateColumn()
   created_at: Date;
 
-  @Column()
+  @Column({ nullable: true })
   club_image: string;
 
   @OneToMany(() => Membership, (membership) => membership.club)

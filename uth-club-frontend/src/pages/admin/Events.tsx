@@ -51,6 +51,7 @@ export default function AdminEvents() {
   const [ongoingEvents, setOngoingEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("pending");
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentEvent, setCurrentEvent] = useState<any | null>(null);
@@ -112,7 +113,7 @@ export default function AdminEvents() {
         {},
         {
           headers: { ...getAuthHeaders() },
-        }
+        },
       );
       const updatedEvents = pendingEvents.filter((event) => event.id !== id);
       setPendingEvents(updatedEvents);
@@ -131,7 +132,7 @@ export default function AdminEvents() {
         navigate("/login");
         return;
       }
-      setError("Không thể duyệt sự kiện.");
+      setActionError("Không thể duyệt sự kiện.");
     }
   };
 
@@ -142,7 +143,7 @@ export default function AdminEvents() {
         {},
         {
           headers: { ...getAuthHeaders() },
-        }
+        },
       );
       const updatedEvents = pendingEvents.filter((event) => event.id !== id);
       setPendingEvents(updatedEvents);
@@ -154,7 +155,7 @@ export default function AdminEvents() {
         navigate("/login");
         return;
       }
-      setError("Không thể từ chối sự kiện.");
+      setActionError("Không thể từ chối sự kiện.");
     }
   };
 
@@ -229,7 +230,7 @@ export default function AdminEvents() {
         navigate("/login");
         return;
       }
-      setError("Không thể cập nhật sự kiện.");
+      setActionError("Không thể cập nhật sự kiện.");
     } finally {
       setIsSubmitting(false);
     }
@@ -263,6 +264,19 @@ export default function AdminEvents() {
               Quản lý và duyệt các sự kiện của câu lạc bộ
             </p>
           </div>
+
+          {actionError && (
+            <div className="flex items-center justify-between bg-destructive/10 border border-destructive/30 text-destructive px-4 py-3 rounded mb-4">
+              <span>{actionError}</span>
+              <button
+                onClick={() => setActionError(null)}
+                className="ml-4 font-bold text-lg leading-none hover:opacity-70"
+                aria-label="dismiss"
+              >
+                ×
+              </button>
+            </div>
+          )}
 
           <Tabs
             value={activeTab}

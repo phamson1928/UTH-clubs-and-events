@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
   Request,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { EventsService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
@@ -60,39 +61,45 @@ export class EventsController {
 
   // Lấy event theo id
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.eventsService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.eventsService.findOne(id);
   }
 
-  // Cập nhật event
+  // Cập nhật event (club_owner — status bị loại bỏ để ngăn tự approve)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('club_owner')
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateEventDto: UpdateEventDto) {
-    return this.eventsService.update(+id, updateEventDto);
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateEventDto: UpdateEventDto,
+  ) {
+    // Strip status to prevent club_owner from self-approving events
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { status: _status, ...safeDto } = updateEventDto;
+    return this.eventsService.update(id, safeDto as UpdateEventDto);
   }
 
   // Duyệt event
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @Patch(':id/approved')
-  clickApproved(@Param('id') id: string) {
-    return this.eventsService.update(+id, { status: 'approved' });
+  clickApproved(@Param('id', ParseIntPipe) id: number) {
+    return this.eventsService.update(id, { status: 'approved' });
   }
 
   // Từ chối event
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @Patch(':id/rejected')
-  clickRejected(@Param('id') id: string) {
-    return this.eventsService.update(+id, { status: 'rejected' });
+  clickRejected(@Param('id', ParseIntPipe) id: number) {
+    return this.eventsService.update(id, { status: 'rejected' });
   }
 
   // Xóa event
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.eventsService.remove(+id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.eventsService.remove(id);
   }
 }

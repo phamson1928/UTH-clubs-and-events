@@ -65,7 +65,13 @@ export default function ClubOwnerDashboard() {
         if (token) {
           try {
             const parts = token.split(".");
-            const payload = JSON.parse(atob(parts[1]));
+            // Fix base64url → base64 padding before decoding
+            const b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+            const padded = b64.padEnd(
+              b64.length + ((4 - (b64.length % 4)) % 4),
+              "=",
+            );
+            const payload = JSON.parse(atob(padded));
             clubId = payload.clubId || null;
           } catch (e) {
             console.error("Failed to decode token", e);
@@ -90,7 +96,7 @@ export default function ClubOwnerDashboard() {
           promises.push(
             axios.get(`${API_BASE}/clubs/${clubId}`, {
               headers,
-            })
+            }),
           );
         }
 
@@ -120,7 +126,7 @@ export default function ClubOwnerDashboard() {
       }
     };
     fetchStats();
-  }, []);
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-background">

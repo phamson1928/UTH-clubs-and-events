@@ -2,7 +2,9 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { UsersModule } from './users/users.module';
 import { User } from './users/entities/user.entity';
 import { Club } from './clubs/entities/club.entity';
@@ -21,37 +23,50 @@ import { UploadModule } from './upload/upload.module';
 import { EventRegistrationsModule } from './event_registrations/event_registrations.module';
 @Module({
   imports: [
-    MailerModule.forRoot({
-      transport: {
-        host: 'smtp.gmail.com',
-        port: 587,
-        secure: false,
-        auth: {
-          user: 'pson4282@gmail.com',
-          pass: 'dvdg qjpp hpdz zdxj', // dùng App Password, không dùng password thật!
+    ConfigModule.forRoot({ isGlobal: true }),
+    ThrottlerModule.forRoot([
+      {
+        name: 'default',
+        ttl: 60000, // 60 giây
+        limit: 30, // 30 request / 60s (global default)
+      },
+    ]),
+    MailerModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        transport: {
+          host: 'smtp.gmail.com',
+          port: 587,
+          secure: false,
+          auth: {
+            user: configService.get<string>('MAIL_USER'),
+            pass: configService.get<string>('MAIL_PASS'),
+          },
         },
-      },
-      defaults: {
-        from: '"UTH Clubs" <pson4282@gmail.com>',
-      },
-      template: {
-        dir: join(__dirname, 'mail', 'templates'),
-        adapter: new HandlebarsAdapter(),
-        options: {
-          strict: true,
+        defaults: {
+          from: `"UTH Clubs" <${configService.get<string>('MAIL_USER')}>`,
         },
-      },
+        template: {
+          dir: join(__dirname, 'mail', 'templates'),
+          adapter: new HandlebarsAdapter(),
+          options: {
+            strict: true,
+          },
+        },
+      }),
+      inject: [ConfigService],
     }),
-    ConfigModule.forRoot(), //bắt buộc phải có dòng này
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: 'localhost',
+      host: process.env.DB_HOST,
       port: Number(process.env.DB_PORT),
-      username: process.env.DB_USER, // tài khoản mặc định
-      password: process.env.DB_PASSWORD, // thay bằng mật khẩu của bạn
-      database: process.env.DB_NAME, // tên database bạn vừa tạo
+      username: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME,
+      ssl:
+        process.env.DB_SSL === 'false' ? false : { rejectUnauthorized: false },
       autoLoadEntities: true,
-      synchronize: true, // Tự tạo bảng khi chạy (chỉ dùng trong dev)
+      synchronize: process.env.NODE_ENV !== 'production', // ⚠️ false trong production
       entities: [User, Club, Membership, Event, EventRegistration],
     }),
     UsersModule,
@@ -64,6 +79,6 @@ import { EventRegistrationsModule } from './event_registrations/event_registrati
     EventRegistrationsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}

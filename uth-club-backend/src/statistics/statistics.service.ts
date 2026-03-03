@@ -148,7 +148,10 @@ export class StatisticsService {
   async getMemberDashboardStatistics() {
     const totalClubs = await this.clubRepository.count();
     const totalEvents = await this.eventsRepository.count();
-    const totalMembers = await this.userRepository.count();
+    // Count only real verified students (not admins or unverified accounts)
+    const totalMembers = await this.userRepository.count({
+      where: { role: 'user', isVerified: true },
+    });
     return {
       totalClubs,
       totalEvents,

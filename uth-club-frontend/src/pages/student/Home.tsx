@@ -10,6 +10,7 @@ import {
   MapPin,
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Navbar from "../../components/Navbar";
 import { useToast } from "../../hooks/use-toast";
@@ -19,13 +20,33 @@ const API_BASE =
 
 export default function StudentHome() {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [heroQuery, setHeroQuery] = useState("");
   const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
+  const [liveStats, setLiveStats] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetchApprovedEvents();
+    fetchStats();
   }, []);
+
+  const fetchStats = async () => {
+    try {
+      const res = await axios.get(`${API_BASE}/statistics/member_statistics`);
+      const d = res.data;
+      setLiveStats({
+        clubs: d.totalClubs != null ? String(d.totalClubs) : "",
+        events: d.totalEvents != null ? String(d.totalEvents) : "",
+        members:
+          d.totalMembers != null
+            ? Number(d.totalMembers).toLocaleString("vi-VN")
+            : "",
+      });
+    } catch {
+      // Keep hardcoded fallback values
+    }
+  };
 
   const fetchApprovedEvents = async () => {
     setIsLoadingEvents(true);
@@ -39,6 +60,7 @@ export default function StudentHome() {
       const items = Array.isArray(res.data)
         ? res.data.map((event: any, index: number) => ({
             id: event.id,
+            clubId: event.club?.id,
             title: event.name || "Untitled Event",
             club: event.club?.name || "Unknown Club",
             date: event.date
@@ -70,21 +92,21 @@ export default function StudentHome() {
   const stats = [
     {
       label: "Câu Lạc Bộ Hoạt Động",
-      value: "52",
+      value: liveStats.clubs || "52",
       subtext: "Trên tất cả các danh mục",
       icon: Users,
       color: "text-teal-600",
     },
     {
       label: "Sự Kiện Hàng Tháng",
-      value: "38",
+      value: liveStats.events || "38",
       subtext: "Tham gia điều gì đó mới",
       icon: Calendar,
       color: "text-purple-600",
     },
     {
       label: "Thành Viên Hoạt Động",
-      value: "2,847",
+      value: liveStats.members || "2.847",
       subtext: "Cộng đồng đang phát triển",
       icon: TrendingUp,
       color: "text-orange-600",
@@ -127,25 +149,36 @@ export default function StudentHome() {
 
   function onHeroSearch(e: React.FormEvent) {
     e.preventDefault();
-    console.log("Searching for:", heroQuery);
+    navigate(
+      `/student/clubs${heroQuery.trim() ? `?q=${encodeURIComponent(heroQuery.trim())}` : ""}`,
+    );
   }
 
   const handleRegisterEvent = async (eventId: number) => {
+    console.log(`[Home] handleRegisterEvent called — eventId: ${eventId}`);
     try {
       const token = localStorage.getItem("authToken");
       if (!token) {
+        console.warn("[Home] No auth token found, aborting registration");
         alert("Vui lòng đăng nhập để đăng ký tham gia event");
         return;
       }
+      console.log(
+        `[Home] Token present, sending POST /event-registrations/${eventId}/register`,
+      );
 
-      await axios.post(
+      const response = await axios.post(
         `${API_BASE}/event-registrations/${eventId}/register`,
         {},
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
+      );
+      console.log(
+        `[Home] Registration successful — eventId: ${eventId}`,
+        response.data,
       );
 
       toast({
@@ -155,9 +188,13 @@ export default function StudentHome() {
       });
 
       // Refresh events để lấy dữ liệu mới nhất từ server
+      console.log("[Home] Refreshing approved events list...");
       await fetchApprovedEvents();
+      console.log("[Home] Events refreshed after registration");
     } catch (error: any) {
-      console.error("[Home] Register event error:", error);
+      console.error(`[Home] Register event error — eventId: ${eventId}`, error);
+      console.error("[Home] Response data:", error.response?.data);
+      console.error("[Home] Status:", error.response?.status);
       const errorMsg =
         error.response?.data?.message || "Không thể đăng ký tham gia event";
       toast({
@@ -230,6 +267,11 @@ export default function StudentHome() {
               ].map((cat) => (
                 <button
                   key={cat}
+                  onClick={() =>
+                    navigate(
+                      `/student/clubs?category=${encodeURIComponent(cat)}`,
+                    )
+                  }
                   className="px-5 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/30 hover:border-white/50 transition-all text-sm font-medium"
                 >
                   {cat}
@@ -336,7 +378,10 @@ export default function StudentHome() {
                   </div>
                 </div>
               </div>
-              <button className="px-8 py-4 bg-teal-600 hover:bg-teal-700 text-white font-bold transition-all">
+              <button
+                onClick={() => navigate("/student/clubs")}
+                className="px-8 py-4 bg-teal-600 hover:bg-teal-700 text-white font-bold transition-all"
+              >
                 Khám Phá Tất Cả Sự Kiện
               </button>
             </div>
@@ -395,7 +440,10 @@ export default function StudentHome() {
                   </div>
                 </div>
               </div>
-              <button className="px-8 py-4 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-bold transition-all">
+              <button
+                onClick={() => navigate("/student/clubs")}
+                className="px-8 py-4 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-bold transition-all"
+              >
                 Tham Gia CLB Ngay Hôm Nay
               </button>
             </div>
@@ -453,11 +501,18 @@ export default function StudentHome() {
                           {event.title}
                         </h3>
                         <button
-                          onClick={() => handleRegisterEvent(event.id)}
-                          className="px-6 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold transition-all ml-4 whitespace-nowrap disabled:bg-gray-300 disabled:text-gray-600 disabled:cursor-not-allowed"
-                          disabled={event.registered}
+                          onClick={() =>
+                            !event.registered && handleRegisterEvent(event.id)
+                          }
+                          className={`px-6 py-2 text-white font-bold transition-all ml-4 whitespace-nowrap ${
+                            event.registered
+                              ? "bg-teal-900 cursor-default"
+                              : "bg-teal-600 hover:bg-teal-700 cursor-pointer"
+                          }`}
                         >
-                          {event.registered ? "Đăng ký rồi" : "Đăng Ký"}
+                          {event.registered
+                            ? "✓ Đã đăng ký tham gia"
+                            : "Đăng Ký"}
                         </button>
                       </div>
 
@@ -518,7 +573,10 @@ export default function StudentHome() {
           )}
 
           <div className="text-center mt-12">
-            <button className="px-8 py-4 border-2 border-gray-900 hover:bg-gray-900 hover:text-white text-gray-900 font-bold transition-all inline-flex items-center gap-2">
+            <button
+              onClick={() => navigate("/student/clubs")}
+              className="px-8 py-4 border-2 border-gray-900 hover:bg-gray-900 hover:text-white text-gray-900 font-bold transition-all inline-flex items-center gap-2"
+            >
               Xem Tất Cả Sự Kiện <ArrowRight className="w-5 h-5" />
             </button>
           </div>
@@ -585,10 +643,16 @@ export default function StudentHome() {
             UTH. Hành trình của bạn bắt đầu hôm nay.
           </p>
           <div className="flex gap-4 justify-center">
-            <button className="px-10 py-5 bg-white text-teal-700 hover:bg-gray-100 font-bold text-lg transition-all">
+            <button
+              onClick={() => navigate("/student/clubs")}
+              className="px-10 py-5 bg-white text-teal-700 hover:bg-gray-100 font-bold text-lg transition-all"
+            >
               Duyệt Tất Cả Câu Lạc Bộ
             </button>
-            <button className="px-10 py-5 border-2 border-white hover:bg-white hover:text-teal-700 text-white font-bold text-lg transition-all">
+            <button
+              onClick={() => navigate("/student/clubs")}
+              className="px-10 py-5 border-2 border-white hover:bg-white hover:text-teal-700 text-white font-bold text-lg transition-all"
+            >
               Xem Lịch Sự Kiện
             </button>
           </div>

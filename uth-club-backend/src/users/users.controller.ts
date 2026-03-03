@@ -7,6 +7,9 @@ import {
   UseGuards,
   Body,
   Post,
+  Request,
+  ForbiddenException,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -32,55 +35,60 @@ export class UsersController {
   @Roles('admin')
   @Post('create')
   async create(@Body() createUserDto: CreateUserDto) {
-    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-    return this.usersService.create({
-      ...createUserDto,
-      password: hashedPassword,
-    });
+    return this.usersService.create(createUserDto);
   }
 
   // Cập nhật user
   @Patch('update/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    return this.usersService.update(id, updateUserDto);
   }
 
   // Xóa user
   @Delete('delete/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.usersService.remove(id);
   }
 
   // Sửa thông tin user bởi admin
-  @Post('admin/edit/:id')
+  @Patch('admin/edit/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   async adminEditUser(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
   ) {
     if (updateUserDto.password) {
       const hashedPassword = await bcrypt.hash(updateUserDto.password, 10);
       updateUserDto.password = hashedPassword;
     }
-    return this.usersService.update(+id, updateUserDto);
+    return this.usersService.update(id, updateUserDto);
   }
 
-  // Sửa thông tin email user bởi club owner
+  // Sửa thông tin email user bởi club owner (chỉ được sửa email của chính mình)
   @Post('club-owner/edit-email/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('club_owner')
   async clubOwnerEditUserEmail(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
+    @Request() req: { user: { id: number } },
   ) {
+    if (id !== req.user.id) {
+      throw new ForbiddenException(
+        'Bạn chỉ có thể chỉnh sửa email của chính mình',
+      );
+    }
     const allowedFields: Partial<UpdateUserDto> = {
       email: updateUserDto.email,
     };
-    return this.usersService.update(+id, allowedFields);
+    return this.usersService.update(id, allowedFields);
   }
 }

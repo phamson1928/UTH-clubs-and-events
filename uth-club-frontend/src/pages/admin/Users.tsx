@@ -55,13 +55,12 @@ import {
   SelectValue,
 } from "../../components/ui/select";
 import axios from "axios";
-type UserRole = "ADMIN" | "CLUB_LEADER" | "STUDENT";
 
 const sidebarLinks = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/clubs", label: "Clubs", icon: Building2 },
   { href: "/admin/events", label: "Events", icon: Calendar },
-  { href: "/admin/users", label: "Users", icon: UsersIcon, active: true },
+  { href: "/admin/users", label: "Users", icon: UsersIcon },
 ];
 
 export default function AdminUsers() {
@@ -137,7 +136,7 @@ export default function AdminUsers() {
   const handleDelete = async (userId: string) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
       try {
-        const res = await axios.delete(`${API_BASE}/users/delete/${userId}`, {
+        await axios.delete(`${API_BASE}/users/delete/${userId}`, {
           headers: {
             ...getAuthHeaders(),
           },
@@ -180,7 +179,7 @@ export default function AdminUsers() {
       });
 
       if (currentUser.id) {
-        setUsers(users.map((u) => (u.id === currentUser.id ? currentUser : u)));
+        setUsers(users.map((u) => (u.id === currentUser.id ? res.data : u)));
       } else {
         setUsers([...users, res.data]);
       }
@@ -373,8 +372,8 @@ export default function AdminUsers() {
                                 user.role === "admin"
                                   ? "default"
                                   : user.role === "club_owner"
-                                  ? "secondary"
-                                  : "outline"
+                                    ? "secondary"
+                                    : "outline"
                               }
                             >
                               {user.role.replace("_", " ")}

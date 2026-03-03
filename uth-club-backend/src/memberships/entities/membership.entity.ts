@@ -22,8 +22,8 @@ export class Membership {
   @CreateDateColumn()
   request_date: Date;
 
-  @Column()
-  join_date: Date;
+  @Column({ type: 'timestamp', nullable: true })
+  join_date: Date | null;
 
   @Column()
   promise: string;
@@ -34,6 +34,10 @@ export class Membership {
   @ManyToOne(() => User, (user) => user.memberships)
   user: User;
 
-  @Column({ default: 'pending' })
+  @Column({
+    type: 'enum',
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending',
+  })
   status: 'pending' | 'approved' | 'rejected';
 }

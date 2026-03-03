@@ -18,9 +18,11 @@ type Filters = {
 export default function SearchAndFilters({
   value,
   onChange,
+  categories = ["Technology", "Arts", "Sports", "Music"],
 }: {
   value: Filters;
   onChange: (v: Filters) => void;
+  categories?: string[];
 }) {
   return (
     <div className="flex flex-col md:flex-row gap-4 mb-8">
@@ -44,10 +46,11 @@ export default function SearchAndFilters({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Categories</SelectItem>
-          <SelectItem value="Technology">Technology</SelectItem>
-          <SelectItem value="Arts">Arts</SelectItem>
-          <SelectItem value="Sports">Sports</SelectItem>
-          <SelectItem value="Music">Music</SelectItem>
+          {categories.map((cat) => (
+            <SelectItem key={cat} value={cat}>
+              {cat}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
 

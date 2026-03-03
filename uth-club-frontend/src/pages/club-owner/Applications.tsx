@@ -83,7 +83,7 @@ export default function ClubOwnerApplications() {
       await axios.patch(
         `${API_BASE}/memberships/${id}/approve`,
         {},
-        { headers: getAuthHeaders() }
+        { headers: getAuthHeaders() },
       );
       setApplications((prev) => prev.filter((a) => a.id !== id));
       toast({
@@ -105,7 +105,7 @@ export default function ClubOwnerApplications() {
       await axios.patch(
         `${API_BASE}/memberships/${id}/reject`,
         {},
-        { headers: getAuthHeaders() }
+        { headers: getAuthHeaders() },
       );
       setApplications((prev) => prev.filter((a) => a.id !== id));
       setConfirmRejectId(null);
@@ -170,10 +170,10 @@ export default function ClubOwnerApplications() {
                           alt={app.name}
                         />
                         <AvatarFallback>
-                          {app.name
+                          {(app.name ?? "?")
                             .split(" ")
                             .map((n: string) => n[0])
-                            .join("")}
+                            .join("") || "?"}
                         </AvatarFallback>
                       </Avatar>
                       <div>

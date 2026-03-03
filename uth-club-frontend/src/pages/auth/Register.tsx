@@ -41,7 +41,7 @@ export default function Register() {
 
     // Basic validation
     if (formData.password !== formData.confirmPassword) {
-      alert("Mật khẩu xác nhận không khớp!");
+      setError("Mật khẩu xác nhận không khớp!");
       return;
     }
 
@@ -56,24 +56,7 @@ export default function Register() {
         mssv: formData.studentId,
       };
 
-      const res = await axios.post(`${API_BASE}/auth/register`, payload);
-
-      if (!res.data) {
-        let details = "";
-        try {
-          const data = await res.data;
-          details =
-            (Array.isArray(data?.message)
-              ? data.message?.join(", ")
-              : data?.message) ||
-            data?.error ||
-            "";
-        } catch {}
-        throw new Error(details || `Đăng ký thất bại (HTTP ${res.status})`);
-      }
-
-      // Optionally, backend returns { user, token }
-      // We keep flow: redirect to login page
+      await axios.post(`${API_BASE}/auth/register`, payload);
       navigate("/login?registered=true");
     } catch (error) {
       const msg =

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Lock, Mail } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -20,6 +20,8 @@ export default function Login() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isJustRegistered = searchParams.get("registered") === "true";
 
   const API_BASE =
     (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
@@ -35,20 +37,6 @@ export default function Login() {
         password,
       });
 
-      if (!res.data) {
-        let details = "";
-        try {
-          const data = await res.data;
-          details =
-            (Array.isArray(data?.message)
-              ? data.message?.join(", ")
-              : data?.message) ||
-            data?.error ||
-            "";
-        } catch {}
-        throw new Error(details || `Đăng nhập thất bại (HTTP ${res.status})`);
-      }
-
       const { token, user } = res.data || {};
 
       if (!token || !user) throw new Error("Phản hồi không hợp lệ từ máy chủ");
@@ -57,8 +45,14 @@ export default function Login() {
       localStorage.setItem("authToken", token);
       localStorage.setItem("authUser", JSON.stringify(user));
 
-      // Điều hướng sau khi đăng nhập thành công
-      navigate("/");
+      // Điều hướng theo role
+      if (user.role === "admin") {
+        navigate("/admin/dashboard");
+      } else if (user.role === "club_owner") {
+        navigate("/club-owner/dashboard");
+      } else {
+        navigate("/");
+      }
     } catch (err: any) {
       setError(err?.message || "Đã xảy ra lỗi. Vui lòng thử lại.");
     } finally {
@@ -77,6 +71,12 @@ export default function Login() {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
+            {isJustRegistered && (
+              <div className="text-sm text-green-600 bg-green-50 border border-green-200 p-3 rounded">
+                Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài
+                khoản trước khi đăng nhập.
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">

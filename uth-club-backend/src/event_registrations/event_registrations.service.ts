@@ -39,7 +39,20 @@ export class EventRegistrationsService {
       event: { id: eventId } as Event,
       user: { id: userId },
     });
-    await this.registrationsRepository.save(registration);
+
+    try {
+      await this.registrationsRepository.save(registration);
+    } catch (err: unknown) {
+      // Handle unique constraint violation (race condition)
+      const e = err as { code?: string; message?: string };
+      const isUniqueViolation =
+        e.code === '23505' || // PostgreSQL unique violation
+        e.message?.includes('duplicate') === true;
+      if (isUniqueViolation) {
+        throw new ConflictException('Bạn đã đăng ký tham gia event này rồi');
+      }
+      throw err;
+    }
 
     await this.eventsRepository.increment(
       { id: eventId },
@@ -48,6 +61,32 @@ export class EventRegistrationsService {
     );
 
     return { message: 'Đăng ký thành công' };
+  }
+
+  // Hủy đăng ký tham gia event
+  async cancelRegistration(eventId: number, userId: number) {
+    const registration = await this.registrationsRepository.findOne({
+      where: { event: { id: eventId }, user: { id: userId } },
+      relations: ['event', 'user'],
+    });
+
+    if (!registration) {
+      throw new NotFoundException('Bạn chưa đăng ký tham gia event này');
+    }
+
+    await this.registrationsRepository.delete(registration.id);
+
+    // Decrement attending_users_number (min 0)
+    await this.eventsRepository
+      .createQueryBuilder()
+      .update(Event)
+      .set({
+        attending_users_number: () => 'GREATEST(attending_users_number - 1, 0)',
+      })
+      .where('id = :id', { id: eventId })
+      .execute();
+
+    return { message: 'Hủy đăng ký thành công' };
   }
 
   // Lấy danh sách người tham gia một sự kiện dành cho chủ CLB hoặc admin

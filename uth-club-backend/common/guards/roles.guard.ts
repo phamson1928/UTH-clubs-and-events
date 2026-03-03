@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
+import { ROLES_KEY } from '../decorators/roles.decorator';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -14,7 +15,7 @@ export class RolesGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     // Lấy danh sách role yêu cầu từ decorator @Roles()
     const requiredRoles = this.reflector.get<string[]>(
-      'roles',
+      ROLES_KEY,
       context.getHandler(),
     );
     if (!requiredRoles) return true; // không có yêu cầu gì đặc biệt

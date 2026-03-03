@@ -53,16 +53,6 @@ export default function ResetPassword() {
         newPassword: password,
       });
 
-      if (res.status !== 201 && res.status !== 200) {
-        // Try to read error message if provided
-        let details = "";
-        try {
-          const data = await res.data;
-          details = (data?.message as string) || (data?.error as string) || "";
-        } catch {}
-        throw new Error(details || `Yêu cầu thất bại (HTTP ${res.status})`);
-      }
-
       setMessage(
         "Đặt lại mật khẩu thành công. Đang chuyển về trang đăng nhập...",
       );

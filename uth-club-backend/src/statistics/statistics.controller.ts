@@ -1,4 +1,12 @@
-import { Controller, Get, Request, UseGuards, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Request,
+  UseGuards,
+  Query,
+  DefaultValuePipe,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { StatisticsService } from './statistics.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from 'common/guards/roles.guard';
@@ -35,19 +43,21 @@ export class StatisticsController {
   @Get('admin/events-growth')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
-  getEventsGrowthStatistics(@Query('year') year: number) {
-    return this.statisticsService.getEventsGrowthStatistics(
-      year || new Date().getFullYear(),
-    );
+  getEventsGrowthStatistics(
+    @Query('year', new DefaultValuePipe(new Date().getFullYear()), ParseIntPipe)
+    year: number,
+  ) {
+    return this.statisticsService.getEventsGrowthStatistics(year);
   }
 
   @Get('admin/users-growth')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
-  getUserGrowthStatistics(@Query('year') year: number) {
-    return this.statisticsService.getUserGrowthStatistics(
-      year || new Date().getFullYear(),
-    );
+  getUserGrowthStatistics(
+    @Query('year', new DefaultValuePipe(new Date().getFullYear()), ParseIntPipe)
+    year: number,
+  ) {
+    return this.statisticsService.getUserGrowthStatistics(year);
   }
 
   @Get('admin/club-categories')
@@ -67,10 +77,11 @@ export class StatisticsController {
   @Get('admin/events-monthly-status')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
-  getMonthlyEventsByStatus(@Query('year') year: number) {
-    return this.statisticsService.getMonthlyEventsByStatus(
-      year || new Date().getFullYear(),
-    );
+  getMonthlyEventsByStatus(
+    @Query('year', new DefaultValuePipe(new Date().getFullYear()), ParseIntPipe)
+    year: number,
+  ) {
+    return this.statisticsService.getMonthlyEventsByStatus(year);
   }
 
   // Chart Statistics for Club Owner
@@ -79,13 +90,11 @@ export class StatisticsController {
   @Roles('club_owner')
   getClubEventsGrowthStatistics(
     @Request() req: { user: { clubId: number } },
-    @Query('year') year: number,
+    @Query('year', new DefaultValuePipe(new Date().getFullYear()), ParseIntPipe)
+    year: number,
   ) {
     const clubId = req.user.clubId;
-    return this.statisticsService.getClubEventsGrowthStatistics(
-      clubId,
-      year || new Date().getFullYear(),
-    );
+    return this.statisticsService.getClubEventsGrowthStatistics(clubId, year);
   }
 
   @Get('club-owner/members-growth')
@@ -93,12 +102,10 @@ export class StatisticsController {
   @Roles('club_owner')
   getClubMemberGrowthStatistics(
     @Request() req: { user: { clubId: number } },
-    @Query('year') year: number,
+    @Query('year', new DefaultValuePipe(new Date().getFullYear()), ParseIntPipe)
+    year: number,
   ) {
     const clubId = req.user.clubId;
-    return this.statisticsService.getClubMemberGrowthStatistics(
-      clubId,
-      year || new Date().getFullYear(),
-    );
+    return this.statisticsService.getClubMemberGrowthStatistics(clubId, year);
   }
 }

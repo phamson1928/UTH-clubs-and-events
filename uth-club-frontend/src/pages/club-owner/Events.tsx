@@ -119,7 +119,7 @@ export default function ClubOwnerEvents() {
         `${API_BASE}/event-registrations/${eventId}/participants`,
         {
           headers: getAuthHeaders(),
-        }
+        },
       );
 
       const list = Array.isArray(res.data?.participants)
@@ -165,7 +165,7 @@ export default function ClubOwnerEvents() {
 
   useEffect(() => {
     fetchEvents(statusFilter);
-  }, []);
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -254,7 +254,11 @@ export default function ClubOwnerEvents() {
                           ? "Đang tải..."
                           : "Xem người tham gia"}
                       </Button>
-                      <Button variant="outline" size="sm">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate("/club-owner/requests")}
+                      >
                         <Edit className="h-4 w-4 mr-1" />
                         Edit
                       </Button>

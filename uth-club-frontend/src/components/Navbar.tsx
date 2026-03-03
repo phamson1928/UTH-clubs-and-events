@@ -24,13 +24,21 @@ export default function Navbar() {
   const [authUser, setAuthUser] = useState<any | null>(null);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem("authUser");
-      if (raw) setAuthUser(JSON.parse(raw));
-      else setAuthUser(null);
-    } catch {
-      setAuthUser(null);
-    }
+    const syncAuth = () => {
+      try {
+        const raw = localStorage.getItem("authUser");
+        if (raw) setAuthUser(JSON.parse(raw));
+        else setAuthUser(null);
+      } catch {
+        setAuthUser(null);
+      }
+    };
+
+    syncAuth();
+
+    // Sync auth state when another tab logs in/out
+    window.addEventListener("storage", syncAuth);
+    return () => window.removeEventListener("storage", syncAuth);
   }, []);
 
   const displayName = useMemo(() => {
@@ -112,7 +120,9 @@ export default function Navbar() {
 
           <Button variant="ghost" size="icon" className="relative">
             <Bell className="h-5 w-5" />
-            <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive" />
+            {authUser && (
+              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive" />
+            )}
           </Button>
           {/* Role-based dashboard shortcuts */}
           {role === "admin" && (
@@ -154,11 +164,13 @@ export default function Navbar() {
               <DropdownMenuContent className="w-56" align="end">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/profile")}>
                   <User className="mr-2 h-4 w-4" />
                   Profile
                 </DropdownMenuItem>
-                <DropdownMenuItem>Settings</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/settings")}>
+                  Settings
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="text-destructive"

@@ -86,7 +86,9 @@ export default function AdminClubs() {
     const fetchData = async () => {
       try {
         const [clubsRes, usersRes] = await Promise.all([
-          axios.get(`${API_BASE}/clubs`),
+          axios.get(`${API_BASE}/clubs`, {
+            headers: { ...getAuthHeaders() },
+          }),
           axios.get(`${API_BASE}/users`, {
             headers: { ...getAuthHeaders() },
           }),
@@ -116,12 +118,19 @@ export default function AdminClubs() {
     const totalClubs = clubs.length;
     const totalMembers = clubs.reduce(
       (sum, c: any) => sum + Number(c?.members || 0),
-      0
+      0,
     );
     const avgMembers =
       totalClubs > 0 ? Math.round(totalMembers / totalClubs) : 0;
 
     return { totalClubs, totalMembers, avgMembers };
+  }, [clubs]);
+
+  const clubCategories = useMemo(() => {
+    const unique = Array.from(
+      new Set(clubs.map((c: any) => c.category).filter(Boolean)),
+    ) as string[];
+    return unique.sort();
   }, [clubs]);
 
   const visible = useMemo(() => {
@@ -133,7 +142,7 @@ export default function AdminClubs() {
         (c) =>
           c.name.toLowerCase().includes(q) ||
           c.category.toLowerCase().includes(q) ||
-          (c.owner?.name && c.owner.name.toLowerCase().includes(q))
+          (c.owner?.name && c.owner.name.toLowerCase().includes(q)),
       );
     }
 
@@ -219,7 +228,7 @@ export default function AdminClubs() {
               ...getAuthHeaders(),
               "Content-Type": "multipart/form-data",
             },
-          }
+          },
         );
         uploadedImageUrl = uploadRes.data.path;
       }
@@ -236,7 +245,9 @@ export default function AdminClubs() {
       });
 
       // Refresh clubs to get updated owner info
-      const clubsRes = await axios.get(`${API_BASE}/clubs`);
+      const clubsRes = await axios.get(`${API_BASE}/clubs`, {
+        headers: { ...getAuthHeaders() },
+      });
       setClubs(clubsRes.data);
 
       setIsDialogOpen(false);
@@ -327,7 +338,11 @@ export default function AdminClubs() {
             </CardHeader>
             <CardContent>
               <div className="mb-4">
-                <SearchAndFilters value={filters} onChange={setFilters} />
+                <SearchAndFilters
+                  value={filters}
+                  onChange={setFilters}
+                  categories={clubCategories}
+                />
               </div>
 
               <Table>

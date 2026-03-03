@@ -17,6 +17,7 @@ import axios from "axios";
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,19 +35,10 @@ export default function ForgotPassword() {
         email,
       });
 
-      if (res.status !== 200) {
-        // Try to read error message if provided
-        let details = "";
-        try {
-          const data = await res.data;
-          details = data?.message || data?.error || "";
-        } catch {}
-        throw new Error(details || `Yêu cầu thất bại (HTTP ${res.status})`);
-      }
-
       setMessage(
         "Nếu email tồn tại trong hệ thống, chúng tôi đã gửi hướng dẫn đặt lại mật khẩu. Vui lòng kiểm tra hộp thư của bạn.",
       );
+      setIsSubmitted(true);
     } catch (err: any) {
       setError(err?.message || "Đã xảy ra lỗi. Vui lòng thử lại sau.");
     } finally {
@@ -92,8 +84,16 @@ export default function ForgotPassword() {
             )}
           </CardContent>
           <CardFooter className="flex flex-col space-y-3">
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? "Đang gửi..." : "Gửi hướng dẫn"}
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isSubmitting || isSubmitted}
+            >
+              {isSubmitting
+                ? "Đang gửi..."
+                : isSubmitted
+                  ? "Đã gửi"
+                  : "Gửi hướng dẫn"}
             </Button>
             <Button asChild variant="ghost" className="w-full">
               <Link

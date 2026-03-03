@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateClubDto } from './dto/create-club.dto';
 import { UpdateClubDto } from './dto/update-club.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Club } from './entities/club.entity';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { EventRegistration } from '../event_registrations/entities/event_registration.entity';
 
@@ -19,6 +19,18 @@ export class ClubsService {
   ) {}
 
   async create(createClubDto: CreateClubDto) {
+    // Verify owner exists
+    const owner = await this.usersRepository.findOne({
+      where: { id: createClubDto.ownerId },
+    });
+    if (!owner) {
+      throw new NotFoundException(
+        `User with ID ${createClubDto.ownerId} not found`,
+      );
+    }
+    owner.role = 'club_owner';
+    await this.usersRepository.save(owner);
+
     const club = this.clubsRepository.create(createClubDto);
     return await this.clubsRepository.save(club);
   }
@@ -37,7 +49,13 @@ export class ClubsService {
       .orderBy('clubs.created_at', 'DESC')
       .leftJoin('clubs.owner', 'owner')
       .addSelect(['owner.id', 'owner.name'])
-      .loadRelationCountAndMap('clubs.members', 'clubs.memberships')
+      // Only count approved memberships
+      .loadRelationCountAndMap(
+        'clubs.members',
+        'clubs.memberships',
+        'memberships_count',
+        (qb) => qb.where('memberships_count.status = :ms', { ms: 'approved' }),
+      )
       .leftJoin('clubs.memberships', 'memberships')
       .leftJoin('memberships.user', 'user')
       .addSelect(['user.id', 'user.name'])
@@ -58,25 +76,20 @@ export class ClubsService {
       return null;
     }
 
-    // If user is authenticated, check registration status for each event
-    if (userId && club.events) {
-      const eventsWithRegistration = await Promise.all(
-        club.events.map(async (event) => {
-          const registration = await this.registrationsRepository.findOne({
-            where: {
-              event: { id: event.id },
-              user: { id: userId },
-            },
-          });
-          return {
-            ...event,
-            isRegistered: !!registration,
-          };
-        }),
-      );
+    // If user is authenticated, check registration status for each event in one batch query
+    if (userId && club.events && club.events.length > 0) {
+      const eventIds = club.events.map((e) => e.id);
+      const registrations = await this.registrationsRepository.find({
+        where: { event: { id: In(eventIds) }, user: { id: userId } },
+        relations: ['event'],
+      });
+      const registeredEventIds = new Set(registrations.map((r) => r.event.id));
       return {
         ...club,
-        events: eventsWithRegistration,
+        events: club.events.map((event) => ({
+          ...event,
+          isRegistered: registeredEventIds.has(event.id),
+        })),
       };
     }
 
@@ -90,18 +103,30 @@ export class ClubsService {
     });
 
     if (!club) {
-      throw new Error(`Club with ID ${id} not found`);
+      throw new NotFoundException(`Club with ID ${id} not found`);
     }
 
     if (updateClubDto.ownerId) {
-      const owner = await this.usersRepository.findOne({
+      // Revert old owner's role back to 'user'
+      const oldClub = await this.clubsRepository.findOne({
+        where: { id },
+        relations: ['owner'],
+      });
+      if (oldClub?.owner && oldClub.owner.id !== updateClubDto.ownerId) {
+        oldClub.owner.role = 'user';
+        await this.usersRepository.save(oldClub.owner);
+      }
+
+      const newOwner = await this.usersRepository.findOne({
         where: { id: updateClubDto.ownerId },
       });
-      if (!owner) {
-        throw new Error(`Owner with ID ${updateClubDto.ownerId} not found`);
+      if (!newOwner) {
+        throw new NotFoundException(
+          `User with ID ${updateClubDto.ownerId} not found`,
+        );
       }
-      owner.role = 'club_owner';
-      await this.usersRepository.save(owner);
+      newOwner.role = 'club_owner';
+      await this.usersRepository.save(newOwner);
     }
 
     return await this.clubsRepository.save(club);

@@ -31,6 +31,7 @@ const normalizeImageUrl = (imagePath: string | null | undefined): string => {
 export default function StudentClubDetail() {
   const { id } = useParams();
   const { toast } = useToast();
+  const isAuthenticated = !!localStorage.getItem("authToken");
 
   const [club, setClub] = useState<any>(null);
   const [members, setMembers] = useState<any[]>([]);
@@ -74,7 +75,7 @@ export default function StudentClubDetail() {
                 },
                 join_date: m.join_date,
               }))
-            : []
+            : [],
         );
         setUpcomingEvents(
           Array.isArray(data.events)
@@ -89,7 +90,7 @@ export default function StudentClubDetail() {
                 registered: e.isRegistered || false,
                 color: "bg-teal-500",
               }))
-            : []
+            : [],
         );
       } catch (e: any) {
         console.error("[ClubDetail] fetch error", e);
@@ -107,22 +108,87 @@ export default function StudentClubDetail() {
   const [promiseText, setPromiseText] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const handleRegisterEvent = async (eventId: number) => {
+  const handleJoinClub = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
     try {
       const token = localStorage.getItem("authToken");
       if (!token) {
-        alert("Vui lòng đăng nhập để đăng ký tham gia event");
+        toast({
+          title: "Yêu cầu đăng nhập",
+          description: "Vui lòng đăng nhập trước khi gửi đơn",
+          variant: "destructive",
+        });
+        setSubmitting(false);
         return;
       }
 
-      await axios.post(
+      const response = await axios.post(
+        `${API_BASE}/memberships/${id}/join`,
+        {
+          join_reason: joinReason,
+          skills: skills,
+          promise: promiseText,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      if (response.status === 201 || response.status === 200) {
+        toast({
+          title: "Thành công!",
+          description: "Đã gửi đơn tham gia thành công!",
+          variant: "default",
+        });
+        setJoinReason("");
+        setSkills("");
+        setPromiseText("");
+      }
+    } catch (error: any) {
+      console.error("[ClubDetail] join request error", error);
+      const errorMsg =
+        error.response?.data?.message || error.message || "Có lỗi xảy ra";
+      toast({
+        title: "Lỗi!",
+        description: errorMsg,
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleRegisterEvent = async (eventId: number) => {
+    console.log(
+      `[ClubDetail] handleRegisterEvent called — eventId: ${eventId}, clubId: ${id}`,
+    );
+    try {
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        console.warn("[ClubDetail] No auth token found, aborting registration");
+        alert("Vui lòng đăng nhập để đăng ký tham gia event");
+        return;
+      }
+      console.log(
+        `[ClubDetail] Token present, sending POST /event-registrations/${eventId}/register`,
+      );
+
+      const response = await axios.post(
         `${API_BASE}/event-registrations/${eventId}/register`,
         {},
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
+      );
+      console.log(
+        `[ClubDetail] Registration successful — eventId: ${eventId}`,
+        response.data,
       );
 
       toast({
@@ -132,9 +198,13 @@ export default function StudentClubDetail() {
       });
 
       // Refresh club data để lấy dữ liệu mới nhất từ server
+      console.log(`[ClubDetail] Refreshing club data for clubId: ${id}...`);
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       const res = await axios.get(`${API_BASE}/clubs/${id}`, { headers });
       const data = res.data;
+      console.log(
+        `[ClubDetail] Club data refreshed — events count: ${data?.events?.length ?? 0}`,
+      );
 
       if (data && data.events) {
         setUpcomingEvents(
@@ -150,11 +220,16 @@ export default function StudentClubDetail() {
                 registered: e.isRegistered || false,
                 color: "bg-teal-500",
               }))
-            : []
+            : [],
         );
       }
     } catch (error: any) {
-      console.error("[ClubDetail] Register event error:", error);
+      console.error(
+        `[ClubDetail] Register event error — eventId: ${eventId}`,
+        error,
+      );
+      console.error("[ClubDetail] Response data:", error.response?.data);
+      console.error("[ClubDetail] Status:", error.response?.status);
       const errorMsg =
         error.response?.data?.message || "Không thể đăng ký tham gia event";
       toast({
@@ -321,12 +396,16 @@ export default function StudentClubDetail() {
                       <div className="font-bold text-gray-900">
                         {m?.user?.name || "Member"}
                       </div>
-                      <div className="text-sm text-gray-600">
-                        {m?.user?.email}
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        {m?.user?.mssv}
-                      </div>
+                      {isAuthenticated && (
+                        <>
+                          <div className="text-sm text-gray-600">
+                            {m?.user?.email}
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            {m?.user?.mssv}
+                          </div>
+                        </>
+                      )}
                       <div className="text-xs text-gray-500 mt-2">
                         Tham gia:{" "}
                         {m?.join_date
@@ -357,17 +436,24 @@ export default function StudentClubDetail() {
                     <div className="flex">
                       <div className={`w-2 ${event.color}`}></div>
                       <div className="flex-1 p-6">
-                        {/* Header với title và button */}
+                        {/* Header với title và nút đăng ký */}
                         <div className="flex items-start justify-between mb-4">
                           <h3 className="text-2xl font-bold text-gray-900 group-hover:text-teal-600 transition-colors flex-1">
                             {event.title}
                           </h3>
                           <button
-                            onClick={() => handleRegisterEvent(event.id)}
-                            className="px-6 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold transition-all ml-4 whitespace-nowrap disabled:bg-gray-300 disabled:text-gray-600 disabled:cursor-not-allowed"
-                            disabled={event.registered}
+                            onClick={() =>
+                              !event.registered && handleRegisterEvent(event.id)
+                            }
+                            className={`px-6 py-2 text-white font-bold transition-all ml-4 whitespace-nowrap ${
+                              event.registered
+                                ? "bg-teal-900 cursor-default"
+                                : "bg-teal-600 hover:bg-teal-700 cursor-pointer"
+                            }`}
                           >
-                            {event.registered ? "Đăng ký rồi" : "Đăng Ký"}
+                            {event.registered
+                              ? "✓ Đã đăng ký tham gia"
+                              : "Đăng Ký"}
                           </button>
                         </div>
 
@@ -447,65 +533,7 @@ export default function StudentClubDetail() {
                 </p>
               </div>
               <div className="bg-white text-gray-900 p-6">
-                <form
-                  onSubmit={async (e) => {
-                    e.preventDefault();
-                    setSubmitting(true);
-                    try {
-                      const token = localStorage.getItem("authToken");
-                      if (!token) {
-                        alert("Vui lòng đăng nhập trước");
-                        setSubmitting(false);
-                        return;
-                      }
-
-                      // Debug: Decode token để kiểm tra role
-                      const parts = token.split(".");
-                      const payload = JSON.parse(atob(parts[1]));
-                      console.log("[ClubDetail] Token payload:", payload);
-
-                      const response = await axios.post(
-                        `${API_BASE}/memberships/${id}/join`,
-                        {
-                          join_reason: joinReason,
-                          skills: skills,
-                          promise: promiseText,
-                        },
-                        {
-                          headers: {
-                            Authorization: `Bearer ${token}`,
-                            "Content-Type": "application/json",
-                          },
-                        }
-                      );
-
-                      if (response.status === 201 || response.status === 200) {
-                        alert("Đã gửi đơn tham gia thành công!");
-                        setJoinReason("");
-                        setSkills("");
-                        setPromiseText("");
-                      }
-                    } catch (error: any) {
-                      console.error("[ClubDetail] join request error", error);
-                      const errorMsg =
-                        error.response?.data?.message ||
-                        error.message ||
-                        "Có lỗi xảy ra";
-                      console.error(
-                        "[ClubDetail] Status:",
-                        error.response?.status
-                      );
-                      console.error(
-                        "[ClubDetail] Response:",
-                        error.response?.data
-                      );
-                      alert(`Lỗi: ${errorMsg}`);
-                    } finally {
-                      setSubmitting(false);
-                    }
-                  }}
-                  className="space-y-4"
-                >
+                <form onSubmit={handleJoinClub} className="space-y-4">
                   <div>
                     <label className="block text-sm font-semibold mb-2">
                       Vì sao bạn muốn tham gia?

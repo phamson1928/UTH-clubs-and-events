@@ -1,9 +1,11 @@
 import { Club } from '../../clubs/entities/club.entity';
+import { EventRegistration } from '../../event_registrations/entities/event_registration.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
+  OneToMany,
   CreateDateColumn,
 } from 'typeorm';
 @Entity()
@@ -14,6 +16,9 @@ export class Event {
   @ManyToOne(() => Club, (club) => club.events)
   club: Club;
 
+  @OneToMany(() => EventRegistration, (reg) => reg.event)
+  registrations: EventRegistration[];
+
   @Column()
   name: string;
 
@@ -23,7 +28,7 @@ export class Event {
   @Column({ default: 'pending' })
   status: 'pending' | 'approved' | 'rejected' | 'canceled';
 
-  @Column()
+  @Column({ nullable: true })
   event_image: string;
 
   @CreateDateColumn()

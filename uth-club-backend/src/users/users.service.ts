@@ -4,6 +4,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -13,7 +14,12 @@ export class UsersService {
   ) {}
 
   async create(createUserDto: CreateUserDto) {
-    const user = this.usersRepository.create(createUserDto);
+    // Hash password if it hasn't been hashed already (doesn't start with bcrypt prefix)
+    const dto = { ...createUserDto };
+    if (dto.password && !dto.password.startsWith('$2')) {
+      dto.password = await bcrypt.hash(dto.password, 10);
+    }
+    const user = this.usersRepository.create(dto);
     return await this.usersRepository.save(user);
   }
 
@@ -56,6 +62,15 @@ export class UsersService {
     return this.usersRepository.findOne({ where: { email } });
   }
 
+  // Used only for authentication — explicitly selects password hash
+  async findByEmailWithPassword(email: string): Promise<User | null> {
+    return this.usersRepository
+      .createQueryBuilder('user')
+      .addSelect('user.password')
+      .where('user.email = :email', { email })
+      .getOne();
+  }
+
   async findByVerificationToken(token: string) {
     return this.usersRepository.findOne({
       where: { verificationToken: token },
@@ -79,8 +94,8 @@ export class UsersService {
 
   async clearResetToken(id: number) {
     await this.usersRepository.update(id, {
-      resetToken: '',
-      resetTokenExpires: new Date(),
+      resetToken: null,
+      resetTokenExpires: null,
     });
   }
 }
