@@ -3,11 +3,13 @@ import {
   ConflictException,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Event } from '../events/entities/event.entity';
 import { EventRegistration } from './entities/event_registration.entity';
+import { Membership } from '../memberships/entities/membership.entity';
 
 @Injectable()
 export class EventRegistrationsService {
@@ -16,15 +18,57 @@ export class EventRegistrationsService {
     private readonly eventsRepository: Repository<Event>,
     @InjectRepository(EventRegistration)
     private readonly registrationsRepository: Repository<EventRegistration>,
+    @InjectRepository(Membership)
+    private readonly membershipRepository: Repository<Membership>,
   ) {}
 
   // Đăng ký tham gia event, đảm bảo mỗi user chỉ đăng ký một lần
   async registerUserForEvent(eventId: number, userId: number) {
     const event = await this.eventsRepository.findOne({
       where: { id: eventId },
+      relations: ['club'],
     });
     if (!event) {
       throw new NotFoundException('Event not found');
+    }
+
+    // 1.1 Kiểm tra sự kiện đã diễn ra chưa
+    if (event.date <= new Date()) {
+      throw new BadRequestException('Sự kiện đã diễn ra');
+    }
+
+    // 1.1 Kiểm tra registration_deadline
+    if (
+      event.registration_deadline &&
+      event.registration_deadline <= new Date()
+    ) {
+      throw new BadRequestException('Đã hết hạn đăng ký sự kiện');
+    }
+
+    // 1.1 Kiểm tra đủ chỗ
+    if (
+      event.max_capacity !== null &&
+      event.max_capacity !== undefined &&
+      event.attending_users_number >= event.max_capacity
+    ) {
+      throw new BadRequestException('Sự kiện đã đủ chỗ');
+    }
+
+    // 1.2 Kiểm tra visibility members_only
+    if (event.visibility === 'members_only') {
+      const membership = await this.membershipRepository.findOne({
+        where: {
+          user: { id: userId },
+          club: { id: event.club.id },
+          status: 'approved',
+        },
+        relations: ['user', 'club'],
+      });
+      if (!membership) {
+        throw new ForbiddenException(
+          'Sự kiện này chỉ dành cho thành viên của CLB',
+        );
+      }
     }
 
     const existed = await this.registrationsRepository.findOne({
@@ -131,5 +175,26 @@ export class EventRegistrationsService {
         registered_at: r.created_at,
       })),
     };
+  }
+
+  // 2.1 Danh sách event user đã đăng ký
+  async getMyEvents(userId: number) {
+    const registrations = await this.registrationsRepository
+      .createQueryBuilder('reg')
+      .leftJoinAndSelect('reg.event', 'event')
+      .leftJoinAndSelect('event.club', 'club')
+      .where('reg.userId = :userId', { userId })
+      .orderBy('event.date', 'DESC')
+      .getMany();
+
+    return registrations.map((r) => ({
+      eventId: r.event.id,
+      eventName: r.event.name,
+      clubName: r.event.club?.name ?? null,
+      date: r.event.date,
+      location: r.event.location,
+      status: r.event.status,
+      registeredAt: r.created_at,
+    }));
   }
 }

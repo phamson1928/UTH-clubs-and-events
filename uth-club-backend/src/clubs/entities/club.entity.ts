@@ -14,33 +14,33 @@ import { Event } from '../../events/entities/event.entity';
 @Entity()
 export class Club {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column()
-  name: string;
+  name!: string;
 
   @Column({ nullable: true })
-  description: string;
+  description!: string;
 
   @ManyToOne(() => User, (user) => user.ownedClubs)
   @JoinColumn({ name: 'ownerId' })
-  owner: User;
+  owner!: User;
 
   @Column()
-  ownerId: number;
+  ownerId!: number;
 
   @Column()
-  category: string;
+  category!: string;
 
   @CreateDateColumn()
-  created_at: Date;
+  created_at!: Date;
 
   @Column({ nullable: true })
-  club_image: string;
+  club_image!: string;
 
   @OneToMany(() => Membership, (membership) => membership.club)
-  memberships: Membership[];
+  memberships!: Membership[];
 
   @OneToMany(() => Event, (event) => event.club)
-  events: Event[];
+  events!: Event[];
 }

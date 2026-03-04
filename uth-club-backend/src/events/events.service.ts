@@ -1,10 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Event } from './entities/event.entity';
 import { Repository, In } from 'typeorm';
 import { EventRegistration } from '../event_registrations/entities/event_registration.entity';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class EventsService {
@@ -13,7 +15,8 @@ export class EventsService {
     private eventsRepository: Repository<Event>,
     @InjectRepository(EventRegistration)
     private registrationsRepository: Repository<EventRegistration>,
-  ) {}
+    private mailService: MailService,
+  ) { }
 
   async create(createEventDto: CreateEventDto) {
     const event = this.eventsRepository.create(createEventDto);
@@ -23,9 +26,13 @@ export class EventsService {
   }
 
   async findAll(
+    paginationDto: PaginationDto,
     status?: 'pending' | 'approved' | 'rejected' | 'canceled',
     userId?: number,
   ) {
+    const { page = 1, limit = 20 } = paginationDto;
+    const skip = (page - 1) * limit;
+
     let query = this.eventsRepository
       .createQueryBuilder('event')
       .leftJoinAndSelect('event.club', 'club')
@@ -39,6 +46,9 @@ export class EventsService {
         'event.activities',
         'event.event_image',
         'event.attending_users_number',
+        'event.max_capacity',
+        'event.registration_deadline',
+        'event.visibility',
         'club.id',
         'club.name',
       ]);
@@ -47,25 +57,33 @@ export class EventsService {
       query = query.where('event.status = :status', { status });
     }
 
-    const events = await query.getMany();
+    const [events, total] = await query
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
+
+    let data = events.map((event) => ({ ...event, isRegistered: false }));
 
     // If user is authenticated, batch-check registration in ONE query (no N+1)
-    if (userId) {
-      if (events.length === 0)
-        return events.map((e) => ({ ...e, isRegistered: false }));
+    if (userId && events.length > 0) {
       const eventIds = events.map((e) => e.id);
       const registrations = await this.registrationsRepository.find({
         where: { event: { id: In(eventIds) }, user: { id: userId } },
         relations: ['event'],
       });
       const registeredEventIds = new Set(registrations.map((r) => r.event.id));
-      return events.map((event) => ({
+      data = events.map((event) => ({
         ...event,
         isRegistered: registeredEventIds.has(event.id),
       }));
     }
 
-    return events.map((event) => ({ ...event, isRegistered: false }));
+    return {
+      data,
+      total,
+      page,
+      limit,
+    };
   }
 
   // Lấy event theo club cho request của club owner
@@ -102,8 +120,40 @@ export class EventsService {
     });
   }
 
-  async update(id: number, updateEventDto: UpdateEventDto) {
-    return await this.eventsRepository.update(id, updateEventDto);
+  async update(id: number, updateEventDto: UpdateEventDto, clubId?: number) {
+    const event = await this.eventsRepository.findOne({
+      where: { id },
+      relations: ['club', 'club.owner'],
+    });
+
+    if (!event) {
+      throw new NotFoundException(`Event with ID ${id} not found`);
+    }
+
+    if (clubId && event.club.id !== clubId) {
+      throw new ForbiddenException(
+        'Bạn không có quyền chỉnh sửa sự kiện của CLB khác',
+      );
+    }
+
+    const oldStatus = event.status;
+    await this.eventsRepository.update(id, updateEventDto);
+
+    // Notify club owner if admin approved the event
+    if (updateEventDto.status === 'approved' && oldStatus !== 'approved') {
+      try {
+        if (event.club.owner && event.club.owner.email) {
+          await this.mailService.sendEventApprovedEmail(
+            event.club.owner.email,
+            event.name,
+          );
+        }
+      } catch (error) {
+        console.error('Failed to send event approval email:', error);
+      }
+    }
+
+    return { message: 'Updated successfully' };
   }
 
   async remove(id: number) {

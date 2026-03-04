@@ -5,12 +5,17 @@ import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { Throttle } from '@nestjs/throttler';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) { }
 
   // Đăng ký — giới hạn 5 lần / 60 giây
+  @ApiOperation({ summary: 'Đăng ký tài khoản sinh viên mới' })
+  @ApiResponse({ status: 201, description: 'Đăng ký thành công, vui lòng check email để verify' })
+  @ApiResponse({ status: 400, description: 'Email đã tồn tại hoặc mã số sinh viên đã tồn tại' })
   @Throttle({ default: { ttl: 60000, limit: 5 } })
   @Post('register')
   register(@Body() dto: RegisterDto) {
@@ -18,6 +23,9 @@ export class AuthController {
   }
 
   // Đăng nhập — giới hạn 5 lần / 60 giây
+  @ApiOperation({ summary: 'Đăng nhập vào hệ thống' })
+  @ApiResponse({ status: 201, description: 'Đăng nhập thành công, trả về access_token và thông tin user' })
+  @ApiResponse({ status: 401, description: 'Email hoặc mật khẩu không chính xác' })
   @Throttle({ default: { ttl: 60000, limit: 5 } })
   @Post('login')
   login(@Body() dto: LoginDto) {
@@ -25,6 +33,10 @@ export class AuthController {
   }
 
   // Xác nhận email
+  @ApiOperation({ summary: 'Xác thực email qua token' })
+  @ApiQuery({ name: 'token', description: 'Mã xác thực gửi qua email' })
+  @ApiResponse({ status: 200, description: 'Xác thực thành công' })
+  @ApiResponse({ status: 400, description: 'Token không hợp lệ hoặc đã hết hạn' })
   @Get('verify')
   async verifyEmail(@Query('token') token: string) {
     return await this.authService.verifyEmail(token);

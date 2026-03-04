@@ -6,6 +6,7 @@ import { Club } from './entities/club.entity';
 import { Repository, In } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { EventRegistration } from '../event_registrations/entities/event_registration.entity';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @Injectable()
 export class ClubsService {
@@ -16,7 +17,7 @@ export class ClubsService {
     private usersRepository: Repository<User>,
     @InjectRepository(EventRegistration)
     private registrationsRepository: Repository<EventRegistration>,
-  ) {}
+  ) { }
 
   async create(createClubDto: CreateClubDto) {
     // Verify owner exists
@@ -35,8 +36,11 @@ export class ClubsService {
     return await this.clubsRepository.save(club);
   }
 
-  async findAll() {
-    return await this.clubsRepository
+  async findAll(paginationDto: PaginationDto) {
+    const { page = 1, limit = 20 } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await this.clubsRepository
       .createQueryBuilder('clubs')
       .select([
         'clubs.id',
@@ -59,7 +63,16 @@ export class ClubsService {
       .leftJoin('clubs.memberships', 'memberships')
       .leftJoin('memberships.user', 'user')
       .addSelect(['user.id', 'user.name'])
-      .getMany();
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+    };
   }
 
   async findOne(id: number, userId?: number) {
@@ -133,6 +146,25 @@ export class ClubsService {
   }
 
   async remove(id: number) {
-    return await this.clubsRepository.delete(id);
+    // 1.4 Find owner before deleting
+    const club = await this.clubsRepository.findOne({
+      where: { id },
+      relations: ['owner'],
+    });
+
+    const result = await this.clubsRepository.delete(id);
+
+    // 1.4 Revert owner role to 'user' if they no longer own any club
+    if (club?.owner) {
+      const remainingClubs = await this.clubsRepository.count({
+        where: { owner: { id: club.owner.id } },
+      });
+      if (remainingClubs === 0) {
+        club.owner.role = 'user';
+        await this.usersRepository.save(club.owner);
+      }
+    }
+
+    return result;
   }
 }

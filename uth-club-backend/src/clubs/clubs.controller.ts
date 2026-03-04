@@ -9,20 +9,33 @@ import {
   UseGuards,
   Request,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { ClubsService } from './clubs.service';
 import { CreateClubDto } from './dto/create-club.dto';
 import { UpdateClubDto } from './dto/update-club.dto';
+import { PaginationDto } from '../common/dto/pagination.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../auth/optional-jwt-auth.guard';
 import { RolesGuard } from 'common/guards/roles.guard';
 import { Roles } from 'common/decorators/roles.decorator';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 
+@ApiTags('clubs')
 @Controller('clubs')
 export class ClubsController {
-  constructor(private readonly clubsService: ClubsService) {}
+  constructor(private readonly clubsService: ClubsService) { }
 
   // Tạo club mới (admin only)
+  @ApiOperation({ summary: 'Tạo club mới (Admin only)' })
+  @ApiBearerAuth()
+  @ApiResponse({ status: 201, description: 'Tạo club thành công' })
+  @ApiResponse({ status: 403, description: 'Không có quyền (Cần quyền admin)' })
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
@@ -31,12 +44,17 @@ export class ClubsController {
   }
 
   // Lấy danh sách club
+  @ApiOperation({ summary: 'Lấy danh sách các club (phân trang)' })
+  @ApiResponse({ status: 200, description: 'Lấy danh sách thành công' })
   @Get()
-  findAll() {
-    return this.clubsService.findAll();
+  findAll(@Query() paginationDto: PaginationDto) {
+    return this.clubsService.findAll(paginationDto);
   }
 
   // Lấy club theo id (click vào club) — optional auth để populate isRegistered nếu đăng nhập
+  @ApiOperation({ summary: 'Lấy thông tin chi tiết club theo ID' })
+  @ApiResponse({ status: 200, description: 'Lấy thông tin thành công' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy club' })
   @UseGuards(OptionalJwtAuthGuard)
   @Get(':id')
   findOne(
@@ -48,6 +66,10 @@ export class ClubsController {
   }
 
   // Cập nhật club
+  @ApiOperation({ summary: 'Cập nhật thông tin club (Admin only)' })
+  @ApiBearerAuth()
+  @ApiResponse({ status: 200, description: 'Cập nhật thành công' })
+  @ApiResponse({ status: 403, description: 'Không có quyền' })
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
@@ -59,6 +81,10 @@ export class ClubsController {
   }
 
   // Xóa club
+  @ApiOperation({ summary: 'Xóa club (Admin only)' })
+  @ApiBearerAuth()
+  @ApiResponse({ status: 200, description: 'Xóa thành công' })
+  @ApiResponse({ status: 403, description: 'Không có quyền' })
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')

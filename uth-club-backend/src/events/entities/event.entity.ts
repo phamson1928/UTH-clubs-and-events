@@ -11,38 +11,51 @@ import {
 @Entity()
 export class Event {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @ManyToOne(() => Club, (club) => club.events)
-  club: Club;
+  club!: Club;
 
   @OneToMany(() => EventRegistration, (reg) => reg.event)
-  registrations: EventRegistration[];
+  registrations!: EventRegistration[];
 
   @Column()
-  name: string;
+  name!: string;
 
   @Column({ nullable: true })
-  description: string;
+  description!: string;
 
   @Column({ default: 'pending' })
-  status: 'pending' | 'approved' | 'rejected' | 'canceled';
+  status!: 'pending' | 'approved' | 'rejected' | 'canceled';
 
   @Column({ nullable: true })
-  event_image: string;
+  event_image!: string;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @Column()
-  date: Date;
+  date!: Date;
 
   @Column({ default: 0 })
-  attending_users_number: number;
+  attending_users_number!: number;
+
+  @Column({ nullable: true, type: 'int' })
+  max_capacity!: number | null;
+
+  @Column({ nullable: true, type: 'timestamp' })
+  registration_deadline!: Date | null;
+
+  @Column({
+    type: 'enum',
+    enum: ['public', 'members_only'],
+    default: 'public',
+  })
+  visibility!: 'public' | 'members_only';
 
   @Column()
-  activities: string;
+  activities!: string;
 
   @Column()
-  location: string;
+  location!: string;
 }

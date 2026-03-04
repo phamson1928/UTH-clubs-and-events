@@ -1,10 +1,17 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateMembershipDto } from './dto/create-membership.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Membership } from './entities/membership.entity';
 import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { Club } from '../clubs/entities/club.entity';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class MembershipsService {
@@ -13,11 +20,15 @@ export class MembershipsService {
     private membershipRepository: Repository<Membership>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
-  ) {}
+    private mailService: MailService,
+  ) { }
 
   // Lấy đơn xin tham gia club
-  async findAllRequests(clubId: number) {
-    return await this.membershipRepository
+  async findAllRequests(clubId: number, paginationDto: PaginationDto) {
+    const { page = 1, limit = 20 } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await this.membershipRepository
       .createQueryBuilder('membership')
       .leftJoin('membership.user', 'user')
       .addSelect([
@@ -35,7 +46,16 @@ export class MembershipsService {
       .leftJoin('membership.club', 'club')
       .where('membership.status = :status', { status: 'pending' })
       .andWhere('club.id = :clubId', { clubId })
-      .getMany();
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+    };
   }
 
   // Lấy danh sách thành viên trong club
@@ -68,7 +88,9 @@ export class MembershipsService {
       .where('membership.status = :status', { status: 'approved' })
       .getRawMany();
 
-    const ids = approvedUserIds.map((r) => Number(r.userId));
+    const ids = approvedUserIds.map((r: { userId: string | number }) =>
+      Number(r.userId),
+    );
 
     if (ids.length === 0) {
       return this.userRepository.find({
@@ -100,17 +122,31 @@ export class MembershipsService {
     userId: number,
     clubId: number,
   ) {
-    // Kiểm tra duplicate pending request
-    const existing = await this.membershipRepository.findOne({
+    // 1.3 Kiểm tra user chưa có membership (bất kỳ status) trong club này
+    const existingAny = await this.membershipRepository.findOne({
       where: {
         user: { id: userId },
         club: { id: clubId },
-        status: 'pending',
       },
       relations: ['user', 'club'],
     });
-    if (existing) {
-      throw new ConflictException('Bạn đã có đơn chờ xét duyệt cho club này');
+    if (existingAny) {
+      throw new ConflictException(
+        'Bạn đã có đơn hoặc đã là thành viên của club này',
+      );
+    }
+
+    // 1.3 Giới hạn tối đa 3 club (approved + pending)
+    const activeCount = await this.membershipRepository.count({
+      where: [
+        { user: { id: userId }, status: 'approved' },
+        { user: { id: userId }, status: 'pending' },
+      ],
+    });
+    if (activeCount >= 3) {
+      throw new BadRequestException(
+        'Bạn đã tham gia hoặc đang chờ duyệt tối đa 3 club',
+      );
     }
 
     const membership = this.membershipRepository.create({
@@ -138,11 +174,40 @@ export class MembershipsService {
 
   // Cập nhật đơn xin tham gia club
   async updateMembershipRequest(id: number, status: 'approved' | 'rejected') {
-    return await this.membershipRepository.update(id, {
+    const membership = await this.membershipRepository.findOne({
+      where: { id },
+      relations: ['user', 'club'],
+    });
+
+    if (!membership) {
+      throw new NotFoundException(`Membership with ID ${id} not found`);
+    }
+
+    await this.membershipRepository.update(id, {
       status,
       // null when rejected to avoid setting a value on nullable column
       join_date: status === 'approved' ? new Date() : null,
     });
+
+    // Send email notification
+    try {
+      if (status === 'approved') {
+        await this.mailService.sendMembershipApprovedEmail(
+          membership.user.email,
+          membership.club.name,
+        );
+      } else {
+        await this.mailService.sendMembershipRejectedEmail(
+          membership.user.email,
+          membership.club.name,
+        );
+      }
+    } catch (error) {
+      console.error('Failed to send email:', error);
+      // Don't throw exception, just log it. The request update is already done.
+    }
+
+    return { message: `Request ${status} successfully` };
   }
 
   // Xóa đơn xin tham gia club
@@ -164,6 +229,42 @@ export class MembershipsService {
   // Xóa thành viên khỏi club
   async removeMemberFromClub(membershipId: number) {
     return await this.membershipRepository.delete(membershipId);
+  }
+
+  // 1.3 Student tự rời club
+  async leaveClub(userId: number, clubId: number) {
+    const membership = await this.membershipRepository.findOne({
+      where: {
+        user: { id: userId },
+        club: { id: clubId },
+        status: 'approved',
+      },
+      relations: ['user', 'club'],
+    });
+    if (!membership) {
+      throw new NotFoundException('Bạn không phải thành viên của club này');
+    }
+    await this.membershipRepository.delete(membership.id);
+    return { message: 'Rời club thành công' };
+  }
+
+  // 2.2 Lấy tất cả club của user hiện tại (mọi status)
+  async getMyClubs(userId: number) {
+    const memberships = await this.membershipRepository
+      .createQueryBuilder('membership')
+      .leftJoinAndSelect('membership.club', 'club')
+      .where('membership.userId = :userId', { userId })
+      .orderBy('membership.request_date', 'DESC')
+      .getMany();
+
+    return memberships.map((m) => ({
+      clubId: m.club.id,
+      clubName: m.club.name,
+      clubImage: m.club.club_image ?? null,
+      membershipStatus: m.status,
+      requestDate: m.request_date,
+      joinDate: m.join_date ?? null,
+    }));
   }
 
   // Admin: lấy tất cả pending memberships across all clubs

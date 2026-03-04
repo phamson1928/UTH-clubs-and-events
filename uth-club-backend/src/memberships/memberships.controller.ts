@@ -8,24 +8,50 @@ import {
   Delete,
   Get,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { MembershipsService } from './memberships.service';
 import { CreateMembershipDto } from './dto/create-membership.dto';
+import { PaginationDto } from '../common/dto/pagination.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { UseGuards } from '@nestjs/common';
 import { RolesGuard } from 'common/guards/roles.guard';
 import { Roles } from 'common/decorators/roles.decorator';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 
+@ApiTags('memberships')
 @Controller('memberships')
 export class MembershipsController {
-  constructor(private readonly membershipsService: MembershipsService) {}
+  constructor(private readonly membershipsService: MembershipsService) { }
 
   // Lấy danh sách đơn xin tham gia club
+  @ApiOperation({ summary: 'Lấy danh sách đơn đăng ký gia nhập CLB (Club Owner only)' })
+  @ApiBearerAuth()
+  @ApiResponse({ status: 200, description: 'Lấy hồ sơ thành công' })
   @Get('request')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('club_owner')
-  findAllRequests(@Request() req: { user: { clubId: number } }) {
-    return this.membershipsService.findAllRequests(req.user.clubId);
+  findAllRequests(
+    @Request() req: { user: { clubId: number } },
+    @Query() paginationDto: PaginationDto,
+  ) {
+    return this.membershipsService.findAllRequests(req.user.clubId, paginationDto);
+  }
+
+  // 2.2 Danh sách club của user hiện tại
+  @ApiOperation({ summary: 'Lấy danh sách CLB mà người dùng hiện tại đang tham gia' })
+  @ApiBearerAuth()
+  @ApiResponse({ status: 200, description: 'Lấy dữ liệu thành công' })
+  @Get('my-clubs')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('user', 'club_owner', 'admin')
+  getMyClubs(@Request() req: { user: { id: number } }) {
+    return this.membershipsService.getMyClubs(req.user.id);
   }
 
   // Admin: lấy tất cả pending requests across all clubs
@@ -53,6 +79,9 @@ export class MembershipsController {
   }
 
   // Duyệt đơn xin tham gia club
+  @ApiOperation({ summary: 'Duyệt đơn gia nhập CLB' })
+  @ApiBearerAuth()
+  @ApiResponse({ status: 200, description: 'Duyệt hồ sơ thành công' })
   @Patch(':id/approve')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('club_owner', 'admin')
@@ -69,6 +98,10 @@ export class MembershipsController {
   }
 
   // Yêu cầu tham gia club
+  @ApiOperation({ summary: 'Nộp đơn đăng ký tham gia CLB' })
+  @ApiBearerAuth()
+  @ApiResponse({ status: 201, description: 'Nộp đơn thành công' })
+  @ApiResponse({ status: 400, description: 'Lỗi nghiệp vụ (đã đủ 3 CLB)' })
   @Post(':clubId/join')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('user')
@@ -91,6 +124,17 @@ export class MembershipsController {
   @Roles('club_owner')
   async removeMember(@Param('id', ParseIntPipe) id: number) {
     return this.membershipsService.removeMemberFromClub(id);
+  }
+
+  // 1.3 Student tự rời club
+  @Delete('leave/:clubId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('user', 'club_owner')
+  async leaveClub(
+    @Param('clubId', ParseIntPipe) clubId: number,
+    @Request() req: { user: { id: number } },
+  ) {
+    return this.membershipsService.leaveClub(req.user.id, clubId);
   }
 
   // Xóa đơn xin tham gia club

@@ -11,33 +11,33 @@ import {
 @Entity()
 export class Membership {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column()
-  join_reason: string;
+  join_reason!: string;
 
   @Column()
-  skills: string;
+  skills!: string;
 
   @CreateDateColumn()
-  request_date: Date;
+  request_date!: Date;
 
   @Column({ type: 'timestamp', nullable: true })
-  join_date: Date | null;
+  join_date!: Date | null;
 
   @Column()
-  promise: string;
+  promise!: string;
 
   @ManyToOne(() => Club, (club) => club.memberships)
-  club: Club;
+  club!: Club;
 
   @ManyToOne(() => User, (user) => user.memberships)
-  user: User;
+  user!: User;
 
   @Column({
     type: 'enum',
     enum: ['pending', 'approved', 'rejected'],
     default: 'pending',
   })
-  status: 'pending' | 'approved' | 'rejected';
+  status!: 'pending' | 'approved' | 'rejected';
 }

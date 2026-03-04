@@ -21,6 +21,7 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
 import { StatisticsModule } from './statistics/statistics.module';
 import { UploadModule } from './upload/upload.module';
 import { EventRegistrationsModule } from './event_registrations/event_registrations.module';
+import { MailModule } from './mail/mail.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -77,8 +78,9 @@ import { EventRegistrationsModule } from './event_registrations/event_registrati
     StatisticsModule,
     UploadModule,
     EventRegistrationsModule,
+    MailModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
-export class AppModule {}
+export class AppModule { }

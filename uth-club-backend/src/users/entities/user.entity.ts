@@ -11,16 +11,16 @@ import {
 @Entity()
 export class User {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column()
-  name: string;
+  name!: string;
 
   @Column({ unique: true })
-  email: string;
+  email!: string;
 
   @Column({ select: false })
-  password: string;
+  password!: string;
 
   // type: 'enum' adds a DB-level enum constraint (requires migration if column already exists as varchar)
   @Column({
@@ -28,29 +28,29 @@ export class User {
     enum: ['user', 'admin', 'club_owner'],
     default: 'user',
   })
-  role: 'user' | 'admin' | 'club_owner';
+  role!: 'user' | 'admin' | 'club_owner';
 
   @Column({ nullable: true })
-  mssv: string;
+  mssv!: string;
 
   @Column({ default: false })
-  isVerified: boolean;
+  isVerified!: boolean;
 
   @Column({ nullable: true })
-  verificationToken: string;
+  verificationToken!: string;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @Column({ type: 'varchar', nullable: true })
-  resetToken: string | null;
+  resetToken!: string | null;
 
   @Column({ type: 'timestamp', nullable: true })
-  resetTokenExpires: Date | null;
+  resetTokenExpires!: Date | null;
 
   @OneToMany(() => Membership, (membership) => membership.user)
-  memberships: Membership[];
+  memberships!: Membership[];
 
   @OneToMany(() => Club, (club) => club.owner)
-  ownedClubs: Club[];
+  ownedClubs!: Club[];
 }
