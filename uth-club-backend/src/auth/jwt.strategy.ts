@@ -28,7 +28,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   // Trade-off: a deleted/banned user keeps access until token expiry.
   validate(payload: JwtPayload) {
     return {
-      id: payload.sub,
+      id: Number(payload.sub),
       email: payload.email,
       role: payload.role,
       clubId: payload.clubId,

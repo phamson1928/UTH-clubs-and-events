@@ -28,8 +28,8 @@ import { MailModule } from './mail/mail.module';
     ThrottlerModule.forRoot([
       {
         name: 'default',
-        ttl: 60000, // 60 giây
-        limit: 30, // 30 request / 60s (global default)
+        ttl: 60000,
+        limit: 1000,
       },
     ]),
     MailerModule.forRootAsync({

@@ -9,6 +9,7 @@ import {
   Get,
   ParseIntPipe,
   Query,
+  BadRequestException,
 } from '@nestjs/common';
 import { MembershipsService } from './memberships.service';
 import { CreateMembershipDto } from './dto/create-membership.dto';
@@ -65,9 +66,18 @@ export class MembershipsController {
   // Lấy danh sách thành viên trong club
   @Get('members')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('club_owner')
-  findAllMembers(@Request() req: { user: { clubId: number } }) {
-    return this.membershipsService.findAllMembers(req.user.clubId);
+  @Roles('club_owner', 'admin')
+  findAllMembers(
+    @Request() req: { user: { role: string; clubId: number } },
+    @Query('clubId') queryClubId?: number,
+  ) {
+    const clubId = req.user.role === 'admin' ? queryClubId : req.user.clubId;
+
+    if (!clubId) {
+      throw new BadRequestException('Vui lòng cung cấp clubId');
+    }
+
+    return this.membershipsService.findAllMembers(Number(clubId));
   }
 
   // Lấy danh sách những người chưa có trong club nào

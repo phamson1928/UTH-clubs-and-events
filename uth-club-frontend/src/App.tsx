@@ -18,6 +18,10 @@ import ResetPassword from "./pages/auth/ResetPassword";
 import StudentHome from "./pages/student/Home";
 import StudentClubs from "./pages/student/Clubs";
 import StudentClubDetail from "./pages/student/ClubDetail";
+import StudentProfile from "./pages/student/Profile";
+import StudentMyClubs from "./pages/student/MyClubs";
+import StudentMyEvents from "./pages/student/MyEvents";
+import StudentEvents from "./pages/student/Events";
 
 // Club Owner Pages
 import ClubOwnerDashboard from "./pages/club-owner/Dashboard";
@@ -74,6 +78,10 @@ function App() {
         <Route path="/" element={<StudentHome />} />
         <Route path="/student/clubs" element={<StudentClubs />} />
         <Route path="/student/clubs/:id" element={<StudentClubDetail />} />
+        <Route path="/student/events" element={<StudentEvents />} />
+        <Route path="/student/profile" element={<ProtectedRoute roles={["user", "admin", "club_owner"]}><StudentProfile /></ProtectedRoute>} />
+        <Route path="/student/my-clubs" element={<ProtectedRoute roles={["user"]}><StudentMyClubs /></ProtectedRoute>} />
+        <Route path="/student/my-events" element={<ProtectedRoute roles={["user"]}><StudentMyEvents /></ProtectedRoute>} />
 
         {/* Club Owner Routes */}
         <Route

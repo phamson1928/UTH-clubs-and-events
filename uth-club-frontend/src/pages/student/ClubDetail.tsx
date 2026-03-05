@@ -1,5 +1,6 @@
-import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Users, Calendar, MapPin, Mail } from "lucide-react";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { ArrowLeft, Users, Calendar, MapPin, Mail, Sparkles, Clock, ChevronRight } from "lucide-react";
+import { motion } from "framer-motion";
 import Navbar from "../../components/Navbar";
 import { useEffect, useState } from "react";
 import { Button } from "../../components/ui/button";
@@ -8,28 +9,20 @@ import { Textarea } from "../../components/ui/textarea";
 import { useToast } from "../../hooks/use-toast";
 import axios from "axios";
 
-const API_BASE =
-  (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
+const API_BASE = (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
 
-// Helper function to normalize image URLs
 const normalizeImageUrl = (imagePath: string | null | undefined): string => {
   if (!imagePath) {
     return "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=1600&q=80";
   }
-  // If it's already a full URL (starts with http:// or https://), return as is
-  if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
-    return imagePath;
-  }
-  // If it's a relative path starting with /uploads/, prepend API_BASE
-  if (imagePath.startsWith("/uploads/")) {
-    return `${API_BASE}${imagePath}`;
-  }
-  // Otherwise, assume it's a relative path and prepend API_BASE
+  if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) return imagePath;
+  if (imagePath.startsWith("/uploads/")) return `${API_BASE}${imagePath}`;
   return `${API_BASE}${imagePath.startsWith("/") ? "" : "/"}${imagePath}`;
 };
 
 export default function StudentClubDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const isAuthenticated = !!localStorage.getItem("authToken");
 
@@ -49,49 +42,38 @@ export default function StudentClubDetail() {
 
         const res = await axios.get(`${API_BASE}/clubs/${id}`, { headers });
         const data = res.data;
-        if (!data) {
-          throw new Error("Not found");
-        }
+        if (!data) throw new Error("Not found");
+
         setClub({
           id: data.id,
           name: data.name,
           category: data.category,
           description: data.description || "",
-          founded: data.created_at
-            ? new Date(data.created_at).getFullYear().toString()
-            : "",
+          founded: data.created_at ? new Date(data.created_at).getFullYear().toString() : "2024",
           email: data.owner?.email || data.email || "",
-          location: data.location || "",
+          location: data.location || "Cơ sở chính UTH",
           image: normalizeImageUrl(data.club_image),
         });
-        setMembers(
-          Array.isArray(data.memberships)
-            ? data.memberships.map((m: any) => ({
-                id: m.id,
-                user: {
-                  name: m.user?.name,
-                  email: m.user?.email,
-                  mssv: m.user?.mssv,
-                },
-                join_date: m.join_date,
-              }))
-            : [],
-        );
-        setUpcomingEvents(
-          Array.isArray(data.events)
-            ? data.events.map((e: any) => ({
-                id: e.id,
-                title: e.name,
-                date: e.date ? new Date(e.date).toLocaleDateString() : "",
-                location: e.location || "",
-                description: e.description || "",
-                activities: e.activities || "",
-                attendees: e.attending_users_number || 0,
-                registered: e.isRegistered || false,
-                color: "bg-teal-500",
-              }))
-            : [],
-        );
+
+        setMembers(Array.isArray(data.memberships) ? data.memberships.map((m: any) => ({
+          id: m.id,
+          user: { name: m.user?.name, email: m.user?.email, mssv: m.user?.mssv },
+          join_date: m.join_date,
+        })) : []);
+
+        setUpcomingEvents(Array.isArray(data.events) ? data.events.map((e: any) => ({
+          id: e.id,
+          title: e.name,
+          date: e.date ? new Date(e.date).toLocaleDateString("vi-VN") : "",
+          location: e.location || "UTH Campus",
+          description: e.description || "",
+          activities: e.activities || "",
+          attendees: e.attending_users_number || 0,
+          registered: e.isRegistered || false,
+          visibility: e.visibility || "public",
+          max_capacity: e.max_capacity,
+          registration_deadline: e.registration_deadline,
+        })) : []);
       } catch (e: any) {
         console.error("[ClubDetail] fetch error", e);
         setError("Không thể tải thông tin câu lạc bộ");
@@ -114,472 +96,329 @@ export default function StudentClubDetail() {
     try {
       const token = localStorage.getItem("authToken");
       if (!token) {
-        toast({
-          title: "Yêu cầu đăng nhập",
-          description: "Vui lòng đăng nhập trước khi gửi đơn",
-          variant: "destructive",
-        });
+        toast({ title: "Yêu cầu đăng nhập", description: "Vui lòng đăng nhập trước khi gửi đơn", variant: "destructive" });
         setSubmitting(false);
         return;
       }
 
-      const response = await axios.post(
-        `${API_BASE}/memberships/${id}/join`,
-        {
-          join_reason: joinReason,
-          skills: skills,
-          promise: promiseText,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        },
-      );
+      await axios.post(`${API_BASE}/memberships/${id}/join`, {
+        join_reason: joinReason,
+        skills: skills,
+        promise: promiseText,
+      }, { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } });
 
-      if (response.status === 201 || response.status === 200) {
-        toast({
-          title: "Thành công!",
-          description: "Đã gửi đơn tham gia thành công!",
-          variant: "default",
-        });
-        setJoinReason("");
-        setSkills("");
-        setPromiseText("");
-      }
+      toast({ title: "Thành công!", description: "Đã gửi đơn tham gia thành công!" });
+      setJoinReason("");
+      setSkills("");
+      setPromiseText("");
     } catch (error: any) {
-      console.error("[ClubDetail] join request error", error);
-      const errorMsg =
-        error.response?.data?.message || error.message || "Có lỗi xảy ra";
-      toast({
-        title: "Lỗi!",
-        description: errorMsg,
-        variant: "destructive",
-      });
+      toast({ title: "Lỗi!", description: error.response?.data?.message || "Có lỗi xảy ra", variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleRegisterEvent = async (eventId: number) => {
-    console.log(
-      `[ClubDetail] handleRegisterEvent called — eventId: ${eventId}, clubId: ${id}`,
-    );
     try {
       const token = localStorage.getItem("authToken");
       if (!token) {
-        console.warn("[ClubDetail] No auth token found, aborting registration");
-        alert("Vui lòng đăng nhập để đăng ký tham gia event");
+        toast({ title: "Yêu cầu đăng nhập", description: "Vui lòng đăng nhập để đăng ký tham gia", variant: "destructive" });
         return;
       }
-      console.log(
-        `[ClubDetail] Token present, sending POST /event-registrations/${eventId}/register`,
-      );
 
-      const response = await axios.post(
-        `${API_BASE}/event-registrations/${eventId}/register`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-      console.log(
-        `[ClubDetail] Registration successful — eventId: ${eventId}`,
-        response.data,
-      );
+      await axios.post(`${API_BASE}/event-registrations/${eventId}/register`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      toast({ title: "Thành công!", description: "Bạn đã đăng ký tham gia thành công." });
 
-      toast({
-        title: "Thành công!",
-        description: "Bạn đã đăng ký tham gia sự kiện thành công.",
-        variant: "default",
-      });
-
-      // Refresh club data để lấy dữ liệu mới nhất từ server
-      console.log(`[ClubDetail] Refreshing club data for clubId: ${id}...`);
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      const res = await axios.get(`${API_BASE}/clubs/${id}`, { headers });
+      // Refresh events
+      const res = await axios.get(`${API_BASE}/clubs/${id}`, { headers: { Authorization: `Bearer ${token}` } });
       const data = res.data;
-      console.log(
-        `[ClubDetail] Club data refreshed — events count: ${data?.events?.length ?? 0}`,
-      );
-
       if (data && data.events) {
-        setUpcomingEvents(
-          Array.isArray(data.events)
-            ? data.events.map((e: any) => ({
-                id: e.id,
-                title: e.name,
-                date: e.date ? new Date(e.date).toLocaleDateString() : "",
-                location: e.location || "",
-                description: e.description || "",
-                activities: e.activities || "",
-                attendees: e.attending_users_number || 0,
-                registered: e.isRegistered || false,
-                color: "bg-teal-500",
-              }))
-            : [],
-        );
+        setUpcomingEvents(data.events.map((e: any) => ({
+          id: e.id,
+          title: e.name,
+          date: e.date ? new Date(e.date).toLocaleDateString("vi-VN") : "",
+          location: e.location || "UTH Campus",
+          description: e.description || "",
+          activities: e.activities || "",
+          attendees: e.attending_users_number || 0,
+          registered: e.isRegistered || false,
+          visibility: e.visibility || "public",
+          max_capacity: e.max_capacity,
+          registration_deadline: e.registration_deadline,
+        })));
       }
     } catch (error: any) {
-      console.error(
-        `[ClubDetail] Register event error — eventId: ${eventId}`,
-        error,
-      );
-      console.error("[ClubDetail] Response data:", error.response?.data);
-      console.error("[ClubDetail] Status:", error.response?.status);
-      const errorMsg =
-        error.response?.data?.message || "Không thể đăng ký tham gia event";
-      toast({
-        title: "Lỗi!",
-        description: errorMsg,
-        variant: "destructive",
-      });
+      toast({ title: "Lỗi!", description: error.response?.data?.message || "Lỗi đăng ký", variant: "destructive" });
     }
   };
+
+  if (isLoading) return (
+    <div className="min-h-screen bg-white">
+      <Navbar />
+      <div className="container mx-auto px-6 py-40 text-center">
+        <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }} className="inline-block w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full mb-4"></motion.div>
+        <p className="text-gray-500 font-bold">Đang tải dữ liệu câu lạc bộ...</p>
+      </div>
+    </div>
+  );
+
+  if (error || !club) return (
+    <div className="min-h-screen bg-white">
+      <Navbar />
+      <div className="container mx-auto px-6 py-40 text-center">
+        <h2 className="text-2xl font-black mb-4">{error || "Không tìm thấy câu lạc bộ"}</h2>
+        <Link to="/student/clubs" className="px-6 py-2 bg-teal-600 text-white font-bold rounded">Quay lại</Link>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
 
-      {isLoading ? (
-        <div className="container mx-auto px-6 py-16">
-          <div className="text-center py-20">
-            <div className="text-4xl mb-4">⏳</div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">
-              Đang tải câu lạc bộ...
-            </h3>
-            <p className="text-gray-600">Vui lòng đợi trong giây lát</p>
-          </div>
-        </div>
-      ) : error ? (
-        <div className="container mx-auto px-6 py-16">
-          <div className="text-center py-20">
-            <div className="text-6xl mb-4">⚠️</div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">{error}</h3>
-            <Link to="/student/clubs" className="text-teal-600 font-bold">
-              Quay lại danh sách
-            </Link>
-          </div>
-        </div>
-      ) : !club ? (
-        <div className="container mx-auto px-6 py-16">
-          <div className="text-center py-20">
-            <div className="text-6xl mb-4">🔍</div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">
-              Không tìm thấy câu lạc bộ
-            </h3>
-            <Link to="/student/clubs" className="text-teal-600 font-bold">
-              Quay lại danh sách
-            </Link>
-          </div>
-        </div>
-      ) : (
-        <>
-          {/* Hero */}
-          <section className="relative bg-gradient-to-br from-[#008689] via-teal-600 to-cyan-700 text-white overflow-hidden">
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl"></div>
-              <div className="absolute bottom-20 right-10 w-96 h-96 bg-cyan-300 rounded-full blur-3xl"></div>
-            </div>
-            <div className="container mx-auto px-6 py-16 relative z-10">
-              <div className="mb-6">
-                <Link
-                  to="/student/clubs"
-                  className="inline-flex items-center gap-2 text-white/90 hover:text-white"
-                >
-                  <ArrowLeft className="h-4 w-4" /> Quay Lại Danh Sách CLB
-                </Link>
-              </div>
+      {/* Hero Section */}
+      <section className="relative h-[600px] bg-gray-900 text-white overflow-hidden">
+        <motion.img
+          initial={{ scale: 1.1, opacity: 0.6 }}
+          animate={{ scale: 1, opacity: 0.4 }}
+          transition={{ duration: 10, repeat: Infinity, repeatType: "reverse" }}
+          src={club.image}
+          alt={club.name}
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent"></div>
 
-              <div className="grid md:grid-cols-[2fr,1fr] gap-10 items-center">
-                <div>
-                  <h1 className="text-5xl md:text-6xl font-black mb-4 leading-tight">
-                    {club.name}
-                  </h1>
-                  <p className="text-white/90 text-lg max-w-2xl mb-6">
-                    {club.description}
-                  </p>
-                  <div className="flex flex-wrap gap-6 text-white/90">
-                    <div className="flex items-center gap-2">
-                      <Users className="h-5 w-5" />
-                      <span className="font-semibold">
-                        {members.length} thành viên
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-5 w-5" />
-                      <span className="font-semibold">
-                        Thành lập {club.founded}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-5 w-5" />
-                      <span className="font-semibold">{club.location}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-5 w-5" />
-                      <span className="font-semibold">{club.email}</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="hidden md:block">
-                  <img
-                    src={club.image}
-                    alt={club.name}
-                    className="w-full h-64 object-cover shadow-2xl"
-                  />
-                </div>
-              </div>
+        <div className="container mx-auto px-6 relative h-full flex flex-col justify-end pb-20 leading-tight">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <Link to="/student/clubs" className="inline-flex items-center gap-2 text-white/70 hover:text-white mb-8 group transition-all">
+              <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+              <span>Khám phá các câu lạc bộ khác</span>
+            </Link>
+            <div className="flex gap-3 mb-6">
+              <span className="px-4 py-1 bg-teal-500 font-black text-[10px] uppercase tracking-widest rounded shadow-lg">{club.category}</span>
+              <span className="px-4 py-1 bg-white/10 backdrop-blur-md border border-white/20 font-black text-[10px] uppercase tracking-widest rounded">Est. {club.founded}</span>
             </div>
-          </section>
-
-          {/* About Section */}
-          <section className="py-16 bg-white">
-            <div className="container mx-auto px-6">
-              <div className="grid md:grid-cols-2 gap-16 items-center">
-                <div className="relative">
-                  <img
-                    src={club.image}
-                    alt={`${club.name} banner`}
-                    className="w-full h-[480px] object-cover shadow-2xl"
-                  />
-                  <div className="absolute -bottom-8 -right-8 w-64 h-64 bg-teal-500 opacity-20"></div>
+            <h1 className="text-6xl md:text-8xl font-black mb-8 drop-shadow-2xl">{club.name}</h1>
+            <div className="flex flex-wrap gap-x-12 gap-y-6 text-white/90">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/20">
+                  <Users className="w-5 h-5 text-teal-400" />
                 </div>
                 <div>
-                  <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-6">
-                    Giới Thiệu {club.name}
-                  </h2>
-                  <p className="text-lg text-gray-700 leading-relaxed mb-6">
-                    {club.description}
-                  </p>
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="bg-gray-50 border-2 border-gray-200 p-6">
-                      <div className="text-3xl font-black text-teal-600 mb-2">
-                        {members.length}
-                      </div>
-                      <div className="font-bold text-gray-900">Thành Viên</div>
-                    </div>
-                    <div className="bg-gray-50 border-2 border-gray-200 p-6">
-                      <div className="text-3xl font-black text-purple-600 mb-2">
-                        {club.founded}
-                      </div>
-                      <div className="font-bold text-gray-900">Thành Lập</div>
-                    </div>
-                  </div>
+                  <div className="text-xs text-white/60 font-bold uppercase tracking-wider">Thành Viên</div>
+                  <div className="text-xl font-black">{members.length} sinh viên</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/20">
+                  <MapPin className="w-5 h-5 text-orange-400" />
+                </div>
+                <div>
+                  <div className="text-xs text-white/60 font-bold uppercase tracking-wider">Địa Điểm</div>
+                  <div className="text-xl font-black">{club.location}</div>
                 </div>
               </div>
             </div>
-          </section>
+          </motion.div>
+        </div>
+      </section>
 
-          {/* Members Section */}
-          <section className="py-16 bg-gray-50">
-            <div className="container mx-auto px-6">
-              <div className="text-center mb-10">
-                <h2 className="text-4xl md:text-5xl font-black text-gray-900">
-                  Thành Viên
-                </h2>
-              </div>
-              {members.length === 0 ? (
-                <div className="text-center text-gray-600">
-                  Chưa có thành viên
+      {/* Main Content */}
+      <main className="container mx-auto px-6 py-24">
+        <div className="grid lg:grid-cols-3 gap-20">
+
+          {/* Left Column: About & Events */}
+          <div className="lg:col-span-2 space-y-24">
+
+            {/* About */}
+            <section>
+              <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+                <div className="flex items-center gap-4 mb-10">
+                  <h2 className="text-4xl font-black text-gray-900">Về Chúng Tôi</h2>
+                  <div className="h-1 flex-1 bg-gray-100 rounded-full">
+                    <div className="h-full w-24 bg-teal-500 rounded-full"></div>
+                  </div>
                 </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-                  {members.map((m: any) => (
-                    <div
-                      key={m.id}
-                      className="bg-white border-2 border-gray-200 p-6"
-                    >
-                      <div className="font-bold text-gray-900">
-                        {m?.user?.name || "Member"}
-                      </div>
-                      {isAuthenticated && (
-                        <>
-                          <div className="text-sm text-gray-600">
-                            {m?.user?.email}
-                          </div>
-                          <div className="text-sm text-gray-600">
-                            {m?.user?.mssv}
-                          </div>
-                        </>
-                      )}
-                      <div className="text-xs text-gray-500 mt-2">
-                        Tham gia:{" "}
-                        {m?.join_date
-                          ? new Date(m.join_date).toLocaleDateString()
-                          : "-"}
-                      </div>
-                    </div>
+                <div className="prose prose-xl text-gray-700 leading-relaxed max-w-none">
+                  {club.description.split('\n').map((p: string, i: number) => (
+                    <p key={i} className="mb-6 last:mb-0">{p}</p>
                   ))}
                 </div>
-              )}
-            </div>
-          </section>
 
-          {/* Upcoming Events */}
-          <section className="py-16 bg-gray-50">
-            <div className="container mx-auto px-6">
-              <div className="text-center mb-10">
-                <h2 className="text-4xl md:text-5xl font-black text-gray-900">
-                  Sự Kiện Sắp Tới
-                </h2>
+                <div className="grid md:grid-cols-2 gap-8 mt-12">
+                  <div className="p-8 bg-gray-50 border-2 border-gray-100 rounded-2xl">
+                    <Sparkles className="w-8 h-8 text-teal-600 mb-4" />
+                    <h3 className="text-xl font-bold mb-2">Sứ mệnh</h3>
+                    <p className="text-gray-600">Kiến tạo cộng đồng sinh viên năng động, sáng tạo và gắn kết thông qua các hoạt động {club.category.toLowerCase()}.</p>
+                  </div>
+                  <div className="p-8 bg-gray-50 border-2 border-gray-100 rounded-2xl">
+                    <Clock className="w-8 h-8 text-orange-600 mb-4" />
+                    <h3 className="text-xl font-bold mb-2">Hoạt động</h3>
+                    <p className="text-gray-600">Chúng tôi duy trì lịch sinh hoạt định kỳ hàng tuần tại {club.location}.</p>
+                  </div>
+                </div>
+              </motion.div>
+            </section>
+
+            {/* Events */}
+            <section>
+              <div className="flex items-center gap-4 mb-10">
+                <h2 className="text-4xl font-black text-gray-900">Sự Kiện Sắp Tới</h2>
+                <div className="h-1 flex-1 bg-gray-100 rounded-full">
+                  <div className="h-full w-24 bg-teal-500 rounded-full"></div>
+                </div>
               </div>
-              <div className="grid gap-6 max-w-5xl mx-auto">
-                {upcomingEvents.map((event) => (
-                  <div
+
+              <div className="space-y-6">
+                {upcomingEvents.length > 0 ? upcomingEvents.map((event, idx) => (
+                  <motion.div
                     key={event.id}
-                    className="bg-white border-2 border-gray-200 hover:border-teal-500 hover:shadow-xl transition-all group overflow-hidden"
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: idx * 0.1 }}
+                    className="group bg-white border-2 border-gray-100 overflow-hidden hover:border-teal-500 hover:shadow-2xl transition-all duration-300 rounded-2xl"
                   >
-                    <div className="flex">
-                      <div className={`w-2 ${event.color}`}></div>
-                      <div className="flex-1 p-6">
-                        {/* Header với title và nút đăng ký */}
-                        <div className="flex items-start justify-between mb-4">
-                          <h3 className="text-2xl font-bold text-gray-900 group-hover:text-teal-600 transition-colors flex-1">
-                            {event.title}
-                          </h3>
-                          <button
-                            onClick={() =>
-                              !event.registered && handleRegisterEvent(event.id)
-                            }
-                            className={`px-6 py-2 text-white font-bold transition-all ml-4 whitespace-nowrap ${
-                              event.registered
-                                ? "bg-teal-900 cursor-default"
-                                : "bg-teal-600 hover:bg-teal-700 cursor-pointer"
-                            }`}
-                          >
-                            {event.registered
-                              ? "✓ Đã đăng ký tham gia"
-                              : "Đăng Ký"}
-                          </button>
-                        </div>
-
-                        {/* Grid thông tin cơ bản */}
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4 pb-4 border-b border-gray-200">
-                          <div>
-                            <div className="text-xs text-gray-500 mb-1">
-                              Ngày
-                            </div>
-                            <div className="flex items-center gap-1 text-sm font-medium text-gray-900">
-                              <Calendar className="w-4 h-4 text-teal-600" />
-                              {event.date}
-                            </div>
-                          </div>
-
-                          <div>
-                            <div className="text-xs text-gray-500 mb-1">
-                              Địa Điểm
-                            </div>
-                            <div className="flex items-center gap-1 text-sm font-medium text-gray-900">
-                              <MapPin className="w-4 h-4 text-orange-600" />
-                              {event.location}
-                            </div>
-                          </div>
-
-                          <div>
-                            <div className="text-xs text-gray-500 mb-1">
-                              Người Tham Gia
-                            </div>
-                            <div className="flex items-center gap-1 text-sm font-medium text-gray-900">
-                              <Users className="w-4 h-4 text-blue-600" />
-                              {event.attendees} người
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Description */}
-                        {event.description && (
-                          <div className="mb-3">
-                            <div className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">
-                              Mô Tả
-                            </div>
-                            <p className="text-sm text-gray-700 leading-relaxed">
-                              {event.description}
-                            </p>
-                          </div>
+                    <div className="flex flex-col md:flex-row">
+                      <div className="w-full md:w-64 bg-teal-600 flex flex-col items-center justify-center p-8 text-white">
+                        <Calendar className="w-12 h-12 mb-4 opacity-40" />
+                        <div className="text-2xl font-black">{event.date.split('/')[0]}</div>
+                        <div className="text-sm font-bold opacity-80 uppercase tracking-widest text-center">Tháng {event.date.split('/')[1]}, {event.date.split('/')[2]}</div>
+                      </div>
+                      <div className="flex-1 p-8 relative">
+                        {event.visibility === 'members_only' && (
+                          <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-[10px] font-black uppercase px-4 py-1.5 rounded-bl-xl tracking-widest">Members Only</div>
                         )}
-
-                        {/* Activities */}
-                        {event.activities && (
-                          <div>
-                            <div className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">
-                              Hoạt Động
-                            </div>
-                            <p className="text-sm text-gray-700 leading-relaxed">
-                              {event.activities}
-                            </p>
-                          </div>
-                        )}
+                        <h3 className="text-2xl font-black text-gray-900 mb-3 group-hover:text-teal-600 transition-colors">{event.title}</h3>
+                        <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm font-bold text-gray-500 mb-6">
+                          <div className="flex items-center gap-2"><MapPin className="w-4 h-4 text-orange-500" /> {event.location}</div>
+                          <div className="flex items-center gap-2"><Users className="w-4 h-4 text-blue-500" /> {event.attendees} / {event.max_capacity || '∞'}</div>
+                        </div>
+                        <div className="flex items-center justify-between gap-6">
+                          <p className="text-gray-600 line-clamp-2 text-sm">{event.description}</p>
+                          {event.registered ? (
+                            <button className="px-8 py-3 bg-teal-900 text-white font-black text-sm rounded-xl cursor-default flex items-center gap-2">
+                              <Sparkles className="w-4 h-4" /> Đã tham gia
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleRegisterEvent(event.id)}
+                              className="px-8 py-3 bg-teal-600 hover:bg-teal-700 text-white font-black text-sm rounded-xl shadow-lg shadow-teal-100 hover:shadow-teal-200 transition-all active:scale-95 whitespace-nowrap"
+                            >
+                              Đăng ký ngay
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
+                  </motion.div>
+                )) : (
+                  <div className="p-12 border-2 border-dashed border-gray-200 rounded-2xl text-center">
+                    <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500 font-bold">Hiện chưa có sự kiện nào được công bố.</p>
                   </div>
-                ))}
+                )}
               </div>
-            </div>
-          </section>
+            </section>
+          </div>
 
-          {/* CTA */}
-          <section className="py-20 bg-gradient-to-br from-teal-600 to-cyan-700 text-white">
-            <div className="container mx-auto px-6 max-w-3xl">
-              <div className="text-center mb-8">
-                <h2 className="text-4xl md:text-5xl font-black mb-3">
-                  Muốn Tham Gia {club.name}?
-                </h2>
-                <p className="text-lg md:text-xl opacity-90">
-                  Điền vào biểu mẫu dưới đây để gửi yêu cầu tham gia.
-                </p>
+          {/* Right Column: Contact & Join */}
+          <div className="space-y-12">
+
+            {/* Contact Card */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="bg-gray-900 text-white p-10 rounded-3xl shadow-2xl relative overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500 blur-[100px] opacity-20"></div>
+              <h3 className="text-2xl font-black mb-8">Liên hệ CLB</h3>
+              <div className="space-y-6">
+                <div className="flex items-center gap-4 group cursor-pointer">
+                  <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center border border-white/20 group-hover:bg-teal-500 transition-colors">
+                    <Mail className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="text-xs text-white/50 font-bold uppercase">Email công việc</div>
+                    <div className="font-bold">{club.email}</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4 group cursor-pointer">
+                  <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center border border-white/20 group-hover:bg-teal-500 transition-colors">
+                    <MapPin className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="text-xs text-white/50 font-bold uppercase">Văn phòng CLB</div>
+                    <div className="font-bold">{club.location}</div>
+                  </div>
+                </div>
               </div>
-              <div className="bg-white text-gray-900 p-6">
-                <form onSubmit={handleJoinClub} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-semibold mb-2">
-                      Vì sao bạn muốn tham gia?
-                    </label>
-                    <Textarea
-                      value={joinReason}
-                      onChange={(e) => setJoinReason(e.target.value)}
-                      required
-                      placeholder="Mục tiêu, động lực..."
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold mb-2">
-                      Kỹ năng của bạn
-                    </label>
-                    <Input
-                      value={skills}
-                      onChange={(e) => setSkills(e.target.value)}
-                      required
-                      placeholder="VD: React, thiết kế, tổ chức sự kiện..."
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold mb-2">
-                      Cam kết khi tham gia
-                    </label>
-                    <Textarea
-                      value={promiseText}
-                      onChange={(e) => setPromiseText(e.target.value)}
-                      required
-                      placeholder="Bạn sẽ đóng góp điều gì?"
-                    />
-                  </div>
-                  <Button
-                    type="submit"
-                    disabled={submitting}
-                    className="bg-teal-600 hover:bg-teal-700 text-white"
-                  >
-                    {submitting ? "Đang gửi..." : "Gửi đơn tham gia"}
-                  </Button>
-                </form>
-              </div>
-            </div>
-          </section>
-        </>
-      )}
+            </motion.div>
+
+            {/* Join Form */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="bg-white border-2 border-gray-100 p-10 rounded-3xl shadow-sm hover:shadow-xl transition-all"
+            >
+              <h3 className="text-2xl font-black text-gray-900 mb-2">Gia nhập cộng đồng</h3>
+              <p className="text-gray-500 mb-8 font-medium">Bạn đã sẵn sàng để trở thành một phần của {club.name}?</p>
+
+              <form onSubmit={handleJoinClub} className="space-y-6">
+                <div>
+                  <label className="block text-sm font-black text-gray-700 uppercase tracking-wider mb-2">Động lực tham gia</label>
+                  <Textarea
+                    value={joinReason}
+                    onChange={e => setJoinReason(e.target.value)}
+                    placeholder="Tại sao bạn chọn chúng tôi?"
+                    className="rounded-xl border-gray-200 focus:border-teal-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-black text-gray-700 uppercase tracking-wider mb-2">Kỹ năng sẵn có</label>
+                  <Input
+                    value={skills}
+                    onChange={e => setSkills(e.target.value)}
+                    placeholder="Giao tiếp, Coding, Design..."
+                    className="rounded-xl border-gray-200 focus:border-teal-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-black text-gray-700 uppercase tracking-wider mb-2">Lời cam kết</label>
+                  <Textarea
+                    value={promiseText}
+                    onChange={e => setPromiseText(e.target.value)}
+                    placeholder="Bạn cam kết gì với câu lạc bộ?"
+                    className="rounded-xl border-gray-200 focus:border-teal-500"
+                    required
+                  />
+                </div>
+                <button
+                  disabled={submitting}
+                  className="w-full py-4 bg-teal-600 hover:bg-teal-700 text-white font-black rounded-xl shadow-lg shadow-teal-100 hover:shadow-teal-300 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
+                >
+                  {submitting ? "Đang gửi đơn..." : (
+                    <>
+                      Gửi đơn đăng ký
+                      <ChevronRight className="w-5 h-5" />
+                    </>
+                  )}
+                </button>
+              </form>
+            </motion.div>
+
+          </div>
+        </div>
+      </main>
     </div>
   );
 }

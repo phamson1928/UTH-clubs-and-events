@@ -10,13 +10,14 @@ import {
 import { useState, useMemo, useEffect } from "react";
 import axios from "axios";
 import Navbar from "../../components/Navbar";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
 
 const API_BASE =
   (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
 
 // Helper function to normalize image URLs
-const normalizeImageUrl = (imagePath: string | null | undefined): string => {
+export const normalizeImageUrl = (imagePath: string | null | undefined): string => {
   if (!imagePath) {
     return "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&q=80";
   }
@@ -44,26 +45,32 @@ export default function StudentClubs() {
 
   const [categories, setCategories] = useState<string[]>(["all"]);
 
+  const location = useLocation();
+
   useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const categoryParam = params.get("category");
+    if (categoryParam) {
+      setFilters((prev) => ({ ...prev, category: categoryParam }));
+    }
     fetchClubs();
-  }, []);
+  }, [location.search]);
 
   const fetchClubs = async () => {
     setIsLoading(true);
     try {
       const res = await axios.get(`${API_BASE}/clubs`);
-      const items = Array.isArray(res.data)
-        ? res.data.map((club: any) => ({
-            id: club.id,
-            name: club.name || "Unnamed Club",
-            members: club.members || 0,
-            category: club.category || "General",
-            description: club.description || "No description available",
-            image: normalizeImageUrl(club.club_image),
-            owner: club.owner?.name || "Unknown",
-            createdAt: club.created_at,
-          }))
-        : [];
+      const clubsData = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      const items = clubsData.map((club: any) => ({
+        id: club.id,
+        name: club.name || "Unnamed Club",
+        members: club.members || 0,
+        category: club.category || "General",
+        description: club.description || "No description available",
+        image: normalizeImageUrl(club.club_image),
+        owner: club.owner?.name || "Unknown",
+        createdAt: club.created_at,
+      }));
       setClubs(items);
 
       // Extract unique categories
@@ -132,21 +139,33 @@ export default function StudentClubs() {
     <div className="min-h-screen bg-white">
       <Navbar />
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-[#008689] via-teal-600 to-cyan-700 text-white py-20">
-        <div className="container mx-auto px-6">
-          <div className="max-w-3xl mx-auto text-center">
+      <section className="bg-gradient-to-br from-[#008689] via-teal-600 to-cyan-700 text-white py-20 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full blur-3xl translate-x-1/2 -translate-y-1/2"></div>
+        </div>
+        <div className="container mx-auto px-6 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-3xl mx-auto text-center"
+          >
             <h1 className="text-6xl font-black mb-6">Khám Phá Câu Lạc Bộ</h1>
             <p className="text-xl text-white/90 mb-10">
               Tìm cộng đồng hoàn hảo phù hợp với sở thích và đam mê của bạn
             </p>
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* Search and Filters */}
       <section className="bg-gray-50 border-b-2 border-gray-200 py-8">
         <div className="container mx-auto px-6">
-          <div className="bg-white border-2 border-gray-200 p-6">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white border-2 border-gray-200 p-6 shadow-sm"
+          >
             <div className="grid md:grid-cols-3 gap-4">
               {/* Search */}
               <div className="md:col-span-2">
@@ -191,37 +210,34 @@ export default function StudentClubs() {
               <div className="flex gap-2">
                 <button
                   onClick={() => setFilters({ ...filters, sort: "popular" })}
-                  className={`px-4 py-2 text-sm font-medium transition-all ${
-                    filters.sort === "popular"
-                      ? "bg-teal-600 text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
+                  className={`px-4 py-2 text-sm font-medium transition-all ${filters.sort === "popular"
+                    ? "bg-teal-600 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
                 >
                   Phổ Biến Nhất
                 </button>
                 <button
                   onClick={() => setFilters({ ...filters, sort: "name" })}
-                  className={`px-4 py-2 text-sm font-medium transition-all ${
-                    filters.sort === "name"
-                      ? "bg-teal-600 text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
+                  className={`px-4 py-2 text-sm font-medium transition-all ${filters.sort === "name"
+                    ? "bg-teal-600 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
                 >
                   Tên A-Z
                 </button>
                 <button
                   onClick={() => setFilters({ ...filters, sort: "newest" })}
-                  className={`px-4 py-2 text-sm font-medium transition-all ${
-                    filters.sort === "newest"
-                      ? "bg-teal-600 text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
+                  className={`px-4 py-2 text-sm font-medium transition-all ${filters.sort === "newest"
+                    ? "bg-teal-600 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
                 >
                   Mới Nhất
                 </button>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Results Count */}
           <div className="mt-4">
@@ -255,46 +271,50 @@ export default function StudentClubs() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {visible.map((club) => (
-                <div
+              {visible.map((club, idx) => (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: idx * 0.1 }}
                   key={club.id}
-                  className="bg-white border-2 border-gray-200 hover:border-teal-500 hover:shadow-2xl transition-all group"
+                  className="bg-white border-2 border-gray-200 hover:border-teal-500 hover:shadow-2xl transition-all group overflow-hidden flex flex-col"
                 >
-                  <div className="aspect-[4/3] overflow-hidden">
+                  <div className="aspect-[16/9] overflow-hidden relative">
                     <img
                       src={club.image}
                       alt={club.name}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
+                    <div className="absolute top-4 right-4 px-3 py-1 bg-white/90 backdrop-blur-sm text-teal-700 text-xs font-bold rounded-full shadow-sm">
+                      {club.category}
+                    </div>
                   </div>
-                  <div className="p-6">
+                  <div className="p-6 flex-1 flex flex-col">
                     <div className="flex items-start justify-between mb-3">
-                      <h3 className="text-xl font-bold text-gray-900 group-hover:text-teal-600 transition-colors">
+                      <h3 className="text-xl font-bold text-gray-900 group-hover:text-teal-600 transition-colors line-clamp-1">
                         {club.name}
                       </h3>
                     </div>
-                    <div className="inline-block px-3 py-1 bg-teal-100 text-teal-700 text-xs font-bold mb-3">
-                      {club.category}
-                    </div>
-                    <p className="text-gray-600 mb-6 leading-relaxed">
+                    <p className="text-gray-600 mb-6 leading-relaxed line-clamp-2 flex-1 text-sm">
                       {club.description}
                     </p>
-                    <div className="flex items-center justify-between pt-4 border-t-2 border-gray-100">
+                    <div className="flex items-center justify-between pt-4 border-t-2 border-gray-100 mt-auto">
                       <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Users className="h-5 w-5 text-teal-600" />
+                        <Users className="h-4 w-4 text-teal-600" />
                         <span className="font-semibold">
                           {club.members} thành viên
                         </span>
                       </div>
                       <Link
                         to={`/student/clubs/${club.id}`}
-                        className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold transition-all"
+                        className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold transition-all shadow-sm hover:shadow-md"
                       >
                         Xem Chi Tiết
                       </Link>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           )}

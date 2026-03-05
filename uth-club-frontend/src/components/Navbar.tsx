@@ -89,6 +89,9 @@ export default function Navbar() {
           <Button asChild variant="ghost" size="sm">
             <Link to="/student/clubs">Clubs</Link>
           </Button>
+          <Button asChild variant="ghost" size="sm">
+            <Link to="/student/events">Events</Link>
+          </Button>
           {/* Auth actions */}
           {!authUser ? (
             <div className="flex items-center gap-2">
@@ -162,21 +165,30 @@ export default function Navbar() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuLabel>Tài khoản của tôi</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate("/profile")}>
+                <DropdownMenuItem onClick={() => navigate("/student/profile")}>
                   <User className="mr-2 h-4 w-4" />
-                  Profile
+                  Hồ sơ cá nhân
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/settings")}>
-                  Settings
-                </DropdownMenuItem>
+                {role === "user" && (
+                  <>
+                    <DropdownMenuItem onClick={() => navigate("/student/my-clubs")}>
+                      <Building2 className="mr-2 h-4 w-4" />
+                      CLB của tôi
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/student/my-events")}>
+                      <Bell className="mr-2 h-4 w-4" />
+                      Sự kiện của tôi
+                    </DropdownMenuItem>
+                  </>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  className="text-destructive"
+                  className="text-destructive font-bold"
                   onClick={handleLogout}
                 >
-                  Log out
+                  Đăng xuất
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

@@ -55,6 +55,9 @@ export class EventsService {
 
     if (status) {
       query = query.where('event.status = :status', { status });
+    } else {
+      // Mặc định chỉ hiển thị các sự kiện đã được duyệt cho danh sách công khai
+      query = query.where('event.status = :status', { status: 'approved' });
     }
 
     const [events, total] = await query

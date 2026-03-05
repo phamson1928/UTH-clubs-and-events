@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import axios from "axios";
 import Navbar from "../../components/Navbar";
 import { useToast } from "../../hooks/use-toast";
@@ -57,30 +58,32 @@ export default function StudentHome() {
       const res = await axios.get(`${API_BASE}/events?status=approved`, {
         headers,
       });
-      const items = Array.isArray(res.data)
-        ? res.data.map((event: any, index: number) => ({
-            id: event.id,
-            clubId: event.club?.id,
-            title: event.name || "Untitled Event",
-            club: event.club?.name || "Unknown Club",
-            date: event.date
-              ? new Date(event.date).toLocaleDateString()
-              : "TBA",
-            attendees: event.attending_users_number || 0,
-            registered: event.isRegistered || false,
-            description: event.description || "",
-            location: event.location || "",
-            activities: event.activities || "",
-            color: [
-              "bg-teal-500",
-              "bg-purple-500",
-              "bg-orange-500",
-              "bg-blue-500",
-              "bg-green-500",
-              "bg-pink-500",
-            ][index % 6],
-          }))
-        : [];
+      const eventsData = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      const items = eventsData.map((event: any, index: number) => ({
+        id: event.id,
+        clubId: event.club?.id,
+        title: event.name || "Untitled Event",
+        club: event.club?.name || "Unknown Club",
+        date: event.date
+          ? new Date(event.date).toLocaleDateString()
+          : "TBA",
+        attendees: event.attending_users_number || 0,
+        registered: event.isRegistered || false,
+        description: event.description || "",
+        location: event.location || "",
+        activities: event.activities || "",
+        visibility: event.visibility || "public",
+        max_capacity: event.max_capacity,
+        registration_deadline: event.registration_deadline,
+        color: [
+          "bg-teal-500",
+          "bg-purple-500",
+          "bg-orange-500",
+          "bg-blue-500",
+          "bg-green-500",
+          "bg-pink-500",
+        ][index % 6],
+      }));
       setUpcomingEvents(items);
     } catch (error) {
       console.error("[Home] Failed to fetch events", error);
@@ -216,15 +219,20 @@ export default function StudentHome() {
         </div>
 
         <div className="container mx-auto px-6 py-24 relative z-10">
-          <div className="max-w-4xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-5 py-2 bg-white/20 backdrop-blur-sm border border-white/30 mb-8">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="max-w-4xl mx-auto text-center"
+          >
+            <div className="inline-flex items-center gap-2 px-5 py-2 bg-white/20 backdrop-blur-sm border border-white/30 mb-8 rounded-full shadow-lg">
               <Sparkles className="w-4 h-4" />
               <span className="text-sm font-medium">
                 Chào Mừng Đến Cộng Đồng Sinh Viên UTH
               </span>
             </div>
 
-            <h1 className="text-6xl md:text-7xl font-black mb-6 leading-tight">
+            <h1 className="text-6xl md:text-7xl font-black mb-6 leading-tight drop-shadow-md">
               Khám Phá Cộng Đồng
               <br />
               Của Bạn Tại UTH
@@ -278,7 +286,7 @@ export default function StudentHome() {
                 </button>
               ))}
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -289,11 +297,15 @@ export default function StudentHome() {
             {stats.map((stat, index) => {
               const Icon = stat.icon;
               return (
-                <div
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
                   key={index}
-                  className="bg-white border-2 border-gray-200 p-8 hover:border-teal-500 hover:shadow-lg transition-all group"
+                  className="bg-white border-2 border-gray-200 p-8 rounded-2xl hover:border-teal-500 hover:shadow-2xl transition-all group"
                 >
-                  <Icon className={`w-10 h-10 ${stat.color} mb-4`} />
+                  <Icon className={`w-10 h-10 ${stat.color} mb-4 transform group-hover:-translate-y-1 transition-transform`} />
                   <div className="text-5xl font-black text-gray-900 mb-2">
                     {stat.value}
                   </div>
@@ -301,7 +313,7 @@ export default function StudentHome() {
                     {stat.label}
                   </div>
                   <div className="text-sm text-gray-600">{stat.subtext}</div>
-                </div>
+                </motion.div>
               );
             })}
           </div>
@@ -379,7 +391,7 @@ export default function StudentHome() {
                 </div>
               </div>
               <button
-                onClick={() => navigate("/student/clubs")}
+                onClick={() => navigate("/student/events")}
                 className="px-8 py-4 bg-teal-600 hover:bg-teal-700 text-white font-bold transition-all"
               >
                 Khám Phá Tất Cả Sự Kiện
@@ -393,7 +405,12 @@ export default function StudentHome() {
       <section className="py-24 bg-gradient-to-br from-gray-50 to-gray-100">
         <div className="container mx-auto px-6">
           <div className="grid md:grid-cols-2 gap-16 items-center">
-            <div>
+            <motion.div
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+            >
               <h2 className="text-5xl font-black text-gray-900 mb-6">
                 Hoạt Động
                 <br />
@@ -406,7 +423,7 @@ export default function StudentHome() {
               </p>
               <p className="text-lg text-gray-600 mb-8 leading-relaxed">
                 Đây là nơi hình thành tình bạn bền vững và học hỏi thực sự. Cho
-                dù đó là buổi coding, workshop nghệ thuật, luyện tập thể thao
+                cho dù đó là buổi coding, workshop nghệ thuật, luyện tập thể thao
                 hay dự án phục vụ cộng đồng, bạn sẽ tìm thấy những người đồng
                 hành.
               </p>
@@ -446,15 +463,21 @@ export default function StudentHome() {
               >
                 Tham Gia CLB Ngay Hôm Nay
               </button>
-            </div>
-            <div className="relative">
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, x: 50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+              className="relative"
+            >
               <img
                 src="https://images.unsplash.com/photo-1523580494863-6f3031224c94?w=1200&q=80"
                 alt="Students collaborating"
                 className="w-full h-[600px] object-cover shadow-2xl"
               />
               <div className="absolute -top-8 -left-8 w-64 h-64 bg-purple-500 opacity-20"></div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -462,14 +485,19 @@ export default function StudentHome() {
       {/* Upcoming Events */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
             <h2 className="text-5xl font-black text-gray-900 mb-4">
               Sự Kiện Sắp Diễn Ra
             </h2>
             <p className="text-xl text-gray-600">
               Đừng bỏ lỡ những cơ hội thú vị này
             </p>
-          </div>
+          </motion.div>
 
           {isLoadingEvents ? (
             <div className="text-center py-12">
@@ -488,60 +516,99 @@ export default function StudentHome() {
             </div>
           ) : (
             <div className="grid gap-6 max-w-5xl mx-auto">
-              {upcomingEvents.map((event) => (
-                <div
+              {upcomingEvents.map((event, idx) => (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: idx * 0.1 }}
                   key={event.id}
                   className="bg-white border-2 border-gray-200 hover:border-teal-500 hover:shadow-xl transition-all group"
                 >
                   <div className="flex items-start">
                     <div className={`w-2 h-full ${event.color}`}></div>
-                    <div className="flex-1 p-6">
+                    <div className="flex-1 p-6 relative">
+                      {/* Ribbon cho Visibility */}
+                      {event.visibility === "members_only" && (
+                        <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-bl-lg">
+                          Chỉ Dành Cho Thành Viên
+                        </div>
+                      )}
+
                       <div className="flex items-start justify-between mb-4">
-                        <h3 className="text-2xl font-bold text-gray-900 group-hover:text-teal-600 transition-colors flex-1">
-                          {event.title}
-                        </h3>
-                        <button
-                          onClick={() =>
-                            !event.registered && handleRegisterEvent(event.id)
+                        <div className="flex-1 pr-4">
+                          <h3 className="text-2xl font-bold text-gray-900 group-hover:text-teal-600 transition-colors">
+                            {event.title}
+                          </h3>
+                          <div className="text-sm text-teal-700 font-semibold mt-1">
+                            {event.club}
+                          </div>
+                        </div>
+
+                        {/* Nút Đăng Ký */}
+                        {(() => {
+                          const isFull = event.max_capacity && event.attendees >= event.max_capacity;
+                          const isExpired = event.registration_deadline && new Date(event.registration_deadline) < new Date();
+                          const isClosed = isFull || isExpired;
+
+                          if (event.registered) {
+                            return (
+                              <button className="px-6 py-2 text-white font-bold whitespace-nowrap bg-teal-900 cursor-default rounded border border-teal-900 shadow-sm">
+                                ✓ Đã tham gia
+                              </button>
+                            );
                           }
-                          className={`px-6 py-2 text-white font-bold transition-all ml-4 whitespace-nowrap ${
-                            event.registered
-                              ? "bg-teal-900 cursor-default"
-                              : "bg-teal-600 hover:bg-teal-700 cursor-pointer"
-                          }`}
-                        >
-                          {event.registered
-                            ? "✓ Đã đăng ký tham gia"
-                            : "Đăng Ký"}
-                        </button>
+
+                          if (isClosed) {
+                            return (
+                              <button className="px-6 py-2 text-white font-bold whitespace-nowrap bg-gray-400 cursor-not-allowed rounded shadow-sm" disabled>
+                                {isFull ? "Hết chỗ" : "Đã quá hạn"}
+                              </button>
+                            );
+                          }
+
+                          return (
+                            <button
+                              onClick={() => handleRegisterEvent(event.id)}
+                              className="px-6 py-2 text-white font-bold whitespace-nowrap bg-teal-600 hover:bg-teal-700 cursor-pointer shadow hover:shadow-md transition-all rounded hover:-translate-y-0.5"
+                            >
+                              Đăng Ký
+                            </button>
+                          );
+                        })()}
                       </div>
 
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4 pb-4 border-b border-gray-200">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 pb-4 border-b border-gray-100">
                         <div>
-                          <div className="text-xs text-gray-500 mb-1">Ngày</div>
-                          <div className="flex items-center gap-1 text-sm font-medium text-gray-900">
+                          <div className="text-xs text-gray-500 mb-1 font-medium tracking-wide uppercase">Ngày Tổ Chức</div>
+                          <div className="flex items-center gap-2 text-sm font-bold text-gray-900">
                             <Calendar className="w-4 h-4 text-teal-600" />
                             {event.date}
                           </div>
                         </div>
                         <div>
-                          <div className="text-xs text-gray-500 mb-1">
-                            Địa Điểm
-                          </div>
-                          <div className="flex items-center gap-1 text-sm font-medium text-gray-900">
+                          <div className="text-xs text-gray-500 mb-1 font-medium tracking-wide uppercase">Địa Điểm</div>
+                          <div className="flex items-center gap-2 text-sm font-bold text-gray-900">
                             <MapPin className="w-4 h-4 text-orange-600" />
-                            {event.location}
+                            <span className="truncate" title={event.location}>{event.location}</span>
                           </div>
                         </div>
                         <div>
-                          <div className="text-xs text-gray-500 mb-1">
-                            Người Tham Gia
-                          </div>
-                          <div className="flex items-center gap-1 text-sm font-medium text-gray-900">
+                          <div className="text-xs text-gray-500 mb-1 font-medium tracking-wide uppercase">Người Tham Gia</div>
+                          <div className="flex items-center gap-2 text-sm font-bold text-gray-900">
                             <Users className="w-4 h-4 text-blue-600" />
-                            {event.attendees} người
+                            {event.attendees} {event.max_capacity ? `/ ${event.max_capacity}` : "người"}
                           </div>
                         </div>
+                        {event.registration_deadline && (
+                          <div>
+                            <div className="text-xs text-gray-500 mb-1 font-medium tracking-wide uppercase">Hạn Đăng Ký</div>
+                            <div className="flex items-center gap-2 text-sm font-bold text-gray-900">
+                              <Calendar className="w-4 h-4 text-red-500" />
+                              {new Date(event.registration_deadline).toLocaleTimeString("vi-VN", { hour: '2-digit', minute: '2-digit' })} - {new Date(event.registration_deadline).toLocaleDateString("vi-VN")}
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       {event.description && (
@@ -567,14 +634,14 @@ export default function StudentHome() {
                       )}
                     </div>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           )}
 
           <div className="text-center mt-12">
             <button
-              onClick={() => navigate("/student/clubs")}
+              onClick={() => navigate("/student/events")}
               className="px-8 py-4 border-2 border-gray-900 hover:bg-gray-900 hover:text-white text-gray-900 font-bold transition-all inline-flex items-center gap-2"
             >
               Xem Tất Cả Sự Kiện <ArrowRight className="w-5 h-5" />
@@ -586,20 +653,29 @@ export default function StudentHome() {
       {/* Testimonials Section */}
       <section className="py-24 bg-gradient-to-br from-teal-50 to-cyan-50">
         <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
             <h2 className="text-5xl font-black text-gray-900 mb-4">
               Sinh Viên Nói Gì
             </h2>
             <p className="text-xl text-gray-600">
               Lắng nghe từ các thành viên cộng đồng
             </p>
-          </div>
+          </motion.div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial) => (
-              <div
+            {testimonials.map((testimonial, idx) => (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: idx * 0.15 }}
                 key={testimonial.id}
-                className="bg-white border-2 border-gray-200 p-8 hover:border-teal-500 hover:shadow-xl transition-all"
+                className="bg-white border-2 border-gray-100 rounded-3xl p-8 hover:border-teal-500 hover:shadow-2xl transition-all relative"
               >
                 <Quote className="w-10 h-10 text-teal-500 mb-6" />
                 <p className="text-gray-700 mb-8 leading-relaxed italic">
@@ -628,36 +704,47 @@ export default function StudentHome() {
                     />
                   ))}
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 bg-gradient-to-br from-teal-600 to-cyan-700 text-white">
-        <div className="container mx-auto px-6 text-center">
-          <h2 className="text-5xl font-black mb-6">Sẵn Sàng Bắt Đầu?</h2>
-          <p className="text-xl mb-10 max-w-2xl mx-auto opacity-90">
-            Tham gia cùng hàng ngàn sinh viên đã tìm thấy cộng đồng của họ tại
-            UTH. Hành trình của bạn bắt đầu hôm nay.
-          </p>
-          <div className="flex gap-4 justify-center">
-            <button
-              onClick={() => navigate("/student/clubs")}
-              className="px-10 py-5 bg-white text-teal-700 hover:bg-gray-100 font-bold text-lg transition-all"
-            >
-              Duyệt Tất Cả Câu Lạc Bộ
-            </button>
-            <button
-              onClick={() => navigate("/student/clubs")}
-              className="px-10 py-5 border-2 border-white hover:bg-white hover:text-teal-700 text-white font-bold text-lg transition-all"
-            >
-              Xem Lịch Sự Kiện
-            </button>
-          </div>
+      <section className="py-24 bg-gradient-to-br from-teal-600 to-cyan-700 text-white relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute left-0 top-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
+          <div className="absolute right-0 bottom-0 w-96 h-96 bg-cyan-300 rounded-full blur-3xl"></div>
+        </div>
+        <div className="container mx-auto px-6 text-center relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
+          >
+            <h2 className="text-5xl md:text-6xl font-black mb-6 drop-shadow-sm">Sẵn Sàng Bắt Đầu?</h2>
+            <p className="text-xl mb-10 max-w-2xl mx-auto opacity-90 leading-relaxed">
+              Tham gia cùng hàng ngàn sinh viên đã tìm thấy cộng đồng của họ tại
+              UTH. Hành trình của bạn bắt đầu hôm nay.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button
+                onClick={() => navigate("/student/clubs")}
+                className="px-10 py-5 bg-white text-teal-700 rounded-full shadow-lg hover:shadow-xl hover:-translate-y-1 font-bold text-lg transition-all"
+              >
+                Duyệt Tất Cả Câu Lạc Bộ
+              </button>
+              <button
+                onClick={() => navigate("/student/events")}
+                className="px-10 py-5 rounded-full border-2 border-white/50 hover:bg-white/10 hover:border-white text-white font-bold text-lg transition-all"
+              >
+                Xem Lịch Sự Kiện
+              </button>
+            </div>
+          </motion.div>
         </div>
       </section>
-    </div>
+    </div >
   );
 }
