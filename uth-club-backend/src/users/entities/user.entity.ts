@@ -53,4 +53,7 @@ export class User {
 
   @OneToMany(() => Club, (club) => club.owner)
   ownedClubs!: Club[];
+
+  @Column({ default: 0 })
+  total_points!: number;
 }

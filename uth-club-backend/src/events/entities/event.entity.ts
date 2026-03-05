@@ -58,4 +58,13 @@ export class Event {
 
   @Column()
   location!: string;
+
+  @Column({ default: 0 })
+  points!: number;
+
+  @Column({ nullable: true })
+  proposalUrl!: string;
+
+  @Column({ nullable: true })
+  checkInCode!: string;
 }

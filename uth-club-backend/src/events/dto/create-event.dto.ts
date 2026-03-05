@@ -6,6 +6,7 @@ import {
   IsInt,
   Min,
   IsIn,
+  IsUrl,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -65,4 +66,15 @@ export class CreateEventDto {
   @IsOptional()
   @IsIn(['public', 'members_only'])
   visibility?: 'public' | 'members_only';
+
+  @ApiPropertyOptional({ example: 10, description: 'Điểm rèn luyện dự kiến khi tham dự' })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  points?: number;
+
+  @ApiPropertyOptional({ example: 'https://example.com/proposal.pdf', description: 'URL đề án sự kiện (PDF)' })
+  @IsOptional()
+  @IsUrl()
+  proposalUrl?: string;
 }

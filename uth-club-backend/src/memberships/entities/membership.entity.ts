@@ -40,4 +40,11 @@ export class Membership {
     default: 'pending',
   })
   status!: 'pending' | 'approved' | 'rejected';
+
+  @Column({
+    type: 'enum',
+    enum: ['member', 'vice_president', 'secretary', 'treasurer', 'other'],
+    default: 'member',
+  })
+  club_role!: 'member' | 'vice_president' | 'secretary' | 'treasurer' | 'other';
 }

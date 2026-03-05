@@ -45,6 +45,7 @@ export class UsersService {
         mssv: true,
         createdAt: true,
         isVerified: true,
+        total_points: true,
         memberships: {
           id: true,
           status: true,
@@ -87,6 +88,7 @@ export class UsersService {
         mssv: true,
         createdAt: true,
         isVerified: true,
+        total_points: true,
       },
     });
     if (!user) throw new NotFoundException('User not found');

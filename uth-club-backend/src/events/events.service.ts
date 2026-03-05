@@ -49,6 +49,8 @@ export class EventsService {
         'event.max_capacity',
         'event.registration_deadline',
         'event.visibility',
+        'event.points',
+        'event.proposalUrl',
         'club.id',
         'club.name',
       ]);

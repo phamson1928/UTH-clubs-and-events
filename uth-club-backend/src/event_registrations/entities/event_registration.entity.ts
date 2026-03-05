@@ -2,6 +2,7 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   ManyToOne,
+  Column,
   Unique,
   CreateDateColumn,
 } from 'typeorm';
@@ -24,4 +25,10 @@ export class EventRegistration {
 
   @CreateDateColumn()
   created_at!: Date;
+
+  @Column({ default: false })
+  attended!: boolean;
+
+  @Column({ type: 'timestamp', nullable: true })
+  attendedAt!: Date | null;
 }
