@@ -4,7 +4,10 @@ import {
   Calendar,
   Search,
   MoreVertical,
+  Trash2,
   Users,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import Navbar from "../../components/Navbar";
 import Sidebar from "../../components/Sidebar";
@@ -16,6 +19,7 @@ import {
   CardHeader,
   CardTitle,
 } from "../../components/ui/card";
+import { Badge } from "../../components/ui/badge";
 import SearchAndFilters, { Filters } from "../../components/SearchAndFilters";
 import { useEffect, useMemo, useState } from "react";
 import { Input } from "../../components/ui/input";
@@ -46,10 +50,10 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 const sidebarLinks = [
-  { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/clubs", label: "Clubs", icon: Building2 },
-  { href: "/admin/events", label: "Events", icon: Calendar },
-  { href: "/admin/users", label: "Users", icon: Users },
+  { href: "/admin/dashboard", label: "Bảng điều khiển", icon: LayoutDashboard },
+  { href: "/admin/clubs", label: "Câu lạc bộ", icon: Building2 },
+  { href: "/admin/events", label: "Sự kiện", icon: Calendar },
+  { href: "/admin/users", label: "Người dùng", icon: Users },
 ];
 
 export default function AdminClubs() {
@@ -61,6 +65,16 @@ export default function AdminClubs() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalClubs, setTotalClubs] = useState(0);
+  const itemsPerPage = 10;
+  const [isLoading, setIsLoading] = useState(true);
+  const [filters, setFilters] = useState<Filters>({
+    query: "",
+    category: "all",
+    sort: "popular",
+  });
 
   const API_BASE =
     (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
@@ -83,36 +97,56 @@ export default function AdminClubs() {
   };
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchClubs = async () => {
+      setIsLoading(true);
       try {
-        const [clubsRes, usersRes] = await Promise.all([
-          axios.get(`${API_BASE}/clubs`, {
-            headers: { ...getAuthHeaders() },
-          }),
-          axios.get(`${API_BASE}/users`, {
-            headers: { ...getAuthHeaders() },
-          }),
-        ]);
-        setClubs(clubsRes.data);
-        setUsers(usersRes.data);
+        const clubsRes = await axios.get(`${API_BASE}/clubs`, {
+          params: {
+            page: currentPage,
+            limit: itemsPerPage,
+            search: filters.query,
+          },
+          headers: { ...getAuthHeaders() },
+        });
+
+        const { data, total } = clubsRes.data;
+        setClubs(data || []);
+        setTotalClubs(total || 0);
+        setTotalPages(Math.ceil((total || 0) / itemsPerPage));
       } catch (error) {
-        if (
-          axios.isAxiosError(error) &&
-          (error.response?.status === 401 || error.response?.status === 403)
-        ) {
+        if (axios.isAxiosError(error) && (error.response?.status === 401 || error.response?.status === 403)) {
           navigate("/login");
           return;
         }
+      } finally {
+        setIsLoading(false);
       }
     };
-    fetchData();
-  }, []);
 
-  const [filters, setFilters] = useState<Filters>({
-    query: "",
-    category: "all",
-    sort: "popular",
-  });
+    const fetchUsers = async () => {
+      try {
+        const usersRes = await axios.get(`${API_BASE}/users`, {
+          params: { limit: 200 },
+          headers: { ...getAuthHeaders() },
+        });
+        const usersData = Array.isArray(usersRes.data) ? usersRes.data : (usersRes.data?.data || []);
+        setUsers(usersData);
+      } catch (error) { }
+    };
+
+    const delayDebounceFn = setTimeout(() => {
+      fetchClubs();
+    }, 300);
+
+    fetchUsers();
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [currentPage, filters.query]);
+
+  // Reset page on search
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters.query]);
 
   const stats = useMemo(() => {
     const totalClubs = clubs.length;
@@ -133,33 +167,7 @@ export default function AdminClubs() {
     return unique.sort();
   }, [clubs]);
 
-  const visible = useMemo(() => {
-    let items = clubs.slice();
-
-    if (filters.query.trim()) {
-      const q = filters.query.toLowerCase();
-      items = items.filter(
-        (c) =>
-          c.name.toLowerCase().includes(q) ||
-          c.category.toLowerCase().includes(q) ||
-          (c.owner?.name && c.owner.name.toLowerCase().includes(q)),
-      );
-    }
-
-    if (filters.category && filters.category !== "all") {
-      items = items.filter((c) => c.category === filters.category);
-    }
-
-    if (filters.sort === "name") {
-      items.sort((a, b) => a.name.localeCompare(b.name));
-    } else if (filters.sort === "newest") {
-      items.sort((a, b) => b.id - a.id);
-    } else {
-      items.sort((a, b) => b.members - a.members);
-    }
-
-    return items;
-  }, [clubs, filters]);
+  const visible = clubs;
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem("authToken");
@@ -248,7 +256,8 @@ export default function AdminClubs() {
       const clubsRes = await axios.get(`${API_BASE}/clubs`, {
         headers: { ...getAuthHeaders() },
       });
-      setClubs(clubsRes.data);
+      const clubsData = Array.isArray(clubsRes.data) ? clubsRes.data : (clubsRes.data?.data || []);
+      setClubs(clubsData);
 
       setIsDialogOpen(false);
       setCurrentClub(null);
@@ -276,8 +285,8 @@ export default function AdminClubs() {
 
         <main className="flex-1 p-8">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">Clubs Management</h1>
-            <p className="text-muted-foreground">Manage all registered clubs</p>
+            <h1 className="text-3xl font-bold mb-2">Quản lý câu lạc bộ</h1>
+            <p className="text-muted-foreground">Quản lý tất cả câu lạc bộ đã đăng ký</p>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
@@ -289,9 +298,9 @@ export default function AdminClubs() {
                 <Building2 className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.totalClubs}</div>
+                <div className="text-2xl font-bold">{totalClubs}</div>
                 <p className="text-xs text-muted-foreground">
-                  {stats.totalClubs} clubs
+                  {totalClubs} clubs
                 </p>
               </CardContent>
             </Card>
@@ -329,9 +338,9 @@ export default function AdminClubs() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>All Clubs</CardTitle>
+                  <CardTitle>Tất Cả Câu Lạc Bộ</CardTitle>
                   <CardDescription>
-                    A list of all registered clubs in the system
+                    Danh sách tất cả câu lạc bộ đã đăng ký trong hệ thống
                   </CardDescription>
                 </div>
               </div>
@@ -348,44 +357,95 @@ export default function AdminClubs() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Club Name</TableHead>
+                    <TableHead>Tên CLB</TableHead>
                     <TableHead>Category</TableHead>
                     <TableHead>Owner</TableHead>
-                    <TableHead>Members</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>Thành viên</TableHead>
+                    <TableHead className="text-right">Thao tác</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {visible.map((club: any) => (
-                    <TableRow key={club.id}>
-                      <TableCell className="font-medium">{club.name}</TableCell>
-                      <TableCell>{club.category}</TableCell>
-                      <TableCell>{club.owner?.name || "-"}</TableCell>
-                      <TableCell>{Number(club.members || 0)}</TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleEdit(club)}>
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="text-destructive"
-                              onClick={() => handleDelete(club.id)}
-                            >
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                  {isLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8">
+                        Đang tải dữ liệu...
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : visible.length > 0 ? (
+                    visible.map((club: any) => (
+                      <TableRow key={club.id}>
+                        <TableCell className="font-medium">{club.name}</TableCell>
+                        <TableCell>{club.category}</TableCell>
+                        <TableCell>{club.owner?.name || "-"}</TableCell>
+                        <TableCell>{Number(club.members || 0)}</TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleEdit(club)}>
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={() => handleDelete(club.id)}
+                              >
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        colSpan={6}
+                        className="text-center py-8 text-gray-500"
+                      >
+                        Không tìm thấy câu lạc bộ nào
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
+
+              {!isLoading && totalClubs > 0 && (
+                <div className="flex items-center justify-between mt-6 px-2">
+                  <div className="text-sm text-muted-foreground">
+                    Đang hiển thị <span className="font-medium">{clubs.length}</span> trên <span className="font-medium">{totalClubs}</span> câu lạc bộ
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className="h-4 w-4 mr-1" />
+                      Trước
+                    </Button>
+                    <div className="flex items-center gap-1 mx-2">
+                      <Badge variant="outline" className="h-8 w-8 flex items-center justify-center p-0">
+                        {currentPage}
+                      </Badge>
+                      <span className="text-muted-foreground text-sm">/ {totalPages}</span>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                    >
+                      Tiếp
+                      <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -396,7 +456,7 @@ export default function AdminClubs() {
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
+                  <Label htmlFor="name">Họ Tên</Label>
                   <Input
                     id="name"
                     name="name"
@@ -406,7 +466,7 @@ export default function AdminClubs() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
+                  <Label htmlFor="description">Mô tả</Label>
                   <Input
                     id="description"
                     name="description"

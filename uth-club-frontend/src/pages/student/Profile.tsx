@@ -17,6 +17,7 @@ export default function StudentProfile() {
         email: "",
         mssv: "",
         role: "",
+        total_points: 0,
     });
 
     // Password state
@@ -40,7 +41,8 @@ export default function StudentProfile() {
                 name: res.data.name || "",
                 email: res.data.email || "",
                 mssv: res.data.mssv || "",
-                role: res.data.role || "user"
+                role: res.data.role || "user",
+                total_points: res.data.total_points || 0
             });
         } catch (error) {
             toast({
@@ -225,6 +227,23 @@ export default function StudentProfile() {
                                     className="block w-full bg-gray-50 border-gray-300 rounded-md shadow-sm text-gray-500 sm:text-sm border p-2 cursor-not-allowed uppercase"
                                     value={profile.role === 'user' ? 'Sinh viên' : profile.role}
                                 />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Điểm rèn luyện tích lũy (Hoạt động CLB)
+                                </label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-teal-600 font-bold">
+                                        ★
+                                    </div>
+                                    <input
+                                        type="text"
+                                        disabled
+                                        className="pl-10 block w-full bg-teal-50 border-teal-200 rounded-md shadow-sm text-teal-800 font-bold sm:text-sm border p-2 cursor-not-allowed"
+                                        value={`${profile.total_points} điểm`}
+                                    />
+                                </div>
                             </div>
 
                             <div className="pt-4">

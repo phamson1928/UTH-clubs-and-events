@@ -46,13 +46,13 @@ export class EventsController {
 
   // Lấy event theo status
   @ApiOperation({ summary: 'Lấy danh sách event (phân trang)' })
-  @ApiQuery({ name: 'status', required: false, enum: ['pending', 'approved', 'rejected', 'canceled'] })
+  @ApiQuery({ name: 'status', required: false, enum: ['pending', 'approved', 'rejected', 'canceled', 'completed'] })
   @ApiResponse({ status: 200, description: 'Lấy danh sách thành công' })
   @Get()
   @UseGuards(OptionalJwtAuthGuard)
   findAll(
     @Query() paginationDto: PaginationDto,
-    @Query('status') status?: 'pending' | 'approved' | 'rejected' | 'canceled',
+    @Query('status') status?: 'pending' | 'approved' | 'rejected' | 'canceled' | 'completed',
     @Request() req?: { user?: { id: number } },
   ) {
     const userId = req?.user?.id;
@@ -76,7 +76,7 @@ export class EventsController {
   @Roles('club_owner')
   findAllByClubAndStatus(
     @Request() req: { user: { clubId: number } },
-    @Query('status') status?: 'pending' | 'approved' | 'rejected' | 'canceled',
+    @Query('status') status?: 'pending' | 'approved' | 'rejected' | 'canceled' | 'completed',
   ) {
     return this.eventsService.findAllByClubAndStatus(req.user.clubId, status);
   }

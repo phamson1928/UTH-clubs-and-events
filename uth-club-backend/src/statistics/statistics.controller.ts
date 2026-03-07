@@ -14,7 +14,7 @@ import { Roles } from 'common/decorators/roles.decorator';
 
 @Controller('statistics')
 export class StatisticsController {
-  constructor(private readonly statisticsService: StatisticsService) {}
+  constructor(private readonly statisticsService: StatisticsService) { }
 
   // Lấy thống kê admin
   @Get('admin_statistics')
@@ -58,6 +58,13 @@ export class StatisticsController {
     year: number,
   ) {
     return this.statisticsService.getUserGrowthStatistics(year);
+  }
+
+  @Get('admin/role-distribution')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  getRoleDistribution() {
+    return this.statisticsService.getRoleDistribution();
   }
 
   @Get('admin/club-categories')

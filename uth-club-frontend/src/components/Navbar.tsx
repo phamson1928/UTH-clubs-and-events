@@ -18,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import NotificationBell from "./NotificationBell";
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -87,10 +88,10 @@ export default function Navbar() {
         <div className="flex items-center gap-4">
           {/* Primary Navigation */}
           <Button asChild variant="ghost" size="sm">
-            <Link to="/student/clubs">Clubs</Link>
+            <Link to="/student/clubs">Câu Lạc Bộ</Link>
           </Button>
           <Button asChild variant="ghost" size="sm">
-            <Link to="/student/events">Events</Link>
+            <Link to="/student/events">Sự Kiện</Link>
           </Button>
           {/* Auth actions */}
           {!authUser ? (
@@ -121,15 +122,11 @@ export default function Navbar() {
 
           <div className="h-6 w-px bg-gray-200 mx-2"></div>
 
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-5 w-5" />
-            {authUser && (
-              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive" />
-            )}
-          </Button>
+          {authUser && <NotificationBell />}
+
           {/* Role-based dashboard shortcuts */}
           {role === "admin" && (
-            <Button asChild variant="ghost" size="icon" title="Admin Dashboard">
+            <Button asChild variant="ghost" size="icon" title="Bảng điều khiển Admin">
               <Link to="/admin/dashboard">
                 <LayoutDashboard className="h-5 w-5" />
               </Link>
@@ -140,7 +137,7 @@ export default function Navbar() {
               asChild
               variant="ghost"
               size="icon"
-              title="Club Owner Dashboard"
+              title="Bảng điều khiển CLB"
             >
               <Link to="/club-owner/dashboard">
                 <Building2 className="h-5 w-5" />

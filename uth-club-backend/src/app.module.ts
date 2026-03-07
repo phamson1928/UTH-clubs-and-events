@@ -22,8 +22,14 @@ import { StatisticsModule } from './statistics/statistics.module';
 import { UploadModule } from './upload/upload.module';
 import { EventRegistrationsModule } from './event_registrations/event_registrations.module';
 import { MailModule } from './mail/mail.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { FeedbackModule } from './feedback/feedback.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { Notification } from './notifications/entities/notification.entity';
+import { EventFeedback } from './feedback/entities/event_feedback.entity';
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({ isGlobal: true }),
     ThrottlerModule.forRoot([
       {
@@ -68,7 +74,7 @@ import { MailModule } from './mail/mail.module';
         process.env.DB_SSL === 'false' ? false : { rejectUnauthorized: false },
       autoLoadEntities: true,
       synchronize: process.env.NODE_ENV !== 'production', // ⚠️ false trong production
-      entities: [User, Club, Membership, Event, EventRegistration],
+      entities: [User, Club, Membership, Event, EventRegistration, Notification, EventFeedback],
     }),
     UsersModule,
     ClubsModule,
@@ -79,6 +85,8 @@ import { MailModule } from './mail/mail.module';
     UploadModule,
     EventRegistrationsModule,
     MailModule,
+    NotificationsModule,
+    FeedbackModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],

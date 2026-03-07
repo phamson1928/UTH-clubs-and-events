@@ -6,9 +6,13 @@ import { EventRegistration } from './entities/event_registration.entity';
 import { Event } from '../events/entities/event.entity';
 import { Membership } from '../memberships/entities/membership.entity';
 import { User } from '../users/entities/user.entity';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([EventRegistration, Event, Membership, User])],
+  imports: [
+    TypeOrmModule.forFeature([EventRegistration, Event, Membership, User]),
+    NotificationsModule,
+  ],
   controllers: [EventRegistrationsController],
   providers: [EventRegistrationsService],
   exports: [EventRegistrationsService],

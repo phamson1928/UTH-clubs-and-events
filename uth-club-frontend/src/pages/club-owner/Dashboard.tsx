@@ -36,11 +36,11 @@ const API_BASE =
   (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
 
 const sidebarLinks = [
-  { href: "/club-owner/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/club-owner/members", label: "Members", icon: Users },
-  { href: "/club-owner/applications", label: "Applications", icon: FileText },
-  { href: "/club-owner/events", label: "Events", icon: Calendar },
-  { href: "/club-owner/requests", label: "Requests", icon: Send },
+  { href: "/club-owner/dashboard", label: "Bảng điều khiển", icon: LayoutDashboard },
+  { href: "/club-owner/members", label: "Thành viên", icon: Users },
+  { href: "/club-owner/applications", label: "Đề án", icon: FileText },
+  { href: "/club-owner/events", label: "Sự kiện", icon: Calendar },
+  { href: "/club-owner/requests", label: "Yêu cầu", icon: Send },
 ];
 
 const getAuthHeaders = () => {
@@ -143,9 +143,9 @@ export default function ClubOwnerDashboard() {
           >
             <div className="flex items-start justify-between mb-4">
               <div>
-                <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
+                <h1 className="text-3xl font-bold mb-2">Bảng điều khiển</h1>
                 <p className="text-muted-foreground">
-                  Welcome back! Here's your club overview
+                  Chào mừng trở lại! Tổng quan câu lạc bộ của bạn
                 </p>
               </div>
               {clubName && (
@@ -166,10 +166,10 @@ export default function ClubOwnerDashboard() {
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {[
-              { title: "Total Members", value: stats.totalMembersInClub || 0, sub: "Active members in your club", icon: Users },
-              { title: "Total Events", value: stats.totalEvents || 0, sub: "Approved events", icon: Calendar },
-              { title: "Pending Events", value: stats.pendingEvents || 0, sub: "Awaiting review", icon: FileText },
-              { title: "Past Events", value: stats.pastEvents || 0, sub: "Completed events", icon: Calendar },
+              { title: "Tổng thành viên", value: stats.totalMembersInClub || 0, sub: "Thành viên hiện tại", icon: Users },
+              { title: "Tổng sự kiện", value: stats.totalEvents || 0, sub: "Sự kiện đã duyệt", icon: Calendar },
+              { title: "Sự kiện chờ duyệt", value: stats.pendingEvents || 0, sub: "Đang chờ admin duyệt", icon: FileText },
+              { title: "Sự kiện đã qua", value: stats.pastEvents || 0, sub: "Sự kiện đã hoàn thành", icon: Calendar },
             ].map((s, idx) => (
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -207,9 +207,9 @@ export default function ClubOwnerDashboard() {
             >
               <Card>
                 <CardHeader>
-                  <CardTitle>Member Growth (This Year)</CardTitle>
+                  <CardTitle>Biểu đồ thành viên (Năm nay)</CardTitle>
                   <CardDescription>
-                    Your club's member count over time
+                    Số lượng thành viên theo thời gian
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -224,7 +224,7 @@ export default function ClubOwnerDashboard() {
                         <Bar
                           dataKey="count"
                           fill="hsl(var(--primary))"
-                          name="New Members"
+                          name="Thành viên mới"
                         />
                       </BarChart>
                     </ResponsiveContainer>
@@ -241,9 +241,9 @@ export default function ClubOwnerDashboard() {
             >
               <Card>
                 <CardHeader>
-                  <CardTitle>Events Growth (This Year)</CardTitle>
+                  <CardTitle>Biểu đồ sự kiện (Năm nay)</CardTitle>
                   <CardDescription>
-                    Number of events created each month
+                    Số sự kiện tạo bởi CLB mỗi tháng
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -260,7 +260,7 @@ export default function ClubOwnerDashboard() {
                           dataKey="count"
                           stroke="#8884d8"
                           strokeWidth={2}
-                          name="Events"
+                          name="Sự kiện"
                         />
                       </LineChart>
                     </ResponsiveContainer>

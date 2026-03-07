@@ -29,36 +29,43 @@ export class UsersService {
   }
 
   async findAll(paginationDto: PaginationDto) {
-    const { page = 1, limit = 20 } = paginationDto;
+    const { page = 1, limit = 20, search, role } = paginationDto;
     const skip = (page - 1) * limit;
 
-    const [data, total] = await this.usersRepository.findAndCount({
-      relations: ['memberships', 'ownedClubs'],
-      order: {
-        createdAt: 'DESC',
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        mssv: true,
-        createdAt: true,
-        isVerified: true,
-        total_points: true,
-        memberships: {
-          id: true,
-          status: true,
-        },
-        ownedClubs: {
-          id: true,
-          name: true,
-          category: true,
-        },
-      },
-      skip,
-      take: limit,
-    });
+    const queryBuilder = this.usersRepository.createQueryBuilder('user')
+      .leftJoinAndSelect('user.memberships', 'memberships')
+      .leftJoinAndSelect('user.ownedClubs', 'ownedClubs')
+      .orderBy('user.createdAt', 'DESC')
+      .skip(skip)
+      .take(limit)
+      .select([
+        'user.id',
+        'user.name',
+        'user.email',
+        'user.role',
+        'user.mssv',
+        'user.createdAt',
+        'user.isVerified',
+        'user.total_points',
+        'memberships.id',
+        'memberships.status',
+        'ownedClubs.id',
+        'ownedClubs.name',
+        'ownedClubs.category',
+      ]);
+
+    if (search) {
+      queryBuilder.andWhere(
+        '(user.name ILIKE :search OR user.email ILIKE :search OR user.mssv ILIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+
+    if (role && role !== 'all') {
+      queryBuilder.andWhere('user.role = :role', { role });
+    }
+
+    const [data, total] = await queryBuilder.getManyAndCount();
 
     return {
       data,

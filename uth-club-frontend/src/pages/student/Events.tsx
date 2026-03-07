@@ -32,14 +32,21 @@ export default function StudentEvents() {
             const token = localStorage.getItem("authToken");
             const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-            const res = await axios.get(`${API_BASE}/events?status=approved&limit=100`, { headers });
+            const res = await axios.get(`${API_BASE}/events?limit=200`, { headers });
             const eventsData = Array.isArray(res.data) ? res.data : (res.data?.data || []);
 
-            setEvents(eventsData.map((e: any) => ({
-                ...e,
-                isExpired: e.registration_deadline && new Date(e.registration_deadline) < new Date(),
-                isFull: e.max_capacity && (e.attending_users_number || 0) >= e.max_capacity,
-            })));
+            setEvents(eventsData.map((e: any) => {
+                const now = new Date();
+                const isDeadlinePassed = e.registration_deadline && new Date(e.registration_deadline) < now;
+                const isEventPassed = e.date && new Date(e.date) < now;
+                const isCompleted = e.status === 'completed';
+
+                return {
+                    ...e,
+                    isExpired: isDeadlinePassed || isEventPassed || isCompleted,
+                    isFull: e.max_capacity && (e.attending_users_number || 0) >= e.max_capacity,
+                };
+            }));
         } catch (error) {
             console.error("Failed to fetch events:", error);
             toast({

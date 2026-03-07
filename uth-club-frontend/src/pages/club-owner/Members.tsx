@@ -6,6 +6,7 @@ import {
   Send,
   Search,
   MoreVertical,
+  Download,
 } from "lucide-react";
 import axios from "axios";
 import { useEffect, useState } from "react";
@@ -80,11 +81,11 @@ const getAuthHeaders = () => {
 };
 
 const sidebarLinks = [
-  { href: "/club-owner/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/club-owner/members", label: "Members", icon: Users },
-  { href: "/club-owner/applications", label: "Applications", icon: FileText },
-  { href: "/club-owner/events", label: "Events", icon: Calendar },
-  { href: "/club-owner/requests", label: "Requests", icon: Send },
+  { href: "/club-owner/dashboard", label: "Bảng điều khiển", icon: LayoutDashboard },
+  { href: "/club-owner/members", label: "Thành viên", icon: Users },
+  { href: "/club-owner/applications", label: "Đề án", icon: FileText },
+  { href: "/club-owner/events", label: "Sự kiện", icon: Calendar },
+  { href: "/club-owner/requests", label: "Yêu cầu", icon: Send },
 ];
 
 export default function ClubOwnerMembers() {
@@ -99,6 +100,8 @@ export default function ClubOwnerMembers() {
   const [editingMemberId, setEditingMemberId] = useState<number | null>(null);
   const [newEmail, setNewEmail] = useState("");
   const [confirmRemoveId, setConfirmRemoveId] = useState<number | null>(null);
+  const [isEditRoleOpen, setIsEditRoleOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<string>("member");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -109,10 +112,10 @@ export default function ClubOwnerMembers() {
       });
       const items = Array.isArray(res.data)
         ? res.data.map((u: any) => ({
-            id: u.id ?? u.user?.id,
-            name: u.name ?? u.user?.name,
-            email: u.email ?? u.user?.email,
-          }))
+          id: u.id ?? u.user?.id,
+          name: u.name ?? u.user?.name,
+          email: u.email ?? u.user?.email,
+        }))
         : [];
       setCandidates(items.filter((x: any) => x?.id));
       setIsAddOpen(true);
@@ -167,6 +170,7 @@ export default function ClubOwnerMembers() {
           joinReason: m.join_reason || "",
           skills: m.skills || "",
           promise: m.promise || "",
+          clubRole: m.club_role || "member",
           avatar: "/placeholder.svg",
         })),
       );
@@ -229,6 +233,87 @@ export default function ClubOwnerMembers() {
     }
   };
 
+  const handleChangeRole = async () => {
+    if (!editingMemberId || !selectedRole) return;
+    try {
+      await axios.patch(
+        `${API_BASE}/memberships/${editingMemberId}/role`,
+        { role: selectedRole },
+        { headers: getAuthHeaders() },
+      );
+      setMembers((prev) =>
+        prev.map((m) =>
+          m.id === editingMemberId ? { ...m, clubRole: selectedRole } : m,
+        ),
+      );
+      setIsEditRoleOpen(false);
+      setEditingMemberId(null);
+      toast({
+        title: "Thành công",
+        description: "Vai trò đã được cập nhật",
+      });
+    } catch (error: any) {
+      console.error("[Members] edit role failed", error);
+      toast({
+        title: "Lỗi",
+        description: error.response?.data?.message || "Không thể cập nhật vai trò",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case 'owner': return 'Chủ nhiệm';
+      case 'vice_president': return 'Phó Chủ nhiệm';
+      case 'secretary': return 'Thư ký';
+      case 'treasurer': return 'Thủ quỹ';
+      case 'member': default: return 'Thành viên';
+    }
+  };
+
+  const handleExportMembers = async () => {
+    try {
+      if (!owner && members.length === 0) return;
+
+      const token = localStorage.getItem("authToken");
+      let clubId = null;
+      if (token) {
+        const payload: any = decodeJwt(token);
+        clubId = payload?.clubId;
+      }
+      if (!clubId) {
+        toast({ title: "Lỗi", description: "Không lấy được thông tin CLB", variant: "destructive" });
+        return;
+      }
+
+      const res = await axios.get(`${API_BASE}/event-registrations/export/members?clubId=${clubId}`, {
+        headers: getAuthHeaders(),
+        responseType: "blob",
+      });
+
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `DanhSachThanhVien_CLB_${clubId}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      toast({
+        title: "Thành công",
+        description: "Đã tải xuống danh sách thành viên.",
+      });
+    } catch (error) {
+      console.error("Export Members Error", error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể xuất danh sách thành viên",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     const fetchMembers = async () => {
       try {
@@ -256,6 +341,7 @@ export default function ClubOwnerMembers() {
             joinReason: m.join_reason || "",
             skills: m.skills || "",
             promise: m.promise || "",
+            clubRole: m.club_role || "member",
             avatar: "/placeholder.svg",
           })),
         );
@@ -270,13 +356,13 @@ export default function ClubOwnerMembers() {
             setOwner(
               club?.owner
                 ? {
-                    id: club.owner.id,
-                    name: club.owner.name,
-                    email: club.owner.email,
-                    role: "Owner",
-                    mssv: club.owner.mssv,
-                    avatar: "/placeholder.svg",
-                  }
+                  id: club.owner.id,
+                  name: club.owner.name,
+                  email: club.owner.email,
+                  role: "Owner",
+                  mssv: club.owner.mssv,
+                  avatar: "/placeholder.svg",
+                }
                 : null,
             );
           }
@@ -316,8 +402,8 @@ export default function ClubOwnerMembers() {
 
         <main className="flex-1 p-8">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">Members</h1>
-            <p className="text-muted-foreground">Manage your club members</p>
+            <h1 className="text-3xl font-bold mb-2">Thành viên</h1>
+            <p className="text-muted-foreground">Quản lý thành viên câu lạc bộ</p>
           </div>
 
           <Card>
@@ -332,16 +418,24 @@ export default function ClubOwnerMembers() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="mb-4">
-                <div className="relative">
+              <div className="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="relative w-full sm:w-[300px]">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search members..."
+                    placeholder="Tìm kiếm thành viên..."
                     className="pl-10"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                   />
                 </div>
+                <Button
+                  variant="outline"
+                  onClick={handleExportMembers}
+                  className="w-full sm:w-auto"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Xuất Excel
+                </Button>
               </div>
 
               <Table>
@@ -350,10 +444,11 @@ export default function ClubOwnerMembers() {
                     <TableHead>Member</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>MSSV</TableHead>
+                    <TableHead>Vai trò</TableHead>
                     <TableHead>Joined Date</TableHead>
                     <TableHead>Join Reason</TableHead>
                     <TableHead>Skills</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="text-right">Thao tác</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -378,6 +473,11 @@ export default function ClubOwnerMembers() {
                       </TableCell>
                       <TableCell>{owner.email}</TableCell>
                       <TableCell>{owner.mssv || "-"}</TableCell>
+                      <TableCell>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                          Chủ nhiệm
+                        </span>
+                      </TableCell>
                       <TableCell>-</TableCell>
                       <TableCell>-</TableCell>
                       <TableCell>-</TableCell>
@@ -405,6 +505,15 @@ export default function ClubOwnerMembers() {
                       </TableCell>
                       <TableCell>{member.email}</TableCell>
                       <TableCell>{member.mssv || "-"}</TableCell>
+                      <TableCell>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${member.clubRole === 'vice_president' ? 'bg-orange-100 text-orange-800' :
+                            member.clubRole === 'secretary' ? 'bg-blue-100 text-blue-800' :
+                              member.clubRole === 'treasurer' ? 'bg-green-100 text-green-800' :
+                                'bg-gray-100 text-gray-800'
+                          }`}>
+                          {getRoleLabel(member.clubRole)}
+                        </span>
+                      </TableCell>
                       <TableCell>{member.joinedDate}</TableCell>
                       <TableCell
                         className="max-w-[240px] truncate"
@@ -426,6 +535,15 @@ export default function ClubOwnerMembers() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setEditingMemberId(member.id);
+                                setSelectedRole(member.clubRole);
+                                setIsEditRoleOpen(true);
+                              }}
+                            >
+                              Phân công vai trò
+                            </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => {
                                 setEditingMemberId(member.id);
@@ -509,7 +627,40 @@ export default function ClubOwnerMembers() {
                 >
                   Cancel
                 </Button>
-                <Button onClick={handleEditEmail}>Save</Button>
+                <Button onClick={handleEditEmail}>Lưu</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={isEditRoleOpen} onOpenChange={setIsEditRoleOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Phân công vai trò</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label htmlFor="role">Vai trò</Label>
+                  <select
+                    id="role"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    value={selectedRole}
+                    onChange={(e) => setSelectedRole(e.target.value)}
+                  >
+                    <option value="member">Thành viên</option>
+                    <option value="vice_president">Phó Chủ nhiệm</option>
+                    <option value="secretary">Thư ký</option>
+                    <option value="treasurer">Thủ quỹ</option>
+                  </select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsEditRoleOpen(false)}
+                >
+                  Hủy
+                </Button>
+                <Button onClick={handleChangeRole}>Lưu thay đổi</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>

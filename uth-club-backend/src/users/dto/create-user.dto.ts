@@ -20,4 +20,11 @@ export class CreateUserDto {
   @IsString()
   @IsNotEmpty()
   verificationToken: string;
+
+  @IsString()
+  @IsNotEmpty()
+  role?: 'user' | 'admin' | 'club_owner';
+
+  @IsNotEmpty()
+  total_points?: number;
 }

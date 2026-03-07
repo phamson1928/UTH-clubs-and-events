@@ -3,7 +3,17 @@ import axios from "axios";
 import { Link } from "react-router-dom";
 import { useToast } from "../../hooks/use-toast";
 import Navbar from "../../components/Navbar";
-import { Calendar, MapPin, Search, Tag, Users } from "lucide-react";
+import { Calendar, MapPin, Search, Tag, Users, CheckCircle, QrCode, Star, MessageSquare } from "lucide-react";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+} from "../../components/ui/dialog";
+import { Input } from "../../components/ui/input";
+import { Button } from "../../components/ui/button";
 
 const API_BASE = (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
 
@@ -12,6 +22,18 @@ export default function StudentMyEvents() {
     const [loading, setLoading] = useState(true);
     const [events, setEvents] = useState<any[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
+
+    // Check-in state
+    const [checkInModalOpen, setCheckInModalOpen] = useState(false);
+    const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
+    const [checkInCode, setCheckInCode] = useState("");
+    const [isCheckingIn, setIsCheckingIn] = useState(false);
+
+    // Feedback state
+    const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
+    const [rating, setRating] = useState(5);
+    const [comment, setComment] = useState("");
+    const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
 
     useEffect(() => {
         fetchMyEvents();
@@ -53,6 +75,76 @@ export default function StudentMyEvents() {
                 description: error.response?.data?.message || "Không thể hủy đăng ký.",
                 variant: "destructive"
             });
+        }
+    };
+
+    const handleCheckIn = async () => {
+        if (!selectedEventId || !checkInCode) return;
+        setIsCheckingIn(true);
+        try {
+            const token = localStorage.getItem("authToken");
+            const res = await axios.post(`${API_BASE}/event-registrations/${selectedEventId}/checkin`, {
+                code: checkInCode
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            toast({
+                title: "Thành công!",
+                description: res.data.message || "Bạn đã điểm danh thành công.",
+            });
+            setCheckInModalOpen(false);
+            setCheckInCode("");
+            fetchMyEvents(); // re-fetch to update status
+        } catch (error: any) {
+            toast({
+                title: "Lỗi!",
+                description: error.response?.data?.message || "Mã check-in không hợp lệ.",
+                variant: "destructive"
+            });
+        } finally {
+            setIsCheckingIn(false);
+        }
+    };
+
+    const openCheckInModal = (eventId: number) => {
+        setSelectedEventId(eventId);
+        setCheckInCode("");
+        setCheckInModalOpen(true);
+    };
+
+    const openFeedbackModal = (eventId: number) => {
+        setSelectedEventId(eventId);
+        setRating(5);
+        setComment("");
+        setFeedbackModalOpen(true);
+    };
+
+    const handleSubmitFeedback = async () => {
+        if (!selectedEventId || rating < 1 || rating > 5) return;
+        setIsSubmittingFeedback(true);
+        try {
+            const token = localStorage.getItem("authToken");
+            await axios.post(`${API_BASE}/feedback/${selectedEventId}`, {
+                rating,
+                comment,
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            toast({
+                title: "Thành công!",
+                description: "Cảm ơn bạn đã gửi đánh giá.",
+            });
+            setFeedbackModalOpen(false);
+        } catch (error: any) {
+            toast({
+                title: "Lỗi!",
+                description: error.response?.data?.message || "Không thể gửi đánh giá. Bạn có thể đã gửi rồi.",
+                variant: "destructive"
+            });
+        } finally {
+            setIsSubmittingFeedback(false);
         }
     };
 
@@ -148,16 +240,47 @@ export default function StudentMyEvents() {
                                         </div>
                                     </div>
 
-                                    <div className="flex justify-end gap-3 mt-4">
-                                        <button
-                                            onClick={() => handleCancelRegistration(evt.eventId)}
-                                            className="px-4 py-2 border border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 rounded text-sm font-bold transition flex items-center gap-2"
-                                        >
-                                            Hủy Đăng Ký
-                                        </button>
-                                        {/* <Link to={`/student/events/${evt.eventId}`} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded text-sm font-bold transition">
-                      Xem Chi Tiết
-                    </Link> */}
+                                    <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
+                                        <div className="flex items-center gap-2">
+                                            {evt.attended ? (
+                                                <div className="flex items-center gap-3">
+                                                    <div className="text-green-600 flex items-center gap-1 font-semibold text-sm bg-green-50 px-3 py-1.5 rounded-full">
+                                                        <CheckCircle className="w-4 h-4" />
+                                                        Đã điểm danh (+{evt.points || 0} ĐRL)
+                                                    </div>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => openFeedbackModal(evt.eventId)}
+                                                        className="text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                                                    >
+                                                        <MessageSquare className="w-4 h-4 mr-1" />
+                                                        Đánh giá
+                                                    </Button>
+                                                </div>
+                                            ) : (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => openCheckInModal(evt.eventId)}
+                                                    className="text-teal-600 border-teal-200 hover:bg-teal-50"
+                                                >
+                                                    <QrCode className="w-4 h-4 mr-1" />
+                                                    Điểm danh
+                                                </Button>
+                                            )}
+                                        </div>
+                                        <div className="flex gap-2">
+                                            {/* Only able to cancel if the event hasn't happened or they haven't attended */}
+                                            {!evt.attended && (
+                                                <button
+                                                    onClick={() => handleCancelRegistration(evt.eventId)}
+                                                    className="px-4 py-2 border border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 rounded text-sm font-bold transition flex items-center gap-2"
+                                                >
+                                                    Hủy
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -165,6 +288,75 @@ export default function StudentMyEvents() {
                     </div>
                 )}
             </main>
+
+            <Dialog open={checkInModalOpen} onOpenChange={setCheckInModalOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Điểm danh sự kiện</DialogTitle>
+                        <DialogDescription>
+                            Nhập mã kiểm tra do Ban tổ chức cung cấp để xác nhận bạn đã tham gia sự kiện.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4">
+                        <Input
+                            value={checkInCode}
+                            onChange={(e) => setCheckInCode(e.target.value.toUpperCase())}
+                            placeholder="Nhập mã (VD: UTH-1-ABCDEF12)"
+                            className="font-mono text-center uppercase tracking-widest text-lg h-12"
+                            maxLength={16}
+                        />
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setCheckInModalOpen(false)}>Thoát</Button>
+                        <Button onClick={handleCheckIn} disabled={!checkInCode || isCheckingIn}>
+                            {isCheckingIn ? "Đang xử lý..." : "Xác nhận điểm danh"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={feedbackModalOpen} onOpenChange={setFeedbackModalOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Đánh giá sự kiện</DialogTitle>
+                        <DialogDescription>
+                            Đánh giá của bạn giúp ban tổ chức cải thiện trong các sự kiện tới.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4 space-y-4">
+                        <div className="flex flex-col items-center">
+                            <span className="text-sm font-medium mb-2">Đánh giá chung</span>
+                            <div className="flex gap-1">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                    <button
+                                        key={star}
+                                        onClick={() => setRating(star)}
+                                        className="p-1 transition-transform hover:scale-110 focus:outline-none"
+                                    >
+                                        <Star className={`w-8 h-8 ${rating >= star ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}`} />
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Bình luận (Tùy chọn)</label>
+                            <textarea
+                                value={comment}
+                                onChange={(e) => setComment(e.target.value)}
+                                placeholder="Bạn cảm thấy sự kiện này thế nào?"
+                                className="w-full h-24 p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
+                                maxLength={500}
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setFeedbackModalOpen(false)}>Thoát</Button>
+                        <Button onClick={handleSubmitFeedback} disabled={isSubmittingFeedback}>
+                            {isSubmittingFeedback ? "Đang gửi..." : "Gửi đánh giá"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

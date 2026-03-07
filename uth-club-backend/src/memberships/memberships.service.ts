@@ -3,6 +3,7 @@ import {
   ConflictException,
   BadRequestException,
   NotFoundException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { CreateMembershipDto } from './dto/create-membership.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -12,6 +13,7 @@ import { User } from '../users/entities/user.entity';
 import { Club } from '../clubs/entities/club.entity';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { MailService } from '../mail/mail.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class MembershipsService {
@@ -21,6 +23,7 @@ export class MembershipsService {
     @InjectRepository(User)
     private userRepository: Repository<User>,
     private mailService: MailService,
+    private notificationsService: NotificationsService,
   ) { }
 
   // Lấy đơn xin tham gia club
@@ -58,9 +61,9 @@ export class MembershipsService {
     };
   }
 
-  // Lấy danh sách thành viên trong club
+  // Lấy danh sách thành viên trong club (bao gồm vai trò và điểm rèn luyện)
   async findAllMembers(clubId: number) {
-    return await this.membershipRepository
+    const members = await this.membershipRepository
       .createQueryBuilder('membership')
       .leftJoin('membership.user', 'user')
       .addSelect([
@@ -68,16 +71,32 @@ export class MembershipsService {
         'user.name',
         'user.email',
         'user.mssv',
+        'user.total_points',
         'user.createdAt',
+        'membership.id',
         'membership.join_date',
         'membership.join_reason',
         'membership.skills',
         'membership.promise',
+        'membership.club_role',
       ])
       .leftJoin('membership.club', 'club')
       .where('club.id = :clubId', { clubId })
       .andWhere('membership.status = :status', { status: 'approved' })
+      .orderBy('membership.club_role', 'ASC') // president roles first
+      .addOrderBy('user.name', 'ASC')
       .getMany();
+
+    return members.map((m) => ({
+      membershipId: m.id,
+      userId: m.user.id,
+      name: m.user.name,
+      email: m.user.email,
+      mssv: m.user.mssv,
+      total_points: m.user.total_points,
+      club_role: m.club_role,
+      joinDate: m.join_date,
+    }));
   }
 
   // Lấy những user chưa là thành viên của club nào (approved)
@@ -156,7 +175,29 @@ export class MembershipsService {
       user: { id: userId } as unknown as User,
       club: { id: clubId } as unknown as Club,
     });
-    return await this.membershipRepository.save(membership);
+    const saved = await this.membershipRepository.save(membership);
+
+    // Notify club owner about the new request
+    try {
+      const club = await this.membershipRepository.manager
+        .getRepository(Club)
+        .findOne({ where: { id: clubId }, relations: ['owner'] }) as (Club & { owner: User }) | null;
+      if (club?.owner) {
+        const applicant = await this.userRepository.findOne({ where: { id: userId } });
+        this.notificationsService
+          .notifyNewMembershipRequest(
+            club.owner.id,
+            applicant?.name ?? 'Sinh viên',
+            club.name,
+            saved.id,
+          )
+          .catch((e) => console.error('Notification error:', e));
+      }
+    } catch (e) {
+      console.error('Failed to notify club owner:', e);
+    }
+
+    return saved;
   }
 
   // Club owner thêm thành viên trực tiếp (approved)
@@ -189,22 +230,27 @@ export class MembershipsService {
       join_date: status === 'approved' ? new Date() : null,
     });
 
-    // Send email notification
+    // Send email + in-app notification
     try {
       if (status === 'approved') {
         await this.mailService.sendMembershipApprovedEmail(
           membership.user.email,
           membership.club.name,
         );
+        this.notificationsService
+          .notifyMembershipApproved(membership.user.id, membership.club.name, membership.club.id)
+          .catch((e) => console.error('Notification error:', e));
       } else {
         await this.mailService.sendMembershipRejectedEmail(
           membership.user.email,
           membership.club.name,
         );
+        this.notificationsService
+          .notifyMembershipRejected(membership.user.id, membership.club.name, membership.club.id)
+          .catch((e) => console.error('Notification error:', e));
       }
     } catch (error) {
       console.error('Failed to send email:', error);
-      // Don't throw exception, just log it. The request update is already done.
     }
 
     return { message: `Request ${status} successfully` };
@@ -288,5 +334,137 @@ export class MembershipsService {
       .where('membership.status = :status', { status: 'pending' })
       .orderBy('membership.request_date', 'DESC')
       .getMany();
+  }
+
+  // ─────────────────────────────────────────────────
+  // Phase 2: Internal Roles
+  // ─────────────────────────────────────────────────
+
+  /**
+   * Assign / update a member's role within the club.
+   * Only the club_owner (or admin) can set roles.
+   * The owner's own membership cannot be demoted — they are always the leader.
+   */
+  async assignRole(
+    membershipId: number,
+    newRole: 'member' | 'vice_president' | 'secretary' | 'treasurer' | 'other',
+    requester: { id: number; role: string; clubId: number },
+  ) {
+    const membership = await this.membershipRepository.findOne({
+      where: { id: membershipId },
+      relations: ['user', 'club'],
+    });
+    if (!membership) throw new NotFoundException('Membership not found');
+    if (membership.status !== 'approved')
+      throw new BadRequestException('Chỉ có thể gán vai trò cho thành viên đã được duyệt');
+
+    // Permission check: must be admin OR owner of that club
+    if (requester.role !== 'admin' && requester.clubId !== membership.club.id)
+      throw new ForbiddenException('Bạn không có quyền gán vai trò trong CLB này');
+
+    await this.membershipRepository.update(membershipId, { club_role: newRole });
+    return {
+      message: `Đã cập nhật vai trò thành ${newRole}`,
+      membershipId,
+      newRole,
+      memberName: membership.user.name,
+    };
+  }
+
+  /**
+   * Get a full club roster showing all members with their roles.
+   * Accessible by club_owner, admin, and ANY approved member of that club.
+   */
+  async getClubRoster(
+    clubId: number,
+    requesterId: number,
+    requesterRole: string,
+    requesterClubId: number,
+  ) {
+    // Verify requester is admin OR owner/member of that club
+    if (requesterRole !== 'admin' && requesterClubId !== clubId) {
+      // Check if requester is an approved member of the requested club
+      const membership = await this.membershipRepository.findOne({
+        where: { user: { id: requesterId }, club: { id: clubId }, status: 'approved' },
+        relations: ['user', 'club'],
+      });
+      if (!membership)
+        throw new ForbiddenException('Bạn không có quyền xem danh sách này');
+    }
+
+    const members = await this.membershipRepository
+      .createQueryBuilder('membership')
+      .leftJoin('membership.user', 'user')
+      .addSelect([
+        'user.id',
+        'user.name',
+        'user.email',
+        'user.mssv',
+        'user.total_points',
+        'membership.id',
+        'membership.club_role',
+        'membership.join_date',
+      ])
+      .leftJoin('membership.club', 'club')
+      .where('club.id = :clubId', { clubId })
+      .andWhere('membership.status = :status', { status: 'approved' })
+      .orderBy(
+        `CASE membership.club_role
+          WHEN 'vice_president' THEN 1
+          WHEN 'secretary' THEN 2
+          WHEN 'treasurer' THEN 3
+          WHEN 'other' THEN 4
+          ELSE 5
+        END`,
+        'ASC',
+      )
+      .addOrderBy('user.name', 'ASC')
+      .getMany();
+
+    // Summarize by role
+    const roleLabel: Record<string, string> = {
+      member: 'Thành viên',
+      vice_president: 'Phó chủ nhiệm',
+      secretary: 'Thư ký',
+      treasurer: 'Thủ quỹ',
+      other: 'Khác',
+    };
+
+    return {
+      clubId,
+      totalMembers: members.length,
+      roster: members.map((m) => ({
+        membershipId: m.id,
+        userId: m.user.id,
+        name: m.user.name,
+        email: m.user.email,
+        mssv: m.user.mssv,
+        total_points: m.user.total_points,
+        club_role: m.club_role,
+        roleLabel: roleLabel[m.club_role] ?? m.club_role,
+        joinDate: m.join_date,
+      })),
+    };
+  }
+
+  /**
+   * Batch-assign roles: Owner sets multiple members' roles at once.
+   */
+  async batchAssignRoles(
+    updates: Array<{ membershipId: number; role: 'member' | 'vice_president' | 'secretary' | 'treasurer' | 'other' }>,
+    requester: { id: number; role: string; clubId: number },
+  ) {
+    type ResultItem = { ok: boolean; membershipId?: number; error?: string; message?: string; newRole?: string; memberName?: string };
+    const results: ResultItem[] = [];
+    for (const { membershipId, role } of updates) {
+      try {
+        const r = await this.assignRole(membershipId, role, requester);
+        results.push({ ok: true, ...r });
+      } catch (e: unknown) {
+        const err = e as Error;
+        results.push({ ok: false, membershipId, error: err.message });
+      }
+    }
+    return { results, updated: results.filter((r) => r.ok).length, failed: results.filter((r) => !r.ok).length };
   }
 }

@@ -52,7 +52,7 @@ export class EventRegistrationsController {
   @ApiResponse({ status: 400, description: 'Lỗi nghiệp vụ (hết chỗ, quá hạn, đã đăng ký)' })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('user', 'club_owner', 'admin')
-  @Post(':id')
+  @Post(':id/register')
   registerForEvent(
     @Param('id', ParseIntPipe) id: number,
     @Request() req: { user: { id: number } },
@@ -65,7 +65,7 @@ export class EventRegistrationsController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('user', 'club_owner', 'admin')
-  @Delete(':id')
+  @Delete(':id/cancel')
   cancelRegistration(
     @Param('id', ParseIntPipe) id: number,
     @Request() req: { user: { id: number } },
@@ -78,7 +78,7 @@ export class EventRegistrationsController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('club_owner', 'admin')
-  @Get('participants/:id')
+  @Get(':id/participants')
   getEventParticipants(
     @Param('id', ParseIntPipe) id: number,
     @Request() req: { user: { id: number; role: string } },

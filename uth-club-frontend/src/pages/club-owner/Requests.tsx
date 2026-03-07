@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, FileText, Calendar, Send } from "lucide-react";
+import { LayoutDashboard, Users, FileText, Calendar, Send, FileUp, ExternalLink } from "lucide-react";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -33,11 +33,11 @@ const getAuthHeaders = () => {
 };
 
 const sidebarLinks = [
-  { href: "/club-owner/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/club-owner/members", label: "Members", icon: Users },
-  { href: "/club-owner/applications", label: "Applications", icon: FileText },
-  { href: "/club-owner/events", label: "Events", icon: Calendar },
-  { href: "/club-owner/requests", label: "Requests", icon: Send },
+  { href: "/club-owner/dashboard", label: "Bảng điều khiển", icon: LayoutDashboard },
+  { href: "/club-owner/members", label: "Thành viên", icon: Users },
+  { href: "/club-owner/applications", label: "Đề án", icon: FileText },
+  { href: "/club-owner/events", label: "Sự kiện", icon: Calendar },
+  { href: "/club-owner/requests", label: "Yêu cầu", icon: Send },
 ];
 
 export default function ClubOwnerRequests() {
@@ -56,6 +56,8 @@ export default function ClubOwnerRequests() {
     expected_attendees: "",
     activities: "",
   });
+  const [proposalFile, setProposalFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const fetchRequests = async () => {
     setIsLoading(true);
@@ -65,18 +67,19 @@ export default function ClubOwnerRequests() {
       });
       const items = Array.isArray(res.data)
         ? res.data.map((event: any) => ({
-            id: event.id,
-            title: event.title,
-            description: event.description || "",
-            date: event.date ? new Date(event.date).toLocaleDateString() : "",
-            time: event.time || "",
-            location: event.location || "",
-            expectedAttendees:
-              event.expected_attendees ?? event.activities ?? 0,
-            activities: event.activities || "",
-            organizer: event.club?.name || "Unknown",
-            status: event.status || "pending",
-          }))
+          id: event.id,
+          title: event.title,
+          description: event.description || "",
+          date: event.date ? new Date(event.date).toLocaleDateString() : "",
+          time: event.time || "",
+          location: event.location || "",
+          expectedAttendees:
+            event.expected_attendees ?? event.activities ?? 0,
+          activities: event.activities || "",
+          organizer: event.club?.name || "Unknown",
+          status: event.status || "pending",
+          proposalUrl: event.proposalUrl || null,
+        }))
         : [];
       setRequests(items);
     } catch (error) {
@@ -101,7 +104,23 @@ export default function ClubOwnerRequests() {
   const handleCreateEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    let proposalUrl = "";
+
     try {
+      if (proposalFile) {
+        setIsUploading(true);
+        const tfFormData = new FormData();
+        tfFormData.append("file", proposalFile);
+        const uploadRes = await axios.post(`${API_BASE}/memberships/upload/proposal`, tfFormData, {
+          headers: {
+            ...getAuthHeaders(),
+            "Content-Type": "multipart/form-data",
+          },
+        });
+        proposalUrl = uploadRes.data.url;
+        setIsUploading(false);
+      }
+
       await axios.post(
         `${API_BASE}/events`,
         {
@@ -112,6 +131,7 @@ export default function ClubOwnerRequests() {
           ).toISOString(),
           location: formData.location,
           activities: formData.activities,
+          proposalUrl: proposalUrl || undefined,
         },
         { headers: getAuthHeaders() },
       );
@@ -125,6 +145,7 @@ export default function ClubOwnerRequests() {
         expected_attendees: "",
         activities: "",
       });
+      setProposalFile(null);
       toast({
         title: "Success",
         description: "Event request submitted successfully",
@@ -139,6 +160,7 @@ export default function ClubOwnerRequests() {
       });
     } finally {
       setIsSubmitting(false);
+      setIsUploading(false);
     }
   };
 
@@ -156,7 +178,7 @@ export default function ClubOwnerRequests() {
           <div className="mb-8">
             <h1 className="text-3xl font-bold mb-2">Event Requests</h1>
             <p className="text-muted-foreground">
-              Submit and manage event requests
+              Gửi và quản lý yêu cầu sự kiện
             </p>
           </div>
 
@@ -209,7 +231,7 @@ export default function ClubOwnerRequests() {
                       </p>
                     </div>
                     <div>
-                      <h4 className="font-semibold mb-1">Location</h4>
+                      <h4 className="font-semibold mb-1">Địa điểm</h4>
                       <p className="text-sm text-muted-foreground">
                         {request.location}
                       </p>
@@ -217,7 +239,7 @@ export default function ClubOwnerRequests() {
                   </div>
 
                   <div>
-                    <h4 className="font-semibold mb-1">Description</h4>
+                    <h4 className="font-semibold mb-1">Mô tả</h4>
                     <p className="text-sm text-muted-foreground">
                       {request.description || "No description provided"}
                     </p>
@@ -235,6 +257,20 @@ export default function ClubOwnerRequests() {
                       {request.activities || "No activities provided"}
                     </p>
                   </div>
+                  {request.proposalUrl && (
+                    <div className="pt-2">
+                      <a
+                        href={request.proposalUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center text-sm font-medium text-teal-600 hover:text-teal-800 bg-teal-50 px-3 py-1.5 rounded-md transition-colors"
+                      >
+                        <FileText className="w-4 h-4 mr-2" />
+                        Xem tệp Kế hoạch / Đề án
+                        <ExternalLink className="w-3 h-3 ml-1" />
+                      </a>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}
@@ -243,7 +279,7 @@ export default function ClubOwnerRequests() {
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogContent className="max-w-md">
               <DialogHeader>
-                <DialogTitle>Create Event Request</DialogTitle>
+                <DialogTitle>Y�u C?u T?o S? Ki?n</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleCreateEvent} className="space-y-4">
                 <div className="space-y-2">
@@ -260,7 +296,7 @@ export default function ClubOwnerRequests() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
+                  <Label htmlFor="description">Mô tả</Label>
                   <Input
                     id="description"
                     placeholder="Enter event description"
@@ -338,6 +374,17 @@ export default function ClubOwnerRequests() {
                     }
                   />
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="proposalFile">Proposal Document (PDF)</Label>
+                  <Input
+                    id="proposalFile"
+                    type="file"
+                    accept="application/pdf"
+                    onChange={(e) => setProposalFile(e.target.files ? e.target.files[0] : null)}
+                  />
+                  <p className="text-xs text-muted-foreground">Attach a detailed plan or proposal document if required.</p>
+                </div>
                 <DialogFooter>
                   <Button
                     type="button"
@@ -346,8 +393,8 @@ export default function ClubOwnerRequests() {
                   >
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? "Submitting..." : "Submit Request"}
+                  <Button type="submit" disabled={isSubmitting || isUploading}>
+                    {isUploading ? "Uploading..." : isSubmitting ? "Submitting..." : "Submit Request"}
                   </Button>
                 </DialogFooter>
               </form>

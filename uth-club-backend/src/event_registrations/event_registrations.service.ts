@@ -15,6 +15,7 @@ import * as QRCode from 'qrcode';
 import { v4 as uuidv4 } from 'uuid';
 import { Workbook } from 'exceljs';
 import type { Response } from 'express';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class EventRegistrationsService {
@@ -27,6 +28,7 @@ export class EventRegistrationsService {
     private readonly membershipRepository: Repository<Membership>,
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    private readonly notificationsService: NotificationsService,
   ) { }
 
   // ─────────────────────────────────────────────────
@@ -40,8 +42,11 @@ export class EventRegistrationsService {
     });
     if (!event) throw new NotFoundException('Event not found');
 
-    if (event.date <= new Date())
-      throw new BadRequestException('Sự kiện đã diễn ra');
+    if (event.status === 'completed' || event.date <= new Date())
+      throw new BadRequestException('Sự kiện đã diễn ra hoặc đã kết thúc');
+
+    if (event.status === 'canceled' || event.status === 'rejected')
+      throw new BadRequestException('Sự kiện không khả dụng để đăng ký');
 
     if (event.registration_deadline && event.registration_deadline <= new Date())
       throw new BadRequestException('Đã hết hạn đăng ký sự kiện');
@@ -99,6 +104,14 @@ export class EventRegistrationsService {
       relations: ['event', 'user'],
     });
     if (!registration) throw new NotFoundException('Bạn chưa đăng ký tham gia event này');
+
+    if (registration.event.status === 'completed' || registration.event.date <= new Date()) {
+      throw new BadRequestException('Không thể hủy đăng ký sự kiện đã diễn ra hoặc đã kết thúc');
+    }
+
+    if (registration.event.status === 'canceled') {
+      throw new BadRequestException('Sự kiện này đã bị hủy');
+    }
 
     await this.registrationsRepository.delete(registration.id);
     await this.eventsRepository
@@ -229,7 +242,7 @@ export class EventRegistrationsService {
     if (!registration)
       throw new NotFoundException('Bạn chưa đăng ký sự kiện này');
     if (registration.attended)
-      return { message: 'Bạn đã điểm danh sự kiện này rồi', alreadyAttended: true };
+      return { message: 'Bạn đã điểm danh sự  kiện này rồi', alreadyAttended: true };
 
     // Mark attendance
     registration.attended = true;
@@ -240,6 +253,11 @@ export class EventRegistrationsService {
     if (event.points > 0) {
       await this.usersRepository.increment({ id: userId }, 'total_points', event.points);
     }
+
+    // In-app notification
+    this.notificationsService
+      .notifyCheckInSuccess(userId, event.name, event.points, event.id)
+      .catch((e) => console.error('Notification error:', e));
 
     return {
       message: `Điểm danh thành công! Bạn nhận được ${event.points} điểm rèn luyện.`,

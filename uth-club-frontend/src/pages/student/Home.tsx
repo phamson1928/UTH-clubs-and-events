@@ -55,10 +55,15 @@ export default function StudentHome() {
       const token = localStorage.getItem("authToken");
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-      const res = await axios.get(`${API_BASE}/events?status=approved`, {
+      const res = await axios.get(`${API_BASE}/events?status=approved&limit=20`, {
         headers,
       });
-      const eventsData = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      const rawData = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      const now = new Date();
+      const eventsData = rawData.filter((e: any) => {
+        const eventDate = new Date(e.date);
+        return eventDate > now && e.status === 'approved';
+      }).slice(0, 6);
       const items = eventsData.map((event: any, index: number) => ({
         id: event.id,
         clubId: event.club?.id,
@@ -547,9 +552,11 @@ export default function StudentHome() {
 
                         {/* Nút Đăng Ký */}
                         {(() => {
+                          const now = new Date();
                           const isFull = event.max_capacity && event.attendees >= event.max_capacity;
-                          const isExpired = event.registration_deadline && new Date(event.registration_deadline) < new Date();
-                          const isClosed = isFull || isExpired;
+                          const isDeadlinePassed = event.registration_deadline && new Date(event.registration_deadline) < now;
+                          const isEventPassed = event.date && new Date(event.date) < now;
+                          const isClosed = isFull || isDeadlinePassed || isEventPassed;
 
                           if (event.registered) {
                             return (

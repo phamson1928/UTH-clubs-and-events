@@ -37,10 +37,10 @@ export class ClubsService {
   }
 
   async findAll(paginationDto: PaginationDto) {
-    const { page = 1, limit = 20 } = paginationDto;
+    const { page = 1, limit = 20, search } = paginationDto;
     const skip = (page - 1) * limit;
 
-    const [data, total] = await this.clubsRepository
+    const query = this.clubsRepository
       .createQueryBuilder('clubs')
       .select([
         'clubs.id',
@@ -53,6 +53,7 @@ export class ClubsService {
       .orderBy('clubs.created_at', 'DESC')
       .leftJoin('clubs.owner', 'owner')
       .addSelect(['owner.id', 'owner.name'])
+      .leftJoinAndSelect('clubs.owner', 'ownerFull')
       // Only count approved memberships
       .loadRelationCountAndMap(
         'clubs.members',
@@ -62,10 +63,16 @@ export class ClubsService {
       )
       .leftJoin('clubs.memberships', 'memberships')
       .leftJoin('memberships.user', 'user')
-      .addSelect(['user.id', 'user.name'])
-      .skip(skip)
-      .take(limit)
-      .getManyAndCount();
+      .addSelect(['user.id', 'user.name']);
+
+    if (search) {
+      query.andWhere(
+        '(clubs.name ILIKE :search OR clubs.category ILIKE :search OR clubs.description ILIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+
+    const [data, total] = await query.skip(skip).take(limit).getManyAndCount();
 
     return {
       data,

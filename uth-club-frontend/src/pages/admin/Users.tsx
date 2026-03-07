@@ -10,6 +10,8 @@ import {
   Pencil,
   Trash2,
   UserPlus,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import Navbar from "../../components/Navbar";
 import Sidebar from "../../components/Sidebar";
@@ -54,22 +56,33 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../components/ui/select";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../../components/ui/tabs";
 import axios from "axios";
 
 const sidebarLinks = [
-  { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/clubs", label: "Clubs", icon: Building2 },
-  { href: "/admin/events", label: "Events", icon: Calendar },
-  { href: "/admin/users", label: "Users", icon: UsersIcon },
+  { href: "/admin/dashboard", label: "Bảng điều khiển", icon: LayoutDashboard },
+  { href: "/admin/clubs", label: "Câu lạc bộ", icon: Building2 },
+  { href: "/admin/events", label: "Sự kiện", icon: Calendar },
+  { href: "/admin/users", label: "Người dùng", icon: UsersIcon },
 ];
 
 export default function AdminUsers() {
   const [users, setUsers] = useState<any[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [roleFilter, setRoleFilter] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<any | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const itemsPerPage = 20;
   const navigate = useNavigate();
 
   const API_BASE =
@@ -82,13 +95,25 @@ export default function AdminUsers() {
 
   useEffect(() => {
     const fetchUsers = async () => {
+      setIsLoading(true);
       try {
         const res = await axios.get(`${API_BASE}/users`, {
+          params: {
+            page: currentPage,
+            limit: itemsPerPage,
+            search: searchTerm,
+            role: roleFilter,
+          },
           headers: {
             ...getAuthHeaders(),
           },
         });
-        setUsers(res.data);
+
+        const { data, total, page } = res.data;
+        setUsers(data || []);
+        setTotalUsers(total || 0);
+        setTotalPages(Math.ceil((total || 0) / itemsPerPage));
+        if (page !== currentPage) setCurrentPage(page);
       } catch (error) {
         if (
           axios.isAxiosError(error) &&
@@ -103,18 +128,18 @@ export default function AdminUsers() {
       }
     };
 
-    fetchUsers();
-  }, []);
+    const delayDebounceFn = setTimeout(() => {
+      fetchUsers();
+    }, 300);
 
-  const filteredUsers = users.filter((user) => {
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      user.email.toLowerCase().includes(searchLower) ||
-      user.name.toLowerCase().includes(searchLower) ||
-      (user.mssv && user.mssv.includes(searchTerm)) ||
-      user.role.toLowerCase().includes(searchLower)
-    );
-  });
+    return () => clearTimeout(delayDebounceFn);
+  }, [currentPage, searchTerm, roleFilter]);
+
+  // Reset page when filtering or searching
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, roleFilter]);
+
 
   const handleEdit = (user: any) => {
     setCurrentUser(user);
@@ -217,12 +242,12 @@ export default function AdminUsers() {
         <div className="flex-1 p-8">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h1 className="text-2xl font-bold">User Management</h1>
-              <p className="text-gray-500">Manage all users in the system</p>
+              <h1 className="text-2xl font-bold">Quản lý người dùng</h1>
+              <p className="text-gray-500">Quản lý tất cả người dùng trong hệ thống</p>
             </div>
             <Button onClick={handleCreate}>
               <UserPlus className="mr-2 h-4 w-4" />
-              Add User
+              Thêm người dùng
             </Button>
           </div>
 
@@ -230,17 +255,17 @@ export default function AdminUsers() {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>
-                  {currentUser?.id ? "Edit User" : "Add New User"}
+                  {currentUser?.id ? "Sửa thông tin" : "Thêm người dùng mới"}
                 </DialogTitle>
                 <DialogDescription>
                   {currentUser?.id
-                    ? "Update user information"
-                    : "Add a new user to the system"}
+                    ? "Cập nhật thông tin người dùng"
+                    : "Thêm người dùng mới vào hệ thống"}
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
+                  <Label htmlFor="name">Họ Tên</Label>
                   <Input
                     id="name"
                     name="name"
@@ -262,7 +287,7 @@ export default function AdminUsers() {
                 </div>
                 {!currentUser?.id && (
                   <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="password">Mật khẩu</Label>
                     <Input
                       id="password"
                       name="password"
@@ -273,17 +298,29 @@ export default function AdminUsers() {
                     />
                   </div>
                 )}
-                <div className="space-y-2">
-                  <Label htmlFor="mssv">Student ID (MSSV)</Label>
-                  <Input
-                    id="mssv"
-                    name="mssv"
-                    value={currentUser?.mssv || ""}
-                    onChange={handleInputChange}
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="mssv">MSSV</Label>
+                    <Input
+                      id="mssv"
+                      name="mssv"
+                      value={currentUser?.mssv || ""}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="total_points">Điểm Rèn Luyện</Label>
+                    <Input
+                      id="total_points"
+                      name="total_points"
+                      type="number"
+                      value={currentUser?.total_points || 0}
+                      onChange={(e) => setCurrentUser({ ...currentUser, total_points: parseInt(e.target.value) || 0 })}
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="role">Role</Label>
+                  <Label htmlFor="role">Vai trò</Label>
                   <Select
                     value={currentUser?.role || ""}
                     onValueChange={(value: string) =>
@@ -292,13 +329,27 @@ export default function AdminUsers() {
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select role" />
+                      <SelectValue placeholder="Chọn vai trò" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="admin">Admin</SelectItem>
-                      <SelectItem value="user">User</SelectItem>
+                      <SelectItem value="admin">Quản trị viên</SelectItem>
+                      <SelectItem value="club_owner">Chủ nhiệm</SelectItem>
+                      <SelectItem value="user">Sinh viên</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="flex items-center space-x-2 pt-2">
+                  <input
+                    type="checkbox"
+                    id="isVerified"
+                    name="isVerified"
+                    checked={currentUser?.isVerified || false}
+                    onChange={(e) => setCurrentUser({ ...currentUser, isVerified: e.target.checked })}
+                    className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                  />
+                  <Label htmlFor="isVerified" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    Đã xác thực tài khoản
+                  </Label>
                 </div>
                 <DialogFooter className="mt-6">
                   <Button
@@ -309,10 +360,10 @@ export default function AdminUsers() {
                       setCurrentUser(null);
                     }}
                   >
-                    Cancel
+                    Hủy
                   </Button>
                   <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? "Saving..." : "Save"}
+                    {isSubmitting ? "Đang lưu..." : "Lưu"}
                   </Button>
                 </DialogFooter>
               </form>
@@ -320,23 +371,35 @@ export default function AdminUsers() {
           </Dialog>
 
           <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
+            <CardHeader className="pb-3">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                  <CardTitle>Users</CardTitle>
+                  <CardTitle>Người Dùng</CardTitle>
                   <CardDescription>
-                    Manage all users in the system
+                    Quản lý tất cả người dùng trong hệ thống
                   </CardDescription>
                 </div>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                  <Input
-                    className="pl-9 w-[300px]"
-                    placeholder="Search users..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
+                <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <Input
+                      className="pl-9 w-full sm:w-[250px]"
+                      placeholder="Tìm kiếm người dùng..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
                 </div>
+              </div>
+              <div className="mt-6">
+                <Tabs value={roleFilter} onValueChange={setRoleFilter} className="w-full">
+                  <TabsList className="grid w-full max-w-lg grid-cols-4">
+                    <TabsTrigger value="all">Tất cả</TabsTrigger>
+                    <TabsTrigger value="admin">Admin</TabsTrigger>
+                    <TabsTrigger value="club_owner">Chủ nhiệm</TabsTrigger>
+                    <TabsTrigger value="user">Sinh viên</TabsTrigger>
+                  </TabsList>
+                </Tabs>
               </div>
             </CardHeader>
             <CardContent>
@@ -348,18 +411,20 @@ export default function AdminUsers() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Name</TableHead>
+                      <TableHead>Họ Tên</TableHead>
                       <TableHead>Email</TableHead>
-                      <TableHead>Student ID</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Joined</TableHead>
-                      <TableHead>Club</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead>MSSV</TableHead>
+                      <TableHead>Vai trò</TableHead>
+                      <TableHead>Điểm rèn luyện</TableHead>
+                      <TableHead>Trạng thái</TableHead>
+                      <TableHead>Ngày tham gia</TableHead>
+                      <TableHead>CLB</TableHead>
+                      <TableHead className="text-right">Thao tác</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredUsers.length > 0 ? (
-                      filteredUsers.map((user) => (
+                    {users.length > 0 ? (
+                      users.map((user: any) => (
                         <TableRow key={user.id}>
                           <TableCell className="font-medium">
                             {user.name}
@@ -376,7 +441,17 @@ export default function AdminUsers() {
                                     : "outline"
                               }
                             >
-                              {user.role.replace("_", " ")}
+                              {user.role === 'admin' ? 'Quản trị viên' : user.role === 'club_owner' ? 'Chủ nhiệm' : 'Sinh viên'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <span className="font-bold text-teal-600">
+                              {user.total_points || 0}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={user.isVerified ? "default" : "secondary"} className={user.isVerified ? "bg-green-500 hover:bg-green-600" : ""}>
+                              {user.isVerified ? "Đã xác thực" : "Chưa xác thực"}
                             </Badge>
                           </TableCell>
                           <TableCell>
@@ -384,8 +459,8 @@ export default function AdminUsers() {
                           </TableCell>
                           <TableCell>
                             {user.role === "club_owner" &&
-                            user.ownedClubs &&
-                            user.ownedClubs.length > 0 ? (
+                              user.ownedClubs &&
+                              user.ownedClubs.length > 0 ? (
                               <div className="flex flex-col gap-1">
                                 {user.ownedClubs.map((club: any) => (
                                   <Badge key={club.id} variant="default">
@@ -396,10 +471,10 @@ export default function AdminUsers() {
                             ) : user.memberships &&
                               user.memberships.length > 0 ? (
                               <Badge variant="secondary">
-                                {user.memberships.length} club(s)
+                                {user.memberships.length} CLB
                               </Badge>
                             ) : (
-                              <Badge variant="outline">No club</Badge>
+                              <Badge variant="outline">Không có</Badge>
                             )}
                           </TableCell>
                           <TableCell className="text-right">
@@ -414,14 +489,14 @@ export default function AdminUsers() {
                                   onClick={() => handleEdit(user)}
                                 >
                                   <Pencil className="mr-2 h-4 w-4" />
-                                  Edit
+                                  Sửa
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   className="text-red-600"
                                   onClick={() => handleDelete(user.id)}
                                 >
                                   <Trash2 className="mr-2 h-4 w-4" />
-                                  Delete
+                                  Xóa
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -434,17 +509,51 @@ export default function AdminUsers() {
                           colSpan={7}
                           className="text-center py-8 text-gray-500"
                         >
-                          No users found
+                          Không tìm thấy người dùng
                         </TableCell>
                       </TableRow>
                     )}
                   </TableBody>
                 </Table>
               )}
+
+              {!isLoading && totalUsers > 0 && (
+                <div className="flex items-center justify-between mt-6 px-2">
+                  <div className="text-sm text-muted-foreground">
+                    Đang hiển thị <span className="font-medium">{users.length}</span> trên <span className="font-medium">{totalUsers}</span> người dùng
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className="h-4 w-4 mr-1" />
+                      Trước
+                    </Button>
+                    <div className="flex items-center gap-1 mx-2">
+                      <Badge variant="outline" className="h-8 w-8 flex items-center justify-center p-0">
+                        {currentPage}
+                      </Badge>
+                      <span className="text-muted-foreground text-sm">/ {totalPages}</span>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                    >
+                      Tiếp
+                      <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
       </div>
-    </div>
+    </div >
   );
 }

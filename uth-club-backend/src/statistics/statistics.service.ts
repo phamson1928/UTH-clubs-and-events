@@ -22,16 +22,12 @@ export class StatisticsService {
     private clubRepository: Repository<Club>,
     @InjectRepository(Membership)
     private membershipRepository: Repository<Membership>,
-  ) {}
+  ) { }
 
   async getAdminDashboardStatistics() {
     const totalClubs = await this.clubRepository.count();
 
-    const totalMembers = await this.userRepository
-      .createQueryBuilder('user')
-      .where('user.role = :role', { role: 'user' })
-      .andWhere('user.isVerified = :isVerified', { isVerified: true })
-      .getCount();
+    const totalMembers = await this.userRepository.count();
 
     const totalEvents = await this.eventsRepository.count();
 
@@ -45,6 +41,20 @@ export class StatisticsService {
       totalEvents,
       pendingEvents,
     };
+  }
+
+  async getRoleDistribution() {
+    const result = await this.userRepository
+      .createQueryBuilder('user')
+      .select('user.role', 'role')
+      .addSelect('COUNT(user.id)', 'count')
+      .groupBy('user.role')
+      .getRawMany<{ role: string; count: string | number }>();
+
+    return result.map((r) => ({
+      role: r.role,
+      count: Number(r.count),
+    }));
   }
 
   // New charts: Events status breakdown and monthly status by year

@@ -29,6 +29,7 @@ export default function StudentClubDetail() {
   const [club, setClub] = useState<any>(null);
   const [members, setMembers] = useState<any[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
+  const [pastEvents, setPastEvents] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
 
@@ -61,19 +62,33 @@ export default function StudentClubDetail() {
           join_date: m.join_date,
         })) : []);
 
-        setUpcomingEvents(Array.isArray(data.events) ? data.events.map((e: any) => ({
-          id: e.id,
-          title: e.name,
-          date: e.date ? new Date(e.date).toLocaleDateString("vi-VN") : "",
-          location: e.location || "UTH Campus",
-          description: e.description || "",
-          activities: e.activities || "",
-          attendees: e.attending_users_number || 0,
-          registered: e.isRegistered || false,
-          visibility: e.visibility || "public",
-          max_capacity: e.max_capacity,
-          registration_deadline: e.registration_deadline,
-        })) : []);
+        const allEvents = Array.isArray(data.events) ? data.events.map((e: any) => {
+          const now = new Date();
+          const isExpired = (e.registration_deadline && new Date(e.registration_deadline) < now) || (e.date && new Date(e.date) < now);
+          const isFull = e.max_capacity && (e.attending_users_number || 0) >= e.max_capacity;
+
+          return {
+            id: e.id,
+            title: e.name,
+            date: e.date ? new Date(e.date).toLocaleDateString("vi-VN") : "",
+            rawDate: e.date ? new Date(e.date) : null,
+            location: e.location || "UTH Campus",
+            description: e.description || "",
+            activities: e.activities || "",
+            attendees: e.attending_users_number || 0,
+            registered: e.isRegistered || false,
+            visibility: e.visibility || "public",
+            max_capacity: e.max_capacity,
+            registration_deadline: e.registration_deadline,
+            isExpired: isExpired || isFull,
+            isFull: isFull,
+            status: e.status
+          };
+        }) : [];
+
+        const now = new Date();
+        setUpcomingEvents(allEvents.filter((e: any) => !e.isExpired && e.status !== 'completed' && e.status !== 'canceled'));
+        setPastEvents(allEvents.filter((e: any) => e.isExpired || e.status === 'completed' || e.status === 'canceled'));
       } catch (e: any) {
         console.error("[ClubDetail] fetch error", e);
         setError("Không thể tải thông tin câu lạc bộ");
@@ -133,19 +148,32 @@ export default function StudentClubDetail() {
       const res = await axios.get(`${API_BASE}/clubs/${id}`, { headers: { Authorization: `Bearer ${token}` } });
       const data = res.data;
       if (data && data.events) {
-        setUpcomingEvents(data.events.map((e: any) => ({
-          id: e.id,
-          title: e.name,
-          date: e.date ? new Date(e.date).toLocaleDateString("vi-VN") : "",
-          location: e.location || "UTH Campus",
-          description: e.description || "",
-          activities: e.activities || "",
-          attendees: e.attending_users_number || 0,
-          registered: e.isRegistered || false,
-          visibility: e.visibility || "public",
-          max_capacity: e.max_capacity,
-          registration_deadline: e.registration_deadline,
-        })));
+        const allEvents = data.events.map((e: any) => {
+          const now = new Date();
+          const isExpired = (e.registration_deadline && new Date(e.registration_deadline) < now) || (e.date && new Date(e.date) < now);
+          const isFull = e.max_capacity && (e.attending_users_number || 0) >= e.max_capacity;
+
+          return {
+            id: e.id,
+            title: e.name,
+            date: e.date ? new Date(e.date).toLocaleDateString("vi-VN") : "",
+            location: e.location || "UTH Campus",
+            description: e.description || "",
+            activities: e.activities || "",
+            attendees: e.attending_users_number || 0,
+            registered: e.isRegistered || false,
+            visibility: e.visibility || "public",
+            max_capacity: e.max_capacity,
+            registration_deadline: e.registration_deadline,
+            isExpired: isExpired || isFull,
+            isFull: isFull,
+            status: e.status
+          };
+        });
+
+        const now = new Date();
+        setUpcomingEvents(allEvents.filter((e: any) => !e.isExpired && e.status !== 'completed' && e.status !== 'canceled'));
+        setPastEvents(allEvents.filter((e: any) => e.isExpired || e.status === 'completed' || e.status === 'canceled'));
       }
     } catch (error: any) {
       toast({ title: "Lỗi!", description: error.response?.data?.message || "Lỗi đăng ký", variant: "destructive" });
@@ -304,6 +332,10 @@ export default function StudentClubDetail() {
                             <button className="px-8 py-3 bg-teal-900 text-white font-black text-sm rounded-xl cursor-default flex items-center gap-2">
                               <Sparkles className="w-4 h-4" /> Đã tham gia
                             </button>
+                          ) : event.isExpired ? (
+                            <button disabled className="px-8 py-3 bg-gray-400 text-white font-black text-sm rounded-xl cursor-not-allowed">
+                              {event.isFull ? "Hết chỗ" : "Đã hết hạn"}
+                            </button>
                           ) : (
                             <button
                               onClick={() => handleRegisterEvent(event.id)}
@@ -324,6 +356,47 @@ export default function StudentClubDetail() {
                 )}
               </div>
             </section>
+
+            {/* Past Events Section */}
+            {pastEvents.length > 0 && (
+              <section className="mt-16">
+                <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center border border-gray-200 shadow-sm">
+                      <Clock className="w-6 h-6 text-gray-400" />
+                    </div>
+                    <div>
+                      <h2 className="text-3xl font-black text-gray-900">Hoạt động đã tổ chức</h2>
+                      <p className="text-sm text-gray-500 font-bold uppercase tracking-widest mt-1 italic opacity-70">Lịch sử sự kiện</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {pastEvents.map((event, idx) => (
+                    <motion.div
+                      key={event.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: idx * 0.1 }}
+                      className="bg-gray-50 border border-gray-100 p-6 rounded-2xl grayscale hover:grayscale-0 transition-all opacity-80 hover:opacity-100"
+                    >
+                      <div className="flex items-start justify-between mb-4">
+                        <h4 className="font-bold text-gray-800 text-lg leading-tight">{event.title}</h4>
+                        <span className="text-xs font-black bg-gray-200 text-gray-600 px-3 py-1 rounded-full uppercase tracking-tighter">
+                          {event.status === 'canceled' ? 'Đã hủy' : 'Đã kết thúc'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-4 text-xs font-bold text-gray-500">
+                        <div className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> {event.date}</div>
+                        <div className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5" /> {event.attendees} tham gia</div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </section>
+            )}
           </div>
 
           {/* Right Column: Contact & Join */}

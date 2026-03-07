@@ -26,7 +26,7 @@ export class Event {
   description!: string;
 
   @Column({ default: 'pending' })
-  status!: 'pending' | 'approved' | 'rejected' | 'canceled';
+  status!: 'pending' | 'approved' | 'rejected' | 'canceled' | 'completed';
 
   @Column({ nullable: true })
   event_image!: string;

@@ -30,11 +30,11 @@ const getAuthHeaders = () => {
 };
 
 const sidebarLinks = [
-  { href: "/club-owner/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/club-owner/members", label: "Members", icon: Users },
-  { href: "/club-owner/applications", label: "Applications", icon: FileText },
-  { href: "/club-owner/events", label: "Events", icon: Calendar },
-  { href: "/club-owner/requests", label: "Requests", icon: Send },
+  { href: "/club-owner/dashboard", label: "Bảng điều khiển", icon: LayoutDashboard },
+  { href: "/club-owner/members", label: "Thành viên", icon: Users },
+  { href: "/club-owner/applications", label: "Đề án", icon: FileText },
+  { href: "/club-owner/events", label: "Sự kiện", icon: Calendar },
+  { href: "/club-owner/requests", label: "Yêu cầu", icon: Send },
 ];
 
 export default function ClubOwnerApplications() {
@@ -50,19 +50,18 @@ export default function ClubOwnerApplications() {
       const res = await axios.get(`${API_BASE}/memberships/request`, {
         headers: getAuthHeaders(),
       });
-      const items = Array.isArray(res.data)
-        ? res.data.map((m: any) => ({
-            id: m.id,
-            name: m.user?.name,
-            email: m.user?.email,
-            reason: m.join_reason || "",
-            experience: m.skills || "",
-            appliedDate: m.request_date
-              ? new Date(m.request_date).toLocaleDateString()
-              : "",
-            avatar: "/placeholder.svg",
-          }))
-        : [];
+      const responseData = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      const items = responseData.map((m: any) => ({
+        id: m.id,
+        name: m.user?.name,
+        email: m.user?.email,
+        reason: m.join_reason || "",
+        experience: m.skills || "",
+        appliedDate: m.request_date
+          ? new Date(m.request_date).toLocaleDateString()
+          : "",
+        avatar: "/placeholder.svg",
+      }));
       setApplications(items);
     } catch (error) {
       if (
@@ -135,9 +134,9 @@ export default function ClubOwnerApplications() {
 
         <main className="flex-1 p-8">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">Applications</h1>
+            <h1 className="text-3xl font-bold mb-2">Đề án CLB</h1>
             <p className="text-muted-foreground">
-              Review and manage membership applications
+              Xem xét và quản lý đơn đăng ký tham gia
             </p>
           </div>
 
@@ -181,7 +180,7 @@ export default function ClubOwnerApplications() {
                         <CardDescription>{app.email}</CardDescription>
                       </div>
                     </div>
-                    <Badge variant="secondary">Pending</Badge>
+                    <Badge variant="secondary">Chờ duyệt</Badge>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">

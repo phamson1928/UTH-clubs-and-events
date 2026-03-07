@@ -32,11 +32,11 @@ const getAuthHeaders = () => {
 };
 
 const sidebarLinks = [
-  { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/clubs", label: "Clubs", icon: Building2 },
-  { href: "/admin/events", label: "Events", icon: Calendar },
-  { href: "/admin/requests", label: "Requests", icon: FileText },
-  { href: "/admin/users", label: "Users", icon: Users },
+  { href: "/admin/dashboard", label: "Bảng điều khiển", icon: LayoutDashboard },
+  { href: "/admin/clubs", label: "Câu lạc bộ", icon: Building2 },
+  { href: "/admin/events", label: "Sự kiện", icon: Calendar },
+  { href: "/admin/requests", label: "Yêu cầu", icon: FileText },
+  { href: "/admin/users", label: "Người dùng", icon: Users },
 ];
 
 export default function AdminRequests() {
@@ -132,7 +132,7 @@ export default function AdminRequests() {
 
         <main className="flex-1 p-8">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">Membership Requests</h1>
+            <h1 className="text-3xl font-bold mb-2">Y�u C?u Gia Nh?p</h1>
             <p className="text-muted-foreground">
               Review and approve club membership requests
             </p>

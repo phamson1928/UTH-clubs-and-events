@@ -6,6 +6,10 @@ import {
   Clock,
   MapPin,
   Edit,
+  FileText,
+  Search,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import Navbar from "../../components/Navbar";
 import Sidebar from "../../components/Sidebar";
@@ -36,14 +40,14 @@ import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Textarea } from "../../components/ui/textarea";
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const sidebarLinks = [
-  { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/clubs", label: "Clubs", icon: Building2 },
-  { href: "/admin/events", label: "Events", icon: Calendar },
-  { href: "/admin/users", label: "Users", icon: Users },
+  { href: "/admin/dashboard", label: "Bảng điều khiển", icon: LayoutDashboard },
+  { href: "/admin/clubs", label: "Câu lạc bộ", icon: Building2 },
+  { href: "/admin/events", label: "Sự kiện", icon: Calendar },
+  { href: "/admin/users", label: "Người dùng", icon: Users },
 ];
 
 export default function AdminEvents() {
@@ -63,6 +67,13 @@ export default function AdminEvents() {
     location: "",
     activities: "",
   });
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalEvents, setTotalEvents] = useState(0);
+  const [pendingTotal, setPendingTotal] = useState(0);
+  const [approvedTotal, setApprovedTotal] = useState(0);
+  const itemsPerPage = 10;
   const navigate = useNavigate();
 
   const getAuthHeaders = () => {
@@ -73,62 +84,83 @@ export default function AdminEvents() {
   const API_BASE =
     (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
 
-  useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        // Fetch pending events
-        const pendingRes = await axios.get(`${API_BASE}/events`, {
-          params: { status: "pending" },
-          headers: { ...getAuthHeaders() },
-        });
-        setPendingEvents(pendingRes.data);
+  // A stable ref so we can cancel stale requests
+  const isMounted = useRef(true);
 
-        // Fetch approved events (đang diễn ra)
-        const approvedRes = await axios.get(`${API_BASE}/events`, {
-          params: { status: "approved" },
+  const fetchEvents = async (tab: string, page: number, search: string) => {
+    setLoading(true);
+    const statusParam = tab === "ongoing" ? "approved" : tab;
+    try {
+      const [activeRes, pendingCountRes, approvedCountRes] = await Promise.all([
+        axios.get(`${API_BASE}/events`, {
+          params: { status: statusParam, page, limit: itemsPerPage, search },
           headers: { ...getAuthHeaders() },
-        });
+        }),
+        axios.get(`${API_BASE}/events`, {
+          params: { status: "pending", page: 1, limit: 1, search },
+          headers: { ...getAuthHeaders() },
+        }),
+        axios.get(`${API_BASE}/events`, {
+          params: { status: "approved", page: 1, limit: 1, search },
+          headers: { ...getAuthHeaders() },
+        }),
+      ]);
 
-        setOngoingEvents(approvedRes.data);
-      } catch (error) {
-        if (
-          axios.isAxiosError(error) &&
-          (error.response?.status === 401 || error.response?.status === 403)
-        ) {
-          navigate("/login");
-          return;
-        }
-        setError("Không thể tải danh sách sự kiện.");
-      } finally {
-        setLoading(false);
+      if (!isMounted.current) return;
+
+      const { data, total } = activeRes.data;
+      if (tab === "pending") {
+        setPendingEvents(data || []);
+      } else {
+        setOngoingEvents(data || []);
       }
-    };
+      setTotalEvents(total || 0);
+      setTotalPages(Math.ceil((total || 0) / itemsPerPage));
+      setPendingTotal(pendingCountRes.data?.total || 0);
+      setApprovedTotal(approvedCountRes.data?.total || 0);
+    } catch (err) {
+      if (!isMounted.current) return;
+      if (axios.isAxiosError(err) && (err.response?.status === 401 || err.response?.status === 403)) {
+        navigate("/login");
+        return;
+      }
+      // Don't show error for 400s (validation issues on count endpoints)
+      console.error("Fetch events error:", err);
+    } finally {
+      if (isMounted.current) setLoading(false);
+    }
+  };
 
-    fetchEvents();
-  }, []);
+  // Single effect — fires on mount and whenever filters/pagination change
+  useEffect(() => {
+    isMounted.current = true;
+    fetchEvents(activeTab, currentPage, searchTerm);
+    return () => { isMounted.current = false; };
+  }, [activeTab, currentPage, searchTerm]);
+
+  // When search text changes, reset to page 1 first (this will also trigger the effect above via currentPage change)
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+  };
+
+  // When tab changes, reset to page 1
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    setCurrentPage(1);
+  };
+
   const handleApprove = async (id: number) => {
     try {
       await axios.patch(
         `${API_BASE}/events/${id}/approved`,
         {},
-        {
-          headers: { ...getAuthHeaders() },
-        },
+        { headers: { ...getAuthHeaders() } },
       );
-      const updatedEvents = pendingEvents.filter((event) => event.id !== id);
-      setPendingEvents(updatedEvents);
-
-      // Refresh ongoing events after approval
-      const approvedRes = await axios.get(`${API_BASE}/events`, {
-        params: { status: "approved" },
-        headers: { ...getAuthHeaders() },
-      });
-      setOngoingEvents(approvedRes.data);
+      // Refetch both tabs to update counts
+      await fetchEvents(activeTab, currentPage, searchTerm);
     } catch (error) {
-      if (
-        axios.isAxiosError(error) &&
-        (error.response?.status === 401 || error.response?.status === 403)
-      ) {
+      if (axios.isAxiosError(error) && (error.response?.status === 401 || error.response?.status === 403)) {
         navigate("/login");
         return;
       }
@@ -141,17 +173,12 @@ export default function AdminEvents() {
       await axios.patch(
         `${API_BASE}/events/${id}/rejected`,
         {},
-        {
-          headers: { ...getAuthHeaders() },
-        },
+        { headers: { ...getAuthHeaders() } },
       );
-      const updatedEvents = pendingEvents.filter((event) => event.id !== id);
-      setPendingEvents(updatedEvents);
+      // Refetch both tabs to update counts
+      await fetchEvents(activeTab, currentPage, searchTerm);
     } catch (error) {
-      if (
-        axios.isAxiosError(error) &&
-        (error.response?.status === 401 || error.response?.status === 403)
-      ) {
+      if (axios.isAxiosError(error) && (error.response?.status === 401 || error.response?.status === 403)) {
         navigate("/login");
         return;
       }
@@ -218,7 +245,8 @@ export default function AdminEvents() {
         params: { status: "approved" },
         headers: { ...getAuthHeaders() },
       });
-      setOngoingEvents(approvedRes.data);
+      const approvedData = Array.isArray(approvedRes.data) ? approvedRes.data : (approvedRes.data?.data || []);
+      setOngoingEvents(approvedData);
 
       setIsEditDialogOpen(false);
       setCurrentEvent(null);
@@ -235,13 +263,6 @@ export default function AdminEvents() {
       setIsSubmitting(false);
     }
   };
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <p className="text-muted-foreground">Đang tải dữ liệu...</p>
-      </div>
-    );
-  }
 
   if (error) {
     return (
@@ -259,7 +280,7 @@ export default function AdminEvents() {
 
         <main className="flex-1 p-8">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">Events Management</h1>
+            <h1 className="text-3xl font-bold mb-2">Quản lý sự kiện</h1>
             <p className="text-muted-foreground">
               Quản lý và duyệt các sự kiện của câu lạc bộ
             </p>
@@ -280,17 +301,29 @@ export default function AdminEvents() {
 
           <Tabs
             value={activeTab}
-            onValueChange={setActiveTab}
+            onValueChange={handleTabChange}
             className="w-full"
           >
-            <TabsList className="grid w-full max-w-md grid-cols-2">
-              <TabsTrigger value="pending">
-                Pending Events ({pendingEvents.length})
-              </TabsTrigger>
-              <TabsTrigger value="ongoing">
-                Ongoing Events ({ongoingEvents.length})
-              </TabsTrigger>
-            </TabsList>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+              <TabsList className="grid w-full max-w-md grid-cols-2">
+                <TabsTrigger value="pending">
+                  Chờ duyệt ({pendingTotal})
+                </TabsTrigger>
+                <TabsTrigger value="ongoing">
+                  Đang diễn ra ({approvedTotal})
+                </TabsTrigger>
+              </TabsList>
+
+              <div className="relative w-full md:w-80">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  className="pl-9 w-full"
+                  placeholder="Tìm kiếm sự kiện, địa điểm..."
+                  value={searchTerm}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                />
+              </div>
+            </div>
 
             <TabsContent value="pending" className="mt-6">
               <div className="space-y-6">
@@ -300,25 +333,23 @@ export default function AdminEvents() {
                   </div>
                 ) : pendingEvents.length === 0 ? (
                   <Card>
-                    <CardContent className="py-12 text-center">
-                      <p className="text-muted-foreground">
-                        Không có sự kiện nào đang chờ duyệt.
-                      </p>
+                    <CardContent className="py-12 text-center text-muted-foreground">
+                      Không có yêu cầu tổ chức sự kiện nào đang chờ.
                     </CardContent>
                   </Card>
                 ) : (
                   pendingEvents.map((event) => (
                     <Card
                       key={event.id}
-                      className="hover:shadow-lg transition-shadow"
+                      className="hover:shadow-lg transition-shadow border-l-4 border-l-yellow-500"
                     >
                       <CardHeader>
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
-                            <CardTitle className="text-xl mb-2">
+                            <CardTitle className="text-xl">
                               {event.name}
                             </CardTitle>
-                            <CardDescription className="line-clamp-2">
+                            <CardDescription className="line-clamp-2 mt-1">
                               {event.description}
                             </CardDescription>
                           </div>
@@ -375,7 +406,6 @@ export default function AdminEvents() {
                             </p>
                           </div>
                         )}
-
                         {event.activities && (
                           <div>
                             <span className="text-sm font-semibold text-muted-foreground">
@@ -384,6 +414,20 @@ export default function AdminEvents() {
                             <p className="text-sm mt-1 text-foreground">
                               {event.activities}
                             </p>
+                          </div>
+                        )}
+
+                        {event.proposalUrl && (
+                          <div className="pt-2">
+                            <a
+                              href={event.proposalUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center text-sm font-medium text-teal-600 hover:text-teal-800 bg-teal-50 px-3 py-1.5 rounded-md transition-colors border border-teal-100"
+                            >
+                              <FileText className="w-4 h-4 mr-2" />
+                              Xem Đề án / Kế hoạch (PDF)
+                            </a>
                           </div>
                         )}
 
@@ -407,6 +451,39 @@ export default function AdminEvents() {
                   ))
                 )}
               </div>
+
+              {!loading && totalEvents > 0 && activeTab === "pending" && (
+                <div className="flex items-center justify-between mt-8 bg-card p-4 rounded-lg border shadow-sm">
+                  <div className="text-sm text-muted-foreground font-medium">
+                    Hiển thị <span className="text-foreground font-bold">{pendingEvents.length}</span> trên <span className="text-foreground font-bold">{totalEvents}</span> sự kiện
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1 || loading}
+                      className="h-9 hover:bg-teal-50 hover:text-teal-600 transition-colors"
+                    >
+                      <ChevronLeft className="h-4 w-4 mr-1.5" />
+                      Trước
+                    </Button>
+                    <div className="bg-muted/50 px-3 py-1.5 rounded-md text-sm font-bold min-w-[3.5rem] text-center border shadow-inner">
+                      {currentPage} / {totalPages}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages || loading}
+                      className="h-9 hover:bg-teal-50 hover:text-teal-600 transition-colors"
+                    >
+                      Tiếp
+                      <ChevronRight className="h-4 w-4 ml-1.5" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="ongoing" className="mt-6">
@@ -532,6 +609,39 @@ export default function AdminEvents() {
                   ))
                 )}
               </div>
+
+              {!loading && totalEvents > 0 && activeTab === "ongoing" && (
+                <div className="flex items-center justify-between mt-8 bg-card p-4 rounded-lg border shadow-sm">
+                  <div className="text-sm text-muted-foreground font-medium">
+                    Hiển thị <span className="text-foreground font-bold">{ongoingEvents.length}</span> trên <span className="text-foreground font-bold">{totalEvents}</span> sự kiện
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1 || loading}
+                      className="h-9 hover:bg-teal-50 hover:text-teal-600 transition-colors"
+                    >
+                      <ChevronLeft className="h-4 w-4 mr-1.5" />
+                      Trước
+                    </Button>
+                    <div className="bg-muted/50 px-3 py-1.5 rounded-md text-sm font-bold min-w-[3.5rem] text-center border shadow-inner">
+                      {currentPage} / {totalPages}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages || loading}
+                      className="h-9 hover:bg-teal-50 hover:text-teal-600 transition-colors"
+                    >
+                      Tiếp
+                      <ChevronRight className="h-4 w-4 ml-1.5" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </TabsContent>
           </Tabs>
 
