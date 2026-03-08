@@ -20,7 +20,12 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, document);
 
   // HTTP security headers
-  app.use(helmet());
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: false,
+      contentSecurityPolicy: false,
+    }),
+  );
 
   // Serve static files from uploads directory
   const uploadsPath = join(process.cwd(), 'uploads');
@@ -38,8 +43,8 @@ async function bootstrap() {
 
   // Allow multiple origins via comma-separated CORS_ORIGIN env var
   const corsOrigins = process.env.CORS_ORIGIN
-    ? process.env.CORS_ORIGIN.split(',')
-    : ['http://localhost:5173'];
+    ? (process.env.CORS_ORIGIN === '*' ? true : process.env.CORS_ORIGIN.split(','))
+    : true; // Set to true to allow all origins during development
 
   app.enableCors({
     origin: corsOrigins,
