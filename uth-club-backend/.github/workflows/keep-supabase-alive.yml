@@ -1,0 +1,24 @@
+name: Keep Supabase Alive
+
+on:
+  schedule:
+    # Chạy mỗi 2 ngày một lần vào lúc 00:00 UTC
+    - cron: "0 0 */2 * *"
+  # Cho phép bạn kích hoạt chạy thủ công bất cứ lúc nào từ tab Actions
+  workflow_dispatch:
+
+jobs:
+  ping-database:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Chạy lệnh SELECT để "đánh thức" Database
+        run: |
+          # Thiết lập biến môi trường mật khẩu (lấy từ thông số bạn đã cung cấp)
+          export PGPASSWORD="3msNAfMor5jHvD1f"
+
+          # Sử dụng psql (đã được cài sẵn trên môi trường ubuntu của GitHub)
+          # Truy cập qua cổng pooler port 5432 với quyền cao nhất
+          psql -h aws-0-ap-southeast-1.pooler.supabase.com -U postgres.sxicravdmtiseybwmdaa -d postgres -p 5432 -c "SELECT 1;"
+
+          echo "Ping tới Supabase Database quá thành công! Nó sẽ không ngủ đâu!"
