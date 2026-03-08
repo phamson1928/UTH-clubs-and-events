@@ -10,7 +10,9 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
+  Download,
 } from "lucide-react";
+import { useToast } from "../../hooks/use-toast";
 import Navbar from "../../components/Navbar";
 import Sidebar from "../../components/Sidebar";
 import { Button } from "../../components/ui/button";
@@ -75,6 +77,7 @@ export default function AdminEvents() {
   const [approvedTotal, setApprovedTotal] = useState(0);
   const itemsPerPage = 10;
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem("authToken");
@@ -142,6 +145,35 @@ export default function AdminEvents() {
   const handleSearchChange = (value: string) => {
     setSearchTerm(value);
     setCurrentPage(1);
+  };
+
+  const handleExportAttendance = async (eventId: number) => {
+    try {
+      const res = await axios.get(`${API_BASE}/event-registrations/export/attendance/${eventId}`, {
+        headers: getAuthHeaders(),
+        responseType: "blob", // Important for file download
+      });
+
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `DiemDanh_SuKien_${eventId}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      toast({
+        title: "Thành công",
+        description: "Đã tải xuống danh sách điểm danh.",
+      });
+    } catch (error) {
+      console.error("Export Error", error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể xuất danh sách điểm danh",
+        variant: "destructive",
+      });
+    }
   };
 
   // When tab changes, reset to page 1
@@ -597,6 +629,14 @@ export default function AdminEvents() {
                         <div className="flex gap-2 pt-4 border-t">
                           <Button
                             variant="outline"
+                            className="flex-1"
+                            onClick={() => handleExportAttendance(event.id)}
+                          >
+                            <Download className="h-4 w-4 mr-2" />
+                            Xuất Excel
+                          </Button>
+                          <Button
+                            variant="secondary"
                             className="flex-1"
                             onClick={() => handleEditClick(event)}
                           >

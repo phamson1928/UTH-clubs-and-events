@@ -214,6 +214,12 @@ export default function StudentEvents() {
                                                     <Users className="w-4 h-4 text-blue-600" />
                                                     <span className="font-medium">{event.attending_users_number || 0} / {event.max_capacity || '∞'}</span>
                                                 </div>
+                                                {event.points > 0 && (
+                                                    <div className="flex items-center gap-2 bg-teal-50 px-3 py-1.5 rounded-lg border border-teal-100">
+                                                        <Sparkles className="w-4 h-4 text-teal-600" />
+                                                        <span className="font-bold text-teal-700">+{event.points} ĐRL</span>
+                                                    </div>
+                                                )}
                                             </div>
 
                                             <p className="text-gray-600 text-sm leading-relaxed line-clamp-2 mb-0">

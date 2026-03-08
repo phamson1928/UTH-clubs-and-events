@@ -82,7 +82,8 @@ export default function StudentClubDetail() {
             registration_deadline: e.registration_deadline,
             isExpired: isExpired || isFull,
             isFull: isFull,
-            status: e.status
+            status: e.status,
+            points: e.points || 0,
           };
         }) : [];
 
@@ -167,7 +168,8 @@ export default function StudentClubDetail() {
             registration_deadline: e.registration_deadline,
             isExpired: isExpired || isFull,
             isFull: isFull,
-            status: e.status
+            status: e.status,
+            points: e.points || 0
           };
         });
 
@@ -325,6 +327,11 @@ export default function StudentClubDetail() {
                         <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm font-bold text-gray-500 mb-6">
                           <div className="flex items-center gap-2"><MapPin className="w-4 h-4 text-orange-500" /> {event.location}</div>
                           <div className="flex items-center gap-2"><Users className="w-4 h-4 text-blue-500" /> {event.attendees} / {event.max_capacity || '∞'}</div>
+                          {event.points > 0 && (
+                            <div className="flex items-center gap-2 text-teal-600">
+                              <Sparkles className="w-4 h-4" /> +{event.points} ĐRL
+                            </div>
+                          )}
                         </div>
                         <div className="flex items-center justify-between gap-6">
                           <p className="text-gray-600 line-clamp-2 text-sm">{event.description}</p>

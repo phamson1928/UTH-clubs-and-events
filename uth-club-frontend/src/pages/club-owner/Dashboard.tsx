@@ -5,6 +5,8 @@ import {
   Calendar,
   Send,
   Building2,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
 import Navbar from "../../components/Navbar";
 import Sidebar from "../../components/Sidebar";
@@ -15,6 +17,8 @@ import {
   CardHeader,
   CardTitle,
 } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
+import { useToast } from "../../hooks/use-toast";
 import {
   BarChart,
   Bar,
@@ -54,80 +58,117 @@ export default function ClubOwnerDashboard() {
   const [eventsGrowth, setEventsGrowth] = useState<any[]>([]);
   const [membersGrowth, setMembersGrowth] = useState<any[]>([]);
   const [clubName, setClubName] = useState<string>("");
+  const [joinRequests, setJoinRequests] = useState<any[]>([]);
+  const { toast } = useToast();
+
+  const fetchStats = async () => {
+    try {
+      const headers = getAuthHeaders();
+
+      // Get clubId from JWT token
+      const token = localStorage.getItem("authToken");
+      let clubId: number | null = null;
+      if (token) {
+        try {
+          const parts = token.split(".");
+          // Fix base64url → base64 padding before decoding
+          const b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+          const padded = b64.padEnd(
+            b64.length + ((4 - (b64.length % 4)) % 4),
+            "=",
+          );
+          const payload = JSON.parse(atob(padded));
+          clubId = payload.clubId || null;
+        } catch (e) {
+          console.error("Failed to decode token", e);
+        }
+      }
+
+      // Fetch all data including club info
+      const promises = [
+        axios.get(`${API_BASE}/statistics/own-club_statistics`, {
+          headers,
+        }),
+        axios.get(`${API_BASE}/statistics/club-owner/events-growth`, {
+          headers,
+        }),
+        axios.get(`${API_BASE}/statistics/club-owner/members-growth`, {
+          headers,
+        }),
+      ];
+
+      // If we have clubId, fetch club info
+      if (clubId) {
+        promises.push(
+          axios.get(`${API_BASE}/clubs/${clubId}`, {
+            headers,
+          }),
+        );
+      }
+
+      // Fetch join requests
+      promises.push(
+        axios.get(`${API_BASE}/memberships/request`, {
+          headers,
+          params: { page: 1, limit: 10 } // recent 10 requests
+        }),
+      );
+
+      const results = await Promise.all(promises);
+      const [statsRes, eventsGrowthRes, membersGrowthRes, ...rest] = results;
+
+      setStats(statsRes.data);
+      setEventsGrowth(eventsGrowthRes.data);
+      setMembersGrowth(membersGrowthRes.data);
+
+      // If club info was fetched, set club name
+      if (clubId && rest.length > 0) {
+        const clubRes = rest[0] as any;
+        if (clubRes?.data?.name) {
+          setClubName(clubRes.data.name);
+        }
+      }
+      // Set join requests if they exist
+      const requestsRes = results[promises.length - 1] as any;
+      if (requestsRes?.data?.data) {
+        setJoinRequests(requestsRes.data.data.filter((r: any) => r.status === 'pending'));
+      }
+
+    } catch (error) {
+      if (
+        axios.isAxiosError(error) &&
+        (error.response?.status === 401 || error.response?.status === 403)
+      ) {
+        navigate("/login");
+        return;
+      }
+      console.error("Failed to fetch statistics", error);
+    }
+  };
 
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const headers = getAuthHeaders();
-
-        // Get clubId from JWT token
-        const token = localStorage.getItem("authToken");
-        let clubId: number | null = null;
-        if (token) {
-          try {
-            const parts = token.split(".");
-            // Fix base64url → base64 padding before decoding
-            const b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
-            const padded = b64.padEnd(
-              b64.length + ((4 - (b64.length % 4)) % 4),
-              "=",
-            );
-            const payload = JSON.parse(atob(padded));
-            clubId = payload.clubId || null;
-          } catch (e) {
-            console.error("Failed to decode token", e);
-          }
-        }
-
-        // Fetch all data including club info
-        const promises = [
-          axios.get(`${API_BASE}/statistics/own-club_statistics`, {
-            headers,
-          }),
-          axios.get(`${API_BASE}/statistics/club-owner/events-growth`, {
-            headers,
-          }),
-          axios.get(`${API_BASE}/statistics/club-owner/members-growth`, {
-            headers,
-          }),
-        ];
-
-        // If we have clubId, fetch club info
-        if (clubId) {
-          promises.push(
-            axios.get(`${API_BASE}/clubs/${clubId}`, {
-              headers,
-            }),
-          );
-        }
-
-        const results = await Promise.all(promises);
-        const [statsRes, eventsGrowthRes, membersGrowthRes, ...rest] = results;
-
-        setStats(statsRes.data);
-        setEventsGrowth(eventsGrowthRes.data);
-        setMembersGrowth(membersGrowthRes.data);
-
-        // If club info was fetched, set club name
-        if (clubId && rest.length > 0) {
-          const clubRes = rest[0] as any;
-          if (clubRes?.data?.name) {
-            setClubName(clubRes.data.name);
-          }
-        }
-      } catch (error) {
-        if (
-          axios.isAxiosError(error) &&
-          (error.response?.status === 401 || error.response?.status === 403)
-        ) {
-          navigate("/login");
-          return;
-        }
-        console.error("Failed to fetch statistics", error);
-      }
-    };
     fetchStats();
   }, [navigate]);
+
+  const handleApproveRequest = async (id: number) => {
+    try {
+      await axios.patch(`${API_BASE}/memberships/${id}/approve`, {}, { headers: getAuthHeaders() });
+      toast({ title: "Thành công", description: "Đã duyệt đơn gia nhập." });
+      fetchStats();
+    } catch (e) {
+      toast({ title: "Lỗi", description: "Không thể duyệt đơn.", variant: "destructive" });
+    }
+  };
+
+  const handleRejectRequest = async (id: number) => {
+    try {
+      await axios.patch(`${API_BASE}/memberships/${id}/reject`, {}, { headers: getAuthHeaders() });
+      toast({ title: "Thành công", description: "Đã từ chối đơn gia nhập." });
+      fetchStats();
+    } catch (e) {
+      toast({ title: "Lỗi", description: "Không thể từ chối đơn.", variant: "destructive" });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -269,6 +310,59 @@ export default function ClubOwnerDashboard() {
               </Card>
             </motion.div>
           </div>
+
+          {/* Pending Members Requests */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle>Yêu cầu tham gia mới nhất</CardTitle>
+                <CardDescription>
+                  Duyệt hoặc từ chối sinh viên muốn gia nhập CLB
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {joinRequests.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground bg-gray-50 rounded-lg border border-dashed">
+                    Không có yêu cầu tham gia mới nào
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {joinRequests.map((req) => (
+                      <div key={req.id} className="flex flex-col md:flex-row items-center justify-between p-4 bg-gray-50 rounded-lg border">
+                        <div className="mb-4 md:mb-0">
+                          <p className="font-semibold text-gray-900">{req.user?.name} <span className="text-sm font-normal text-muted-foreground">({req.user?.mssv || req.user?.email})</span></p>
+                          <p className="text-sm text-gray-600 mt-1 line-clamp-1"><span className="font-medium text-gray-800">Lý do:</span> {req.joinReason || "Không có lý do"}</p>
+                          <p className="text-sm text-gray-600 line-clamp-1"><span className="font-medium text-gray-800">Cam kết:</span> {req.promise || "Không có cam kết"}</p>
+                        </div>
+                        <div className="flex bg-white gap-2 flex-shrink-0">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                            onClick={() => handleRejectRequest(req.id)}
+                          >
+                            <XCircle className="w-4 h-4 mr-1" /> Từ chối
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="bg-teal-600 hover:bg-teal-700"
+                            onClick={() => handleApproveRequest(req.id)}
+                          >
+                            <CheckCircle className="w-4 h-4 mr-1" /> Duyệt
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+
         </main>
       </div>
     </div>

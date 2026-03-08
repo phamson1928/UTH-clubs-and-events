@@ -3,7 +3,8 @@ import axios from "axios";
 import { Link } from "react-router-dom";
 import { useToast } from "../../hooks/use-toast";
 import Navbar from "../../components/Navbar";
-import { Calendar, MapPin, Search, Tag, Users, CheckCircle, QrCode, Star, MessageSquare } from "lucide-react";
+import { Calendar, MapPin, Search, Tag, Users, CheckCircle, QrCode, Star, MessageSquare, Camera } from "lucide-react";
+import { Scanner } from '@yudiel/react-qr-scanner';
 import {
     Dialog,
     DialogContent,
@@ -28,6 +29,7 @@ export default function StudentMyEvents() {
     const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
     const [checkInCode, setCheckInCode] = useState("");
     const [isCheckingIn, setIsCheckingIn] = useState(false);
+    const [showScanner, setShowScanner] = useState(false);
 
     // Feedback state
     const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
@@ -78,13 +80,14 @@ export default function StudentMyEvents() {
         }
     };
 
-    const handleCheckIn = async () => {
-        if (!selectedEventId || !checkInCode) return;
+    const handleCheckIn = async (scannedCode?: string) => {
+        const codeToUse = scannedCode && typeof scannedCode === 'string' ? scannedCode : checkInCode;
+        if (!selectedEventId || !codeToUse) return;
         setIsCheckingIn(true);
         try {
             const token = localStorage.getItem("authToken");
             const res = await axios.post(`${API_BASE}/event-registrations/${selectedEventId}/checkin`, {
-                code: checkInCode
+                code: codeToUse
             }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -95,6 +98,7 @@ export default function StudentMyEvents() {
             });
             setCheckInModalOpen(false);
             setCheckInCode("");
+            setShowScanner(false);
             fetchMyEvents(); // re-fetch to update status
         } catch (error: any) {
             toast({
@@ -110,6 +114,7 @@ export default function StudentMyEvents() {
     const openCheckInModal = (eventId: number) => {
         setSelectedEventId(eventId);
         setCheckInCode("");
+        setShowScanner(false);
         setCheckInModalOpen(true);
     };
 
@@ -298,17 +303,43 @@ export default function StudentMyEvents() {
                         </DialogDescription>
                     </DialogHeader>
                     <div className="py-4">
-                        <Input
-                            value={checkInCode}
-                            onChange={(e) => setCheckInCode(e.target.value.toUpperCase())}
-                            placeholder="Nhập mã (VD: UTH-1-ABCDEF12)"
-                            className="font-mono text-center uppercase tracking-widest text-lg h-12"
-                            maxLength={16}
-                        />
+                        {showScanner ? (
+                            <div className="w-full h-64 overflow-hidden rounded-lg mx-auto mb-4 border border-gray-200">
+                                <Scanner
+                                    onScan={(result) => {
+                                        if (result && result.length > 0 && result[0].rawValue) {
+                                            const code = result[0].rawValue;
+                                            setCheckInCode(code);
+                                            setShowScanner(false);
+                                            handleCheckIn(code);
+                                        }
+                                    }}
+                                />
+                            </div>
+                        ) : null}
+
+                        {!showScanner && (
+                            <Input
+                                value={checkInCode}
+                                onChange={(e) => setCheckInCode(e.target.value.toUpperCase())}
+                                placeholder="Nhập mã (VD: UTH-1-ABCDEF12)"
+                                className="font-mono text-center uppercase tracking-widest text-lg h-12 mb-4"
+                                maxLength={16}
+                            />
+                        )}
+
+                        <Button
+                            variant="secondary"
+                            className="w-full flex items-center justify-center gap-2"
+                            onClick={() => setShowScanner(!showScanner)}
+                        >
+                            <Camera className="w-4 h-4" />
+                            {showScanner ? "Nhập mã thủ công" : "Quét mã QR"}
+                        </Button>
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setCheckInModalOpen(false)}>Thoát</Button>
-                        <Button onClick={handleCheckIn} disabled={!checkInCode || isCheckingIn}>
+                        <Button variant="outline" onClick={() => { setCheckInModalOpen(false); setShowScanner(false); }}>Thoát</Button>
+                        <Button onClick={() => handleCheckIn(checkInCode)} disabled={!checkInCode || isCheckingIn}>
                             {isCheckingIn ? "Đang xử lý..." : "Xác nhận điểm danh"}
                         </Button>
                     </DialogFooter>
