@@ -43,7 +43,7 @@ import {
 } from "../../components/ui/select";
 
 const API_BASE =
-  (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
+  import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("authToken");

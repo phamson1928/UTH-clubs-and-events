@@ -14,7 +14,7 @@ import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 
 const API_BASE =
-  (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
+  import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 // Helper function to normalize image URLs
 export const normalizeImageUrl = (imagePath: string | null | undefined): string => {

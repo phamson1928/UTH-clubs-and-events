@@ -6,7 +6,7 @@ import Navbar from "../../components/Navbar";
 import { Calendar, Building2, Search, ArrowRight, XCircle } from "lucide-react";
 import { normalizeImageUrl } from "./Clubs";
 
-const API_BASE = (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 export default function StudentMyClubs() {
     const { toast } = useToast();

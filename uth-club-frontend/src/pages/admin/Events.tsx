@@ -85,7 +85,7 @@ export default function AdminEvents() {
   };
 
   const API_BASE =
-    (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
+    import.meta.env.VITE_API_URL || "http://localhost:3000";
 
   // A stable ref so we can cancel stale requests
   const isMounted = useRef(true);

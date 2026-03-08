@@ -37,7 +37,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
 const API_BASE =
-  (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
+  import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 const sidebarLinks = [
   { href: "/club-owner/dashboard", label: "Bảng điều khiển", icon: LayoutDashboard },

@@ -13,7 +13,7 @@ import Navbar from "../../components/Navbar";
 import { useToast } from "../../hooks/use-toast";
 import { motion } from "framer-motion";
 
-const API_BASE = (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 export default function StudentEvents() {
     const { toast } = useToast();

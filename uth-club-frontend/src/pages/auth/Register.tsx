@@ -26,7 +26,7 @@ export default function Register() {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const API_BASE =
-    (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
+    import.meta.env.VITE_API_URL || "http://localhost:3000";
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

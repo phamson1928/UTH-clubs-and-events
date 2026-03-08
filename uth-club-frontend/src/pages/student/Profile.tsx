@@ -4,7 +4,7 @@ import { useToast } from "../../hooks/use-toast";
 import Navbar from "../../components/Navbar";
 import { User, Mail, Shield, Save, Key } from "lucide-react";
 
-const API_BASE = (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 export default function StudentProfile() {
     const { toast } = useToast();

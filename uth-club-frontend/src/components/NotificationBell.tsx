@@ -13,7 +13,7 @@ import { Button } from "./ui/button";
 import { useToast } from "../hooks/use-toast";
 import { Badge } from "./ui/badge";
 
-const API_BASE = (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 const getAuthHeaders = () => {
     const token = localStorage.getItem("authToken");

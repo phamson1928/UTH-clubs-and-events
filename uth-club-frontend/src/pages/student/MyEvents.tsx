@@ -16,7 +16,7 @@ import {
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
 
-const API_BASE = (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 export default function StudentMyEvents() {
     const { toast } = useToast();

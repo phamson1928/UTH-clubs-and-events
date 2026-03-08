@@ -26,7 +26,7 @@ export default function ResetPassword() {
   const [error, setError] = useState<string | null>(null);
 
   const API_BASE =
-    (import.meta as any)?.env?.VITE_API_URL || "http://localhost:3000";
+    import.meta.env.VITE_API_URL || "http://localhost:3000";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
