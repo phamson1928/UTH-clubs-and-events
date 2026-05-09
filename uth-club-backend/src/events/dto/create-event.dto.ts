@@ -32,6 +32,12 @@ export class CreateEventDto {
   @Type(() => Date)
   date!: Date;
 
+  @ApiProperty({ example: '2025-12-30T12:00:00Z' })
+  @IsDate()
+  @IsNotEmpty()
+  @Type(() => Date)
+  endDate!: Date;
+
   @ApiProperty({ example: 'https://placehold.co/600x400' })
   @IsNotEmpty()
   event_image!: string;

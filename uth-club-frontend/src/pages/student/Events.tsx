@@ -22,6 +22,20 @@ export default function StudentEvents() {
     const [searchQuery, setSearchQuery] = useState("");
     const [filter, setFilter] = useState("all"); // all, ongoing, upcoming
 
+    const getRemainingTime = (targetDate: string | Date) => {
+        const now = new Date();
+        const target = new Date(targetDate);
+        const diff = target.getTime() - now.getTime();
+
+        if (diff <= 0) return null;
+
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+
+        if (days > 0) return `Còn ${days} ngày ${hours} giờ`;
+        return `Hết hạn sau ${hours} giờ`;
+    };
+
     useEffect(() => {
         fetchEvents();
     }, []);
@@ -37,14 +51,22 @@ export default function StudentEvents() {
 
             setEvents(eventsData.map((e: any) => {
                 const now = new Date();
-                const isDeadlinePassed = e.registration_deadline && new Date(e.registration_deadline) < now;
-                const isEventPassed = e.date && new Date(e.date) < now;
+                const startDate = new Date(e.date);
+                const endDate = e.endDate ? new Date(e.endDate) : startDate;
+                const deadline = e.registration_deadline ? new Date(e.registration_deadline) : startDate;
+
+                const isDeadlinePassed = deadline < now;
+                const isStarted = startDate < now;
+                const isEnded = endDate < now;
                 const isCompleted = e.status === 'completed';
 
                 return {
                     ...e,
-                    isExpired: isDeadlinePassed || isEventPassed || isCompleted,
+                    isExpired: isDeadlinePassed || isStarted || isCompleted,
+                    isOngoing: isStarted && !isEnded && !isCompleted,
+                    isEnded: isEnded || isCompleted,
                     isFull: e.max_capacity && (e.attending_users_number || 0) >= e.max_capacity,
+                    remainingTime: getRemainingTime(deadline < startDate ? deadline : startDate)
                 };
             }));
         } catch (error) {
@@ -92,8 +114,9 @@ export default function StudentEvents() {
         const matchesSearch = e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             e.club?.name?.toLowerCase().includes(searchQuery.toLowerCase());
 
-        if (filter === "upcoming") return matchesSearch && !e.isExpired;
-        if (filter === "expired") return matchesSearch && e.isExpired;
+        if (filter === "upcoming") return matchesSearch && !e.isExpired && !e.isEnded;
+        if (filter === "ongoing") return matchesSearch && e.isOngoing;
+        if (filter === "expired") return matchesSearch && e.isEnded;
         return matchesSearch;
     });
 
@@ -139,6 +162,12 @@ export default function StudentEvents() {
                             className={`px-4 py-2 rounded-full text-sm font-bold transition-all shadow-sm ${filter === "upcoming" ? "bg-teal-600 text-white shadow-teal-200" : "bg-white text-gray-600 border"}`}
                         >
                             Đang mở
+                        </button>
+                        <button
+                            onClick={() => setFilter("ongoing")}
+                            className={`px-4 py-2 rounded-full text-sm font-bold transition-all shadow-sm ${filter === "ongoing" ? "bg-orange-500 text-white shadow-orange-200" : "bg-white text-gray-600 border"}`}
+                        >
+                            Đang diễn ra
                         </button>
                         <button
                             onClick={() => setFilter("expired")}
@@ -204,7 +233,10 @@ export default function StudentEvents() {
                                             <div className="flex flex-wrap gap-y-3 gap-x-6 text-sm text-gray-600 mb-5">
                                                 <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
                                                     <Clock className="w-4 h-4 text-teal-600" />
-                                                    <span className="font-medium">{new Date(event.date).toLocaleDateString("vi-VN")}</span>
+                                                    <span className="font-medium text-[12px] whitespace-nowrap">
+                                                        {new Date(event.date).toLocaleString("vi-VN", { dateStyle: "short", timeStyle: "short" })}
+                                                        {event.endDate && ` - ${new Date(event.endDate).toLocaleString("vi-VN", { dateStyle: "short", timeStyle: "short" })}`}
+                                                    </span>
                                                 </div>
                                                 <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
                                                     <MapPin className="w-4 h-4 text-orange-600" />
@@ -222,9 +254,18 @@ export default function StudentEvents() {
                                                 )}
                                             </div>
 
-                                            <p className="text-gray-600 text-sm leading-relaxed line-clamp-2 mb-0">
+                                            <p className="text-gray-600 text-sm leading-relaxed mb-4">
                                                 {event.description}
                                             </p>
+
+                                            {event.activities && (
+                                                <div className="mt-4 p-4 bg-teal-50/50 rounded-xl border border-teal-100/50">
+                                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-teal-800 mb-2">Hoạt động dự kiến</h4>
+                                                    <p className="text-xs text-teal-900/80 leading-relaxed italic">
+                                                        {event.activities}
+                                                    </p>
+                                                </div>
+                                            )}
                                         </div>
 
                                         <div className="flex flex-col justify-center items-stretch md:items-end gap-3 min-w-[160px]">
@@ -233,9 +274,17 @@ export default function StudentEvents() {
                                                     <Sparkles className="w-4 h-4" />
                                                     Đã đăng ký
                                                 </button>
+                                            ) : event.isEnded ? (
+                                                <button disabled className="w-full py-3 bg-gray-100 text-gray-400 text-sm font-bold rounded-lg cursor-not-allowed border border-gray-200">
+                                                    Đã kết thúc
+                                                </button>
+                                            ) : event.isOngoing ? (
+                                                <button disabled className="w-full py-3 bg-orange-100 text-orange-600 text-sm font-bold rounded-lg cursor-not-allowed border border-orange-200">
+                                                    Đang diễn ra
+                                                </button>
                                             ) : event.isExpired ? (
                                                 <button disabled className="w-full py-3 bg-gray-100 text-gray-400 text-sm font-bold rounded-lg cursor-not-allowed border border-gray-200">
-                                                    Đã hết hạn
+                                                    Hết hạn đăng ký
                                                 </button>
                                             ) : event.isFull ? (
                                                 <button disabled className="w-full py-3 bg-gray-100 text-gray-400 text-sm font-bold rounded-lg cursor-not-allowed border border-gray-200">
@@ -250,9 +299,16 @@ export default function StudentEvents() {
                                                 </button>
                                             )}
 
-                                            {event.registration_deadline && !event.isExpired && (
-                                                <span className="text-[10px] text-red-500 font-bold italic text-center md:text-right">
-                                                    Hạn chót: {new Date(event.registration_deadline).toLocaleDateString("vi-VN")}
+                                            {event.remainingTime && !event.isExpired && (
+                                                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-600 rounded-full border border-red-100 animate-pulse">
+                                                    <Clock className="w-3 h-3" />
+                                                    <span className="text-[10px] font-black uppercase">{event.remainingTime}</span>
+                                                </div>
+                                            )}
+
+                                            {event.registration_deadline && !event.isEnded && (
+                                                <span className="text-[10px] text-gray-400 font-bold italic text-center md:text-right">
+                                                    Hạn chót: {new Date(event.registration_deadline).toLocaleString("vi-VN", { dateStyle: 'short', timeStyle: 'short' })}
                                                 </span>
                                             )}
                                         </div>

@@ -37,6 +37,9 @@ export class Event {
   @Column()
   date!: Date;
 
+  @Column()
+  endDate!: Date;
+
   @Column({ default: 0 })
   attending_users_number!: number;
 

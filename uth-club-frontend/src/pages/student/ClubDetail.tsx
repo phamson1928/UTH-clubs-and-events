@@ -71,7 +71,9 @@ export default function StudentClubDetail() {
             id: e.id,
             title: e.name,
             date: e.date ? new Date(e.date).toLocaleDateString("vi-VN") : "",
+            endDate: e.endDate ? new Date(e.endDate).toLocaleDateString("vi-VN") : "",
             rawDate: e.date ? new Date(e.date) : null,
+            rawEndDate: e.endDate ? new Date(e.endDate) : null,
             location: e.location || "UTH Campus",
             description: e.description || "",
             activities: e.activities || "",
@@ -158,6 +160,7 @@ export default function StudentClubDetail() {
             id: e.id,
             title: e.name,
             date: e.date ? new Date(e.date).toLocaleDateString("vi-VN") : "",
+            endDate: e.endDate ? new Date(e.endDate).toLocaleDateString("vi-VN") : "",
             location: e.location || "UTH Campus",
             description: e.description || "",
             activities: e.activities || "",
@@ -325,6 +328,11 @@ export default function StudentClubDetail() {
                         )}
                         <h3 className="text-2xl font-black text-gray-900 mb-3 group-hover:text-teal-600 transition-colors">{event.title}</h3>
                         <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm font-bold text-gray-500 mb-6">
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-teal-500" />
+                            {event.rawDate?.toLocaleTimeString("vi-VN", { hour: '2-digit', minute: '2-digit' })}
+                            {event.rawEndDate && ` - ${event.rawEndDate.toLocaleTimeString("vi-VN", { hour: '2-digit', minute: '2-digit' })}`}
+                          </div>
                           <div className="flex items-center gap-2"><MapPin className="w-4 h-4 text-orange-500" /> {event.location}</div>
                           <div className="flex items-center gap-2"><Users className="w-4 h-4 text-blue-500" /> {event.attendees} / {event.max_capacity || '∞'}</div>
                           {event.points > 0 && (

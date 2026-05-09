@@ -29,7 +29,7 @@ export class EventsTaskService {
         const eventsToComplete = await this.eventsRepository.find({
             where: {
                 status: 'approved',
-                date: LessThan(now),
+                endDate: LessThan(now),
             },
         });
 
@@ -41,28 +41,7 @@ export class EventsTaskService {
 
         for (const event of eventsToComplete) {
             try {
-                // 2. Award points to users who attended
-                const attendees = await this.registrationsRepository.find({
-                    where: {
-                        event: { id: event.id },
-                        attended: true,
-                    },
-                    relations: ['user'],
-                });
-
-                if (attendees.length > 0 && event.points > 0) {
-                    this.logger.log(`Awarding ${event.points} points to ${attendees.length} attendees for event: ${event.name}`);
-
-                    for (const reg of attendees) {
-                        await this.usersRepository.increment(
-                            { id: reg.user.id },
-                            'total_points',
-                            event.points,
-                        );
-                    }
-                }
-
-                // 3. Update event status to completed
+                // 2. Update event status to completed
                 event.status = 'completed';
                 await this.eventsRepository.save(event);
 

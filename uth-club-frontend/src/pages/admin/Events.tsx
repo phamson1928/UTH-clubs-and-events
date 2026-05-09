@@ -66,6 +66,7 @@ export default function AdminEvents() {
     name: "",
     description: "",
     date: "",
+    endDate: "",
     location: "",
     activities: "",
   });
@@ -248,6 +249,7 @@ export default function AdminEvents() {
       name: event.name || "",
       description: event.description || "",
       date: formatDateForInput(event.date),
+      endDate: formatDateForInput(event.endDate || event.date),
       location: event.location || "",
       activities: event.activities || "",
     });
@@ -264,6 +266,7 @@ export default function AdminEvents() {
         name: editFormData.name,
         description: editFormData.description,
         date: new Date(editFormData.date).toISOString(),
+        endDate: new Date(editFormData.endDate).toISOString(),
         location: editFormData.location,
         activities: editFormData.activities,
       };
@@ -342,7 +345,7 @@ export default function AdminEvents() {
                   Chờ duyệt ({pendingTotal})
                 </TabsTrigger>
                 <TabsTrigger value="ongoing">
-                  Đang diễn ra ({approvedTotal})
+                  Đã duyệt ({approvedTotal})
                 </TabsTrigger>
               </TabsList>
 
@@ -726,7 +729,7 @@ export default function AdminEvents() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="edit-date">Ngày và giờ diễn ra *</Label>
+                    <Label htmlFor="edit-date">Ngày và giờ bắt đầu *</Label>
                     <Input
                       id="edit-date"
                       type="datetime-local"
@@ -742,6 +745,22 @@ export default function AdminEvents() {
                   </div>
 
                   <div className="space-y-2">
+                    <Label htmlFor="edit-end-date">Ngày và giờ kết thúc *</Label>
+                    <Input
+                      id="edit-end-date"
+                      type="datetime-local"
+                      value={editFormData.endDate}
+                      onChange={(e) =>
+                        setEditFormData({
+                          ...editFormData,
+                          endDate: e.target.value,
+                        })
+                      }
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="edit-location">Địa điểm *</Label>
                     <Input
                       id="edit-location"

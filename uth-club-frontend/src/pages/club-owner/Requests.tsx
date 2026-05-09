@@ -52,6 +52,8 @@ export default function ClubOwnerRequests() {
     description: "",
     event_date: "",
     event_time: "",
+    event_end_date: "",
+    event_end_time: "",
     location: "",
     expected_attendees: "",
     activities: "",
@@ -129,6 +131,9 @@ export default function ClubOwnerRequests() {
           date: new Date(
             `${formData.event_date}T${formData.event_time || "00:00"}`,
           ).toISOString(),
+          endDate: new Date(
+            `${formData.event_end_date}T${formData.event_end_time || "00:00"}`,
+          ).toISOString(),
           location: formData.location,
           activities: formData.activities,
           proposalUrl: proposalUrl || undefined,
@@ -141,6 +146,8 @@ export default function ClubOwnerRequests() {
         description: "",
         event_date: "",
         event_time: "",
+        event_end_date: "",
+        event_end_time: "",
         location: "",
         expected_attendees: "",
         activities: "",
@@ -309,7 +316,7 @@ export default function ClubOwnerRequests() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="date">Date *</Label>
+                    <Label htmlFor="date">Ngày bắt đầu *</Label>
                     <Input
                       id="date"
                       type="date"
@@ -321,13 +328,40 @@ export default function ClubOwnerRequests() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="time">Time *</Label>
+                    <Label htmlFor="time">Giờ bắt đầu *</Label>
                     <Input
                       id="time"
                       type="time"
                       value={formData.event_time}
                       onChange={(e) =>
                         setFormData({ ...formData, event_time: e.target.value })
+                      }
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="end_date">Ngày kết thúc *</Label>
+                    <Input
+                      id="end_date"
+                      type="date"
+                      value={formData.event_end_date}
+                      onChange={(e) =>
+                        setFormData({ ...formData, event_end_date: e.target.value })
+                      }
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="end_time">Giờ kết thúc *</Label>
+                    <Input
+                      id="end_time"
+                      type="time"
+                      value={formData.event_end_time}
+                      onChange={(e) =>
+                        setFormData({ ...formData, event_end_time: e.target.value })
                       }
                       required
                     />
