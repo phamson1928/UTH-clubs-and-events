@@ -125,10 +125,17 @@ export default function StudentEvents() {
             <Navbar />
 
             {/* Hero Header */}
-            <section className="bg-teal-700 text-white py-12 relative overflow-hidden">
-                <div className="absolute inset-0 opacity-10">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full blur-3xl translate-x-1/2 -translate-y-1/2"></div>
+            <section className="relative text-white py-12 overflow-hidden">
+                {/* Banner Image Background */}
+                <div className="absolute inset-0">
+                    <img 
+                        src="/gts.jpg" 
+                        alt="UTH Events Banner" 
+                        className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#008689]/80 via-teal-900/60 to-cyan-900/80"></div>
                 </div>
+
                 <div className="container mx-auto px-6 relative z-10">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}

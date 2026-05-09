@@ -47,8 +47,18 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md">
+    <div className="relative min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      {/* Background Image */}
+      <div className="absolute inset-0 z-0">
+        <img 
+          src="/gts.jpg" 
+          alt="Background" 
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]"></div>
+      </div>
+
+      <Card className="w-full max-w-md relative z-10 bg-white/95 backdrop-blur-md shadow-2xl border-white/20">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-2xl font-bold">Quên mật khẩu</CardTitle>
           <CardDescription>

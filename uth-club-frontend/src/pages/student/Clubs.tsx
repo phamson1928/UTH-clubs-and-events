@@ -139,10 +139,17 @@ export default function StudentClubs() {
     <div className="min-h-screen bg-white">
       <Navbar />
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-[#008689] via-teal-600 to-cyan-700 text-white py-20 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full blur-3xl translate-x-1/2 -translate-y-1/2"></div>
+      <section className="relative text-white py-20 overflow-hidden">
+        {/* Banner Image Background */}
+        <div className="absolute inset-0">
+          <img 
+            src="/gts.jpg" 
+            alt="UTH Clubs Banner" 
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#008689]/80 via-teal-900/60 to-cyan-900/80"></div>
         </div>
+
         <div className="container mx-auto px-6 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -439,40 +446,33 @@ export default function StudentClubs() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-24 bg-gradient-to-br from-teal-600 to-cyan-700 text-white">
-        <div className="container mx-auto px-6 text-center">
-          <h2 className="text-5xl font-black mb-6">
-            Không Tìm Thấy Điều Bạn Muốn?
-          </h2>
-          <p className="text-xl mb-10 max-w-2xl mx-auto opacity-90">
-            Tạo câu lạc bộ của riêng bạn và kết nối những sinh viên có chung sở
-            thích độc đáo
-          </p>
-          <button className="px-10 py-5 bg-white text-teal-700 hover:bg-gray-100 font-bold text-lg transition-all">
-            Tạo Câu Lạc Bộ Mới
-          </button>
+      {/* Community Inspiration Section */}
+      <section className="py-24 bg-gradient-to-br from-[#004d4f] to-[#008689] text-white relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute -left-20 -top-20 w-96 h-96 bg-white rounded-full blur-3xl"></div>
+          <div className="absolute -right-20 -bottom-20 w-96 h-96 bg-teal-400 rounded-full blur-3xl"></div>
+        </div>
+        <div className="container mx-auto px-6 text-center relative z-10">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-5xl md:text-6xl font-black mb-8 leading-tight">
+              Cùng Nhau Kiến Tạo <br /> <span className="text-teal-300">Tương Lai</span>
+            </h2>
+            <p className="text-xl mb-12 max-w-3xl mx-auto opacity-90 leading-relaxed italic">
+              "Mỗi bước chân bạn đi, mỗi câu lạc bộ bạn tham gia đều là một mảnh ghép quan trọng trong hành trình trưởng thành tại UTH."
+            </p>
+            <div className="flex justify-center gap-4">
+              <div className="h-1 w-20 bg-teal-400 rounded-full"></div>
+              <div className="h-1 w-20 bg-white/30 rounded-full"></div>
+              <div className="h-1 w-20 bg-teal-400 rounded-full"></div>
+            </div>
+          </motion.div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="container mx-auto px-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-2xl font-black mb-2">
-                Câu Lạc Bộ Sinh Viên UTH
-              </div>
-              <div className="text-gray-400">
-                Xây dựng cộng đồng, từng kết nối một
-              </div>
-            </div>
-            <div className="text-sm text-gray-400">
-              © 2025 Trường Đại học Công nghệ TP.HCM. Bảo lưu mọi quyền.
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
+
   );
 }

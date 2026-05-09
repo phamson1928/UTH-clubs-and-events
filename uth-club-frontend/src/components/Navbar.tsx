@@ -8,7 +8,7 @@ import {
   UserPlus,
 } from "lucide-react";
 import { Button } from "./ui/button";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -69,6 +69,9 @@ export default function Navbar() {
     navigate("/");
   };
 
+  const location = useLocation();
+    const isActive = (path: string) => location.pathname === path;
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white/90 backdrop-blur-sm shadow-md">
       <div className="container flex h-16 items-center justify-between px-4">
@@ -87,12 +90,23 @@ export default function Navbar() {
 
         <div className="flex items-center gap-4">
           {/* Primary Navigation */}
-          <Button asChild variant="ghost" size="sm">
+          <Button
+            asChild
+            variant={isActive("/student/clubs") ? "accent" : "ghost"}
+            size="sm"
+            className="font-bold"
+          >
             <Link to="/student/clubs">Câu Lạc Bộ</Link>
           </Button>
-          <Button asChild variant="ghost" size="sm">
+          <Button
+            asChild
+            variant={isActive("/student/events") ? "accent" : "ghost"}
+            size="sm"
+            className="font-bold"
+          >
             <Link to="/student/events">Sự Kiện</Link>
           </Button>
+
           {/* Auth actions */}
           {!authUser ? (
             <div className="flex items-center gap-2">

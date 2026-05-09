@@ -8,6 +8,10 @@ import {
   Star,
   Quote,
   MapPin,
+  Target,
+  Zap,
+  Heart,
+  Trophy,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -217,11 +221,17 @@ export default function StudentHome() {
     <div className="min-h-screen bg-white">
       <Navbar />
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-[#008689] via-teal-600 to-cyan-700 text-white overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl"></div>
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-cyan-300 rounded-full blur-3xl"></div>
+      <section className="relative text-white overflow-hidden">
+        {/* Banner Image Background */}
+        <div className="absolute inset-0">
+          <img 
+            src="/gts.jpg" 
+            alt="UTH Clubs Banner" 
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#008689]/80 via-teal-900/60 to-cyan-900/80"></div>
         </div>
+
 
         <div className="container mx-auto px-6 py-24 relative z-10">
           <motion.div
@@ -432,34 +442,26 @@ export default function StudentHome() {
                 hay dự án phục vụ cộng đồng, bạn sẽ tìm thấy những người đồng
                 hành.
               </p>
-              <div className="grid grid-cols-2 gap-6 mb-8">
-                <div className="bg-white border-2 border-gray-200 p-6">
-                  <div className="text-4xl font-black text-teal-600 mb-2">
-                    52
-                  </div>
-                  <div className="font-bold text-gray-900">CLB Hoạt Động</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                <div className="bg-white p-6 border-l-4 border-teal-500 shadow-sm hover:shadow-md transition-all">
+                  <Target className="w-8 h-8 text-teal-600 mb-3" />
+                  <h3 className="font-bold text-gray-900 mb-1">Phát Triển Kỹ Năng</h3>
+                  <p className="text-sm text-gray-600">Nâng cao kỹ năng mềm và chuyên môn qua các dự án thực tế.</p>
                 </div>
-                <div className="bg-white border-2 border-gray-200 p-6">
-                  <div className="text-4xl font-black text-purple-600 mb-2">
-                    2.8K
-                  </div>
-                  <div className="font-bold text-gray-900">Thành Viên</div>
+                <div className="bg-white p-6 border-l-4 border-purple-500 shadow-sm hover:shadow-md transition-all">
+                  <Zap className="w-8 h-8 text-purple-600 mb-3" />
+                  <h3 className="font-bold text-gray-900 mb-1">Kết Nối Đam Mê</h3>
+                  <p className="text-sm text-gray-600">Tìm thấy những người bạn đồng hành cùng sở thích và chí hướng.</p>
                 </div>
-                <div className="bg-white border-2 border-gray-200 p-6">
-                  <div className="text-4xl font-black text-orange-600 mb-2">
-                    150+
-                  </div>
-                  <div className="font-bold text-gray-900">
-                    Hoạt Động Hàng Tuần
-                  </div>
+                <div className="bg-white p-6 border-l-4 border-orange-500 shadow-sm hover:shadow-md transition-all">
+                  <Trophy className="w-8 h-8 text-orange-600 mb-3" />
+                  <h3 className="font-bold text-gray-900 mb-1">Điểm Rèn Luyện</h3>
+                  <p className="text-sm text-gray-600">Tích lũy điểm rèn luyện thông qua các hoạt động ngoại khóa bổ ích.</p>
                 </div>
-                <div className="bg-white border-2 border-gray-200 p-6">
-                  <div className="text-4xl font-black text-blue-600 mb-2">
-                    500+
-                  </div>
-                  <div className="font-bold text-gray-900">
-                    Câu Chuyện Thành Công
-                  </div>
+                <div className="bg-white p-6 border-l-4 border-blue-500 shadow-sm hover:shadow-md transition-all">
+                  <Heart className="w-8 h-8 text-blue-600 mb-3" />
+                  <h3 className="font-bold text-gray-900 mb-1">Kỷ Niệm Đẹp</h3>
+                  <p className="text-sm text-gray-600">Tạo nên những khoảnh khắc đáng nhớ trong quãng đời sinh viên.</p>
                 </div>
               </div>
               <button
