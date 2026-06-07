@@ -20,4 +20,4 @@ scp -r src common "$Username@$ServerIp`:$TargetDir/"
 Write-Host "3. Build và khởi động Docker container trên VPS..." -ForegroundColor Yellow
 ssh $Username@$ServerIp "cd $TargetDir && docker-compose up --build -d"
 
-Write-Host "Deploy hoàn tất! Backend đang chạy tại http://$ServerIp:3000" -ForegroundColor Green
+Write-Host "Deploy hoàn tất! Backend đang chạy tại http://$ServerIp:3001" -ForegroundColor Green
