@@ -129,6 +129,17 @@ export class EventsController {
     return this.eventsService.update(id, { status: 'rejected' });
   }
 
+  // Hủy event
+  @ApiOperation({ summary: 'Hủy event (Admin only)' })
+  @ApiBearerAuth()
+  @ApiResponse({ status: 200, description: 'Hủy thành công' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Patch(':id/canceled')
+  clickCanceled(@Param('id', ParseIntPipe) id: number) {
+    return this.eventsService.update(id, { status: 'canceled' });
+  }
+
   // Xóa event
   @ApiOperation({ summary: 'Xóa event (Admin only)' })
   @ApiBearerAuth()
