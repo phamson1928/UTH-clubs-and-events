@@ -66,7 +66,7 @@ export class StatisticsService {
       .groupBy('event.status')
       .getRawMany<{ status: string; count: string | number }>();
 
-    const statuses = ['approved', 'pending', 'rejected', 'canceled'];
+    const statuses = ['approved', 'pending', 'rejected', 'canceled', 'completed'];
     const map = new Map(result.map((r) => [r.status, Number(r.count)]));
     return statuses.map((s) => ({ status: s, count: map.get(s) || 0 }));
   }
@@ -93,6 +93,7 @@ export class StatisticsService {
       pending: 0,
       rejected: 0,
       canceled: 0,
+      completed: 0,
     }));
 
     rows.forEach((r) => {
@@ -102,13 +103,15 @@ export class StatisticsService {
           | 'approved'
           | 'pending'
           | 'rejected'
-          | 'canceled';
+          | 'canceled'
+          | 'completed';
         if (key in months[idx]) {
           // Assign in a type-safe way
           if (key === 'approved') months[idx].approved = Number(r.count);
           if (key === 'pending') months[idx].pending = Number(r.count);
           if (key === 'rejected') months[idx].rejected = Number(r.count);
           if (key === 'canceled') months[idx].canceled = Number(r.count);
+          if (key === 'completed') months[idx].completed = Number(r.count);
         }
       }
     });
