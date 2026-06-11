@@ -1,16 +1,90 @@
-# React + Vite
+# UTH Clubs & Events — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React SPA for the UTH Clubs & Events management platform.  
+Three role-based interfaces: Student, Club Owner, and Admin.
 
-Currently, two official plugins are available:
+## Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Framework:** React 18 with TypeScript
+- **Build:** Vite 6
+- **Styling:** Tailwind CSS 3 + class-variance-authority + tailwind-merge
+- **Animation:** Framer Motion
+- **Charts:** Recharts
+- **UI Components:** Radix UI (dialog, dropdown, tabs, toast, alert-dialog, select, avatar, separator, label)
+- **HTTP Client:** Axios
+- **Routing:** React Router DOM v6
+- **Icons:** Lucide React
 
-## React Compiler
+## Role-based Pages
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Student Pages
+| Page | Path | Description |
+|------|------|-------------|
+| Home | `/` | Hero, featured events, live stats |
+| Events | `/events` | Browse, search, filter, register |
+| Clubs | `/clubs` | Discover and join clubs |
+| Club Detail | `/clubs/:id` | Club profile, events, members |
+| My Clubs | `/my-clubs` | Clubs joined, membership status |
+| My Events | `/my-events` | Registered events, history |
+| Profile | `/profile` | Account settings, points |
 
-## Expanding the ESLint configuration
+### Club Owner Pages
+| Page | Path | Description |
+|------|------|-------------|
+| Dashboard | `/club-owner` | Club overview, recent events |
+| Events | `/club-owner/events` | Manage own events, create new |
+| Members | `/club-owner/members` | Member list, management |
+| Applications | `/club-owner/applications` | Membership requests |
+| Requests | `/club-owner/requests` | Event approval requests |
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Admin Pages
+| Page | Path | Description |
+|------|------|-------------|
+| Dashboard | `/admin` | System-wide analytics, charts |
+| Events | `/admin/events` | Approve/reject events |
+| Clubs | `/admin/clubs` | Manage clubs |
+| Users | `/admin/users` | Manage users, roles |
+| Requests | `/admin/requests` | Pending requests review |
+
+## Setup
+
+```bash
+# Install dependencies
+npm install
+
+# Development
+npm run dev        # http://localhost:5173
+
+# Production build
+npm run build      # Output in /dist
+
+# Preview production build
+npm run preview
+```
+
+## Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `VITE_API_URL` | Backend API URL (default: `http://localhost:3000`) |
+
+## Project Structure
+
+```
+src/
+├── pages/
+│   ├── student/            # Student views
+│   ├── admin/              # Admin dashboard
+│   └── club-owner/         # Club owner management
+├── components/
+│   ├── ui/                 # Reusable UI primitives (Radix)
+│   ├── Navbar.tsx
+│   ├── Sidebar.tsx
+│   ├── Footer.tsx
+│   └── SearchAndFilters.tsx
+├── hooks/                  # Custom React hooks
+├── lib/                    # Utility functions
+├── services/               # API service modules
+├── styles/                 # Global styles
+└── App.tsx                 # Root with router setup
+```
