@@ -1,0 +1,21 @@
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Sisyphus internal workspace
+.sisyphus/
+SISYPHUS_PROJECT_INFO.md
+
+# Sensitive project docs
+test-accounts.md
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
