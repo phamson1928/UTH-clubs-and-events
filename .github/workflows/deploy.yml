@@ -26,10 +26,21 @@ jobs:
         run: |
           ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "
             set -e
-            cd ~/uth-club-backend
 
-            echo '=== Pull latest code ==='
-            git pull origin main
+            if [ -d ~/uth-club-backend/.git ]; then
+              cd ~/uth-club-backend
+              git pull origin main
+            else
+              rm -rf ~/uth-club-backend
+              git clone https://github.com/phamson1928/UTH-clubs-and-events.git ~/uth-club-backend
+            fi
+
+            cd ~/uth-club-backend/uth-club-backend
+
+            echo '=== Copy .env ==='
+            if [ ! -f .env ]; then
+              cp .env.example .env 2>/dev/null || true
+            fi
 
             echo '=== Rebuild & restart ==='
             docker-compose up --build -d
@@ -37,5 +48,5 @@ jobs:
             echo '=== Clean up old images ==='
             docker image prune -f
 
-            echo '=== Done ==='
+            echo '=== Deploy done ==='
           "
