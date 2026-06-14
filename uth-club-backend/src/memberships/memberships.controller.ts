@@ -70,6 +70,9 @@ export class MembershipsController {
   }
 
   // ─── Admin: All Pending ───────────────────────────────────────
+  @ApiOperation({ summary: 'Lấy tất cả đơn xin gia nhập CLB (Admin only)' })
+  @ApiBearerAuth()
+  @ApiResponse({ status: 200, description: 'Danh sách đơn đang chờ' })
   @Get('admin/all-requests')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
@@ -78,6 +81,11 @@ export class MembershipsController {
   }
 
   // ─── Members List ─────────────────────────────────────────────
+  @ApiOperation({ summary: 'Lấy danh sách thành viên của CLB (Club Owner / Admin)' })
+  @ApiBearerAuth()
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Số trang' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Số lượng mỗi trang' })
+  @ApiResponse({ status: 200, description: 'Danh sách thành viên' })
   @Get('members')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('club_owner', 'admin')
@@ -234,9 +242,10 @@ export class MembershipsController {
   }
 
   // ─── Approve / Reject ────────────────────────────────────────
-  @ApiOperation({ summary: 'Duyệt đơn gia nhập CLB' })
+  @ApiOperation({ summary: 'Duyệt đơn xin gia nhập (Club Owner only)' })
   @ApiBearerAuth()
-  @ApiResponse({ status: 200, description: 'Duyệt hồ sơ thành công' })
+  @ApiParam({ name: 'id', type: Number, description: 'Membership request ID' })
+  @ApiResponse({ status: 200, description: 'Duyệt thành công' })
   @Patch(':id/approve')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('club_owner', 'admin')
@@ -244,6 +253,10 @@ export class MembershipsController {
     return this.membershipsService.updateMembershipRequest(id, 'approved');
   }
 
+  @ApiOperation({ summary: 'Từ chối đơn xin gia nhập (Club Owner only)' })
+  @ApiBearerAuth()
+  @ApiParam({ name: 'id', type: Number, description: 'Membership request ID' })
+  @ApiResponse({ status: 200, description: 'Từ chối thành công' })
   @Patch(':id/reject')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('club_owner', 'admin')
@@ -252,10 +265,9 @@ export class MembershipsController {
   }
 
   // ─── Join Club ───────────────────────────────────────────────
-  @ApiOperation({ summary: 'Nộp đơn đăng ký tham gia CLB' })
+  @ApiOperation({ summary: 'Gửi đơn xin gia nhập CLB' })
   @ApiBearerAuth()
-  @ApiResponse({ status: 201, description: 'Nộp đơn thành công' })
-  @ApiResponse({ status: 400, description: 'Lỗi nghiệp vụ (đã đủ 3 CLB)' })
+  @ApiResponse({ status: 201, description: 'Gửi đơn thành công' })
   @Post(':clubId/join')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('user')
@@ -272,6 +284,10 @@ export class MembershipsController {
   }
 
   // ─── Remove / Leave ──────────────────────────────────────────
+  @ApiOperation({ summary: 'Xóa thành viên khỏi CLB (Club Owner only)' })
+  @ApiBearerAuth()
+  @ApiParam({ name: 'id', type: Number, description: 'Member ID' })
+  @ApiResponse({ status: 200, description: 'Xóa thành viên thành công' })
   @Delete('members/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('club_owner')
@@ -279,7 +295,10 @@ export class MembershipsController {
     return this.membershipsService.removeMemberFromClub(id);
   }
 
-  @ApiQuery({ name: 'clubId', type: Number })
+  @ApiOperation({ summary: 'Rời khỏi CLB' })
+  @ApiBearerAuth()
+  @ApiParam({ name: 'clubId', type: Number, description: 'Club ID' })
+  @ApiResponse({ status: 200, description: 'Rời CLB thành công' })
   @Delete('leave/:clubId')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('user', 'club_owner')

@@ -71,6 +71,10 @@ export class EventsController {
   }
 
   // Lấy event theo status cho club owner
+  @ApiOperation({ summary: 'Lấy danh sách event theo trạng thái cho Club Owner' })
+  @ApiBearerAuth()
+  @ApiQuery({ name: 'status', required: false, enum: ['pending', 'approved', 'rejected', 'canceled', 'completed'] })
+  @ApiResponse({ status: 200, description: 'Danh sách event' })
   @Get('club_owner')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('club_owner')
@@ -82,13 +86,16 @@ export class EventsController {
   }
 
   // Lấy event theo id
+  @ApiOperation({ summary: 'Lấy chi tiết event theo ID' })
+  @ApiResponse({ status: 200, description: 'Chi tiết event' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy event' })
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.eventsService.findOne(id);
   }
 
   // Cập nhật event (club_owner — status bị loại bỏ để ngăn tự approve)
-  @ApiOperation({ summary: 'Cập nhật thông tin event (Club Owner only)' })
+  @ApiOperation({ summary: 'Cập nhật thông tin event (Club Owner / Admin)' })
   @ApiBearerAuth()
   @ApiResponse({ status: 200, description: 'Cập nhật thành công' })
   @ApiResponse({ status: 403, description: 'Không có quyền' })
@@ -122,6 +129,9 @@ export class EventsController {
   }
 
   // Từ chối event
+  @ApiOperation({ summary: 'Từ chối event (Admin only)' })
+  @ApiBearerAuth()
+  @ApiResponse({ status: 200, description: 'Từ chối thành công' })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @Patch(':id/rejected')
@@ -130,9 +140,9 @@ export class EventsController {
   }
 
   // Hủy event
-  @ApiOperation({ summary: 'Hủy event (Admin only)' })
+  @ApiOperation({ summary: 'Hủy event (Club Owner only)' })
   @ApiBearerAuth()
-  @ApiResponse({ status: 200, description: 'Hủy thành công' })
+  @ApiResponse({ status: 200, description: 'Đã hủy event' })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @Patch(':id/canceled')

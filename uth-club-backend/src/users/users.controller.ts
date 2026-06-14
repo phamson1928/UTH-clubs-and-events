@@ -27,6 +27,7 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiParam,
 } from '@nestjs/swagger';
 
 @ApiTags('users')
@@ -86,6 +87,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Tạo người dùng mới (Admin only)' })
   @ApiBearerAuth()
   @ApiResponse({ status: 201, description: 'Tạo thành công' })
+  @ApiResponse({ status: 403, description: 'Không có quyền' })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @Post('create')
@@ -94,6 +96,10 @@ export class UsersController {
   }
 
   // Cập nhật user
+  @ApiOperation({ summary: 'Cập nhật thông tin người dùng (Admin only)' })
+  @ApiParam({ name: 'id', type: Number, description: 'User ID' })
+  @ApiBearerAuth()
+  @ApiResponse({ status: 200, description: 'Cập nhật thành công' })
   @Patch('update/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
@@ -106,6 +112,7 @@ export class UsersController {
 
   // Xóa user
   @ApiOperation({ summary: 'Xóa người dùng (Admin only)' })
+  @ApiParam({ name: 'id', type: Number, description: 'User ID' })
   @ApiBearerAuth()
   @ApiResponse({ status: 200, description: 'Xóa thành công' })
   @ApiResponse({ status: 403, description: 'Không thể xóa chính mình' })

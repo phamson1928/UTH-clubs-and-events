@@ -43,6 +43,9 @@ export class AuthController {
   }
 
   // Quên mật khẩu — giới hạn 3 lần / 60 giây
+  @ApiOperation({ summary: 'Gửi email đặt lại mật khẩu' })
+  @ApiResponse({ status: 201, description: 'Email đặt lại mật khẩu đã được gửi' })
+  @ApiResponse({ status: 400, description: 'Email không tồn tại' })
   @Throttle({ default: { ttl: 60000, limit: 3 } })
   @Post('forgot-password')
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
@@ -50,6 +53,9 @@ export class AuthController {
   }
 
   // Reset mật khẩu — giới hạn 5 lần / 60 giây
+  @ApiOperation({ summary: 'Đặt lại mật khẩu với token' })
+  @ApiResponse({ status: 201, description: 'Đặt lại mật khẩu thành công' })
+  @ApiResponse({ status: 400, description: 'Token không hợp lệ hoặc đã hết hạn' })
   @Throttle({ default: { ttl: 60000, limit: 5 } })
   @Post('reset-password')
   async resetPassword(@Body() dto: ResetPasswordDto) {

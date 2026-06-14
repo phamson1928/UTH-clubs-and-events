@@ -63,6 +63,8 @@ export class EventRegistrationsController {
   // ─── Cancel ──────────────────────────────────────────────────
   @ApiOperation({ summary: 'Hủy đăng ký tham gia sự kiện' })
   @ApiBearerAuth()
+  @ApiParam({ name: 'id', type: Number, description: 'Event ID' })
+  @ApiResponse({ status: 200, description: 'Hủy đăng ký thành công' })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('user', 'club_owner', 'admin')
   @Delete(':id/cancel')
@@ -76,6 +78,8 @@ export class EventRegistrationsController {
   // ─── Participants ─────────────────────────────────────────────
   @ApiOperation({ summary: 'Lấy danh sách người tham gia sự kiện (Club Owner / Admin)' })
   @ApiBearerAuth()
+  @ApiParam({ name: 'id', type: Number, description: 'Event ID' })
+  @ApiResponse({ status: 200, description: 'Thành công' })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('club_owner', 'admin')
   @Get(':id/participants')
@@ -122,7 +126,8 @@ export class EventRegistrationsController {
   // ─── Export: Attendance ───────────────────────────────────────
   @ApiOperation({ summary: 'Xuất Excel danh sách điểm danh sự kiện (Club Owner / Admin)' })
   @ApiBearerAuth()
-  @ApiParam({ name: 'id', description: 'Event ID' })
+  @ApiParam({ name: 'id', type: Number, description: 'Event ID' })
+  @ApiResponse({ status: 200, description: 'Xuất file excel thành công' })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('club_owner', 'admin')
   @Get('export/attendance/:id')
@@ -138,6 +143,7 @@ export class EventRegistrationsController {
   @ApiOperation({ summary: 'Xuất Excel danh sách thành viên CLB (Club Owner / Admin)' })
   @ApiBearerAuth()
   @ApiQuery({ name: 'clubId', type: Number, description: 'Club ID' })
+  @ApiResponse({ status: 200, description: 'Xuất file excel thành công' })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('club_owner', 'admin')
   @Get('export/members')

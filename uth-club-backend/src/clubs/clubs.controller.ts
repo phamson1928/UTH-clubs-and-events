@@ -24,6 +24,7 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiParam,
 } from '@nestjs/swagger';
 
 @ApiTags('clubs')
@@ -53,6 +54,7 @@ export class ClubsController {
 
   // Lấy club theo id (click vào club) — optional auth để populate isRegistered nếu đăng nhập
   @ApiOperation({ summary: 'Lấy thông tin chi tiết club theo ID' })
+  @ApiParam({ name: 'id', type: Number, description: 'Club ID' })
   @ApiResponse({ status: 200, description: 'Lấy thông tin thành công' })
   @ApiResponse({ status: 404, description: 'Không tìm thấy club' })
   @UseGuards(OptionalJwtAuthGuard)
@@ -67,6 +69,7 @@ export class ClubsController {
 
   // Cập nhật club
   @ApiOperation({ summary: 'Cập nhật thông tin club (Admin only)' })
+  @ApiParam({ name: 'id', type: Number, description: 'Club ID' })
   @ApiBearerAuth()
   @ApiResponse({ status: 200, description: 'Cập nhật thành công' })
   @ApiResponse({ status: 403, description: 'Không có quyền' })
@@ -82,6 +85,7 @@ export class ClubsController {
 
   // Xóa club
   @ApiOperation({ summary: 'Xóa club (Admin only)' })
+  @ApiParam({ name: 'id', type: Number, description: 'Club ID' })
   @ApiBearerAuth()
   @ApiResponse({ status: 200, description: 'Xóa thành công' })
   @ApiResponse({ status: 403, description: 'Không có quyền' })

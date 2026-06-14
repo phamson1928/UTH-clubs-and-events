@@ -100,6 +100,7 @@ export class FeedbackController {
             },
         },
     })
+    @ApiResponse({ status: 200, description: 'Cập nhật thành công' })
     @Patch(':id')
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles('user', 'club_owner', 'admin')
@@ -116,6 +117,7 @@ export class FeedbackController {
     @ApiOperation({ summary: 'Xóa đánh giá (chủ nhân hoặc admin)' })
     @ApiBearerAuth()
     @ApiParam({ name: 'id', type: Number, description: 'Feedback ID' })
+    @ApiResponse({ status: 200, description: 'Xóa thành công' })
     @Delete(':id')
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles('user', 'club_owner', 'admin')
