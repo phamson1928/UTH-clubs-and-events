@@ -10,12 +10,18 @@ import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) { }
+  constructor(private authService: AuthService) {}
 
   // Đăng ký — giới hạn 5 lần / 60 giây
   @ApiOperation({ summary: 'Đăng ký tài khoản sinh viên mới' })
-  @ApiResponse({ status: 201, description: 'Đăng ký thành công, vui lòng check email để verify' })
-  @ApiResponse({ status: 400, description: 'Email đã tồn tại hoặc mã số sinh viên đã tồn tại' })
+  @ApiResponse({
+    status: 201,
+    description: 'Đăng ký thành công, vui lòng check email để verify',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Email đã tồn tại hoặc mã số sinh viên đã tồn tại',
+  })
   @Throttle({ default: { ttl: 60000, limit: 5 } })
   @Post('register')
   register(@Body() dto: RegisterDto) {
@@ -24,8 +30,14 @@ export class AuthController {
 
   // Đăng nhập — giới hạn 5 lần / 60 giây
   @ApiOperation({ summary: 'Đăng nhập vào hệ thống' })
-  @ApiResponse({ status: 201, description: 'Đăng nhập thành công, trả về access_token và thông tin user' })
-  @ApiResponse({ status: 401, description: 'Email hoặc mật khẩu không chính xác' })
+  @ApiResponse({
+    status: 201,
+    description: 'Đăng nhập thành công, trả về access_token và thông tin user',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Email hoặc mật khẩu không chính xác',
+  })
   @Throttle({ default: { ttl: 60000, limit: 5 } })
   @Post('login')
   login(@Body() dto: LoginDto) {
@@ -36,7 +48,10 @@ export class AuthController {
   @ApiOperation({ summary: 'Xác thực email qua token' })
   @ApiQuery({ name: 'token', description: 'Mã xác thực gửi qua email' })
   @ApiResponse({ status: 200, description: 'Xác thực thành công' })
-  @ApiResponse({ status: 400, description: 'Token không hợp lệ hoặc đã hết hạn' })
+  @ApiResponse({
+    status: 400,
+    description: 'Token không hợp lệ hoặc đã hết hạn',
+  })
   @Get('verify')
   async verifyEmail(@Query('token') token: string) {
     return await this.authService.verifyEmail(token);
@@ -44,7 +59,10 @@ export class AuthController {
 
   // Quên mật khẩu — giới hạn 3 lần / 60 giây
   @ApiOperation({ summary: 'Gửi email đặt lại mật khẩu' })
-  @ApiResponse({ status: 201, description: 'Email đặt lại mật khẩu đã được gửi' })
+  @ApiResponse({
+    status: 201,
+    description: 'Email đặt lại mật khẩu đã được gửi',
+  })
   @ApiResponse({ status: 400, description: 'Email không tồn tại' })
   @Throttle({ default: { ttl: 60000, limit: 3 } })
   @Post('forgot-password')
@@ -55,7 +73,10 @@ export class AuthController {
   // Reset mật khẩu — giới hạn 5 lần / 60 giây
   @ApiOperation({ summary: 'Đặt lại mật khẩu với token' })
   @ApiResponse({ status: 201, description: 'Đặt lại mật khẩu thành công' })
-  @ApiResponse({ status: 400, description: 'Token không hợp lệ hoặc đã hết hạn' })
+  @ApiResponse({
+    status: 400,
+    description: 'Token không hợp lệ hoặc đã hết hạn',
+  })
   @Throttle({ default: { ttl: 60000, limit: 5 } })
   @Post('reset-password')
   async resetPassword(@Body() dto: ResetPasswordDto) {
