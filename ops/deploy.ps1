@@ -1,6 +1,6 @@
 param (
-    [string]$ServerIp = "152.42.163.30",
-    [string]$Username = "root",
+    [string]$ServerIp = "47.131.72.190",
+    [string]$Username = "ubuntu",
     [string]$TargetDir = "~/UTH-clubs-and-events/uth-club-backend"
 )
 
@@ -35,9 +35,9 @@ tar -cf - -C "$ScriptDir" "refresh-vps.sh" | ssh $Username@$ServerIp "mkdir -p ~
 
 # === Buoc 4: Build Docker + Refresh dates ===
 Write-Host "[4/4] Build Docker + refresh dates..." -ForegroundColor Yellow
-ssh $Username@$ServerIp "cd $TargetDir && docker-compose up --build -d && bash ~/UTH-clubs-and-events/ops/refresh-vps.sh"
+ssh $Username@$ServerIp "cd $TargetDir && docker compose up -d --build"
 
 Write-Host ""
 Write-Host "========== DEPLOY HOAN TAT ==========" -ForegroundColor Green
-Write-Host " Backend : http://$ServerIp`:3001" -ForegroundColor Green
-Write-Host " Swagger : http://$ServerIp`/uth/api/docs" -ForegroundColor Green
+Write-Host " Backend : https://uth-club.$ServerIp.sslip.io" -ForegroundColor Green
+Write-Host " Swagger : https://uth-club.$ServerIp.sslip.io/api/docs" -ForegroundColor Green

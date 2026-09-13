@@ -1,11 +1,11 @@
-version: '3.8'
 services:
   backend:
     build: .
     container_name: uth_club_backend
     restart: always
     ports:
-      - '3001:3000'
+      # Nginx on the host is the only public entry point.
+      - '127.0.0.1:3001:3000'
     env_file:
       - .env
     volumes:

@@ -27,23 +27,23 @@ jobs:
           ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "
             set -e
 
-            if [ -d ~/uth-club-backend/.git ]; then
-              cd ~/uth-club-backend
+            if [ -d ~/UTH-clubs-and-events/.git ]; then
+              cd ~/UTH-clubs-and-events
               git pull origin main
             else
-              rm -rf ~/uth-club-backend
-              git clone https://github.com/phamson1928/UTH-clubs-and-events.git ~/uth-club-backend
+              git clone https://github.com/phamson1928/UTH-clubs-and-events.git ~/UTH-clubs-and-events
             fi
 
-            cd ~/uth-club-backend/uth-club-backend
+            cd ~/UTH-clubs-and-events/uth-club-backend
 
-            echo '=== Copy .env ==='
+            echo '=== Verify production environment ==='
             if [ ! -f .env ]; then
-              cp .env.example .env 2>/dev/null || true
+              echo 'Missing uth-club-backend/.env on the server.'
+              exit 1
             fi
 
             echo '=== Rebuild & restart ==='
-            docker-compose up --build -d
+            docker compose up -d --build
 
             echo '=== Clean up old images ==='
             docker image prune -f
